@@ -21,5 +21,12 @@ QuanVi is a web-based application designed to simulate and visualize quantum cir
 ### Target Audience:
 - People who have and interest in the world of quantum computing.
 
-QuanVi provides a hands-on experience for users to deepen their knowledge of quantum circuits, making the abstract world of quantum computing more accessible.
+### Project Milestones
+ - Product description, use case Diagram (Nico, Roland, Vincent)
+ - Creation of basic simulation of qbits and single qbit circuit elements (Zsombor)
+ - Basic CI/CD pipeline (Vincent)
+ - Implementation of basic editor and visualizer (Nico, Roland)
+ - Implementation of multi qbit circuit elements (Zsombor)
+ - Implementation of user friendly tutorials (Nico, Roland, Vincent)
 
+QuanVi provides a hands-on experience for users to deepen their knowledge of quantum circuits, making the abstract world of quantum computing more accessible.
