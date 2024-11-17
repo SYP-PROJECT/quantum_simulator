@@ -1,24 +1,14 @@
-name: Rust
-
+name: "Test Suite"
 on:
   push:
-    branches: [ "master" ]
   pull_request:
-    branches: [ "master" ]
-
-env:
-  CARGO_TERM_COLOR: always
 
 jobs:
-  build-and-test:
+  test:
+    name: cargo test
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
-
-    - name: Build and Test Backend
-      run: |
-        cd backend
-        cargo build --verbose
-        cargo test --verbose
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - run: cargo test --all-features
+      - working-directory: ./backend
