@@ -1,4 +1,4 @@
-use nalgebra::{Complex, Vector2};
+use nalgebra::{Complex, ComplexField, Vector2};
 use rand::prelude::*;
 use std::fmt::{Debug, Formatter};
 
@@ -52,6 +52,18 @@ impl Qubit {
 
 impl Debug for Qubit {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self.state)
+        let number1 = if self.state.x.imaginary() >= 0.0 {
+            format!("{}+{}i", self.state.x.real(), self.state.x.imaginary())
+        } else {
+            format!("{}-{}i", self.state.x.real(), self.state.x.imaginary())
+        };
+
+        let number2 = if self.state.y.imaginary() >= 0.0 {
+            format!("{}+{}i", self.state.y.real(), self.state.y.imaginary())
+        } else {
+            format!("{}-{}i", self.state.y.real(), self.state.y.imaginary())
+        };
+
+        write!(f, "[{}, {}]", number1, number2)
     }
 }
