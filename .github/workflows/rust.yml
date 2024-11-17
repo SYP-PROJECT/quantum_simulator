@@ -20,5 +20,7 @@ jobs:
     - name: Build and Test Backend
       run: |
         cd backend
+        ls -R ./
+        cargo clean
         cargo build --verbose
         cargo test --verbose
