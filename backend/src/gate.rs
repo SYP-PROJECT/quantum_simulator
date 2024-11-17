@@ -50,3 +50,26 @@ impl Gate for PauliY {
         self.matrix_form
     }
 }
+
+pub struct PauliZ {
+    matrix_form: Matrix2<Complex<f64>>,
+}
+
+impl PauliZ {
+    pub fn new() -> Self {
+        Self {
+            matrix_form: Matrix2::new(
+                Complex::new(1.0, 0.0),
+                Complex::new(0.0, 0.0),
+                Complex::new(0.0, 0.0),
+                Complex::new(0.0, -1.0),
+            ),
+        }
+    }
+}
+
+impl Gate for PauliZ {
+    fn matrix_representation(&self) -> Matrix2<Complex<f64>> {
+        self.matrix_form
+    }
+}
