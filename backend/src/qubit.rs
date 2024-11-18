@@ -143,6 +143,35 @@ mod tests {
     }
 
     #[test]
+    fn test_measurement() {
+        let prob_0_theoretical = 0.6_f64.powi(2);
+        let prob_1_theoretical = 0.8_f64.powi(2);
+
+        let mut count_0 = 0;
+        let mut count_1 = 0;
+
+        let num_measurements = 20000;
+        for _ in 0..num_measurements {
+            let mut qubit = Qubit::new_from_amplitudes(0.6, 0.0, 0.8, 0.0);
+            let measurement = qubit.measure();
+
+            match measurement {
+                0 => count_0 += 1,
+                1 => count_1 += 1,
+                _ => panic!("Measurement should be either 0 or 1."),
+            }
+        }
+
+        let prob_0_approx = count_0 as f64 / num_measurements as f64;
+        let prob_1_approx = count_1 as f64 / num_measurements as f64;
+
+        let tolerance = 0.01;
+
+        assert!((prob_0_approx - prob_0_theoretical).abs() < tolerance);
+        assert!((prob_1_approx - prob_1_theoretical).abs() < tolerance);
+    }
+
+    #[test]
     fn test_debug_represantation() {
         assert_eq!(
             String::from("[0.5+0.5i, 0.5-0.5i]"),
