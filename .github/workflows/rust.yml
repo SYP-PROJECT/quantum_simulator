@@ -4,13 +4,13 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+env:
+  CI: ""
 
 jobs:
   test:
     name: cargo test
     runs-on: ubuntu-latest
-    env:
-         CI: ""
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
