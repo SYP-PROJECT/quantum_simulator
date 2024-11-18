@@ -31,6 +31,16 @@ impl Qubit {
         }
     }
 
+    pub fn new_from_amplitudes(r1: f64, i1: f64, r2: f64, i2: f64) -> Self {
+        Self {
+            state: Vector2::new(Complex::new(r1, i1), Complex::new(r2, i2)).normalize(),
+        }
+    }
+
+    pub fn state(&self) -> Vector2<Complex<f64>> {
+        self.state
+    }
+
     pub fn apply_gate(&mut self, gate: &impl Gate) {
         self.state = gate.matrix_representation() * self.state;
     }
@@ -65,5 +75,40 @@ impl Debug for Qubit {
         };
 
         write!(f, "[{}, {}]", number1, number2)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn check_construction() {
+        assert_eq!(
+            Qubit::new().state,
+            Vector2::new(Complex::new(1.0, 0.0), Complex::new(0.0, 0.0))
+        );
+
+        assert_eq!(Qubit::new().state, Qubit::basis0().state);
+
+        assert_eq!(
+            Qubit::new_from_amplitudes(0.0, 0.0, 1.0, 0.0).state,
+            Qubit::basis1().state
+        );
+
+        assert_eq!(
+            Qubit::new_from_amplitudes(1.0, 1.0, 1.0, 1.0).state.norm(),
+            1.0
+        );
+
+        assert_eq!(
+            Qubit::new_from_amplitudes(1.0, 1.0, 1.0, 1.0).state,
+            Vector2::new(Complex::new(0.5, 0.5), Complex::new(0.5, 0.5))
+        );
+
+        assert_eq!(
+            Qubit::new_from_vec(Vector2::new(Complex::new(1.0, 1.0), Complex::new(1.0, 1.0))).state,
+            Qubit::new_from_amplitudes(1.0, 1.0, 1.0, 1.0).state
+        );
     }
 }
