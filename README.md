@@ -1,1 +1,1 @@
-# Quantum Simualator
+# Quantum Simulator
