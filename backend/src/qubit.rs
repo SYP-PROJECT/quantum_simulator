@@ -123,6 +123,26 @@ mod tests {
     }
 
     #[test]
+    fn test_measurement_collapse() {
+        for _ in 0..10000 {
+            let mut qubit = Qubit::new_from_amplitudes(1.0, 0.0, 1.0, 0.0);
+            let measurement = qubit.measure();
+
+            match measurement {
+                0 => assert_eq!(
+                    qubit.state(),
+                    Vector2::new(Complex::new(1.0, 0.0), Complex::new(0.0, 0.0))
+                ),
+                1 => assert_eq!(
+                    qubit.state(),
+                    Vector2::new(Complex::new(0.0, 0.0), Complex::new(1.0, 0.0))
+                ),
+                _ => panic!("Measurement should be either 0 or 1."),
+            }
+        }
+    }
+
+    #[test]
     fn test_debug_represantation() {
         assert_eq!(
             String::from("[0.5+0.5i, 0.5-0.5i]"),
