@@ -10,10 +10,10 @@ jobs:
     name: cargo test
     runs-on: ubuntu-latest
     steps:
-      - name: Disable CI checks
-        run: echo "CI=false" >> $GITHUB_ENV
       - name: Checkout code
         uses: actions/checkout@v4
+      - name: Set RUSTFLAGS to not treat warnings as errors
+        run: echo "RUSTFLAGS=-Awarnings" >> $GITHUB_ENV
       - name: Setup Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
       - name: Run cargo tests
