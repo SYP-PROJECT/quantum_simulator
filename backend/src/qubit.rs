@@ -83,37 +83,47 @@ mod tests {
     use super::*;
 
     #[test]
-    fn check_construction() {
+    fn test_qubit_initial_state() {
+        let qubit = Qubit::new();
         assert_eq!(
-            Qubit::new().state,
+            qubit.state(),
             Vector2::new(Complex::new(1.0, 0.0), Complex::new(0.0, 0.0))
-        );
-
-        assert_eq!(Qubit::new().state, Qubit::basis0().state);
-
-        assert_eq!(
-            Qubit::new_from_amplitudes(0.0, 0.0, 1.0, 0.0).state,
-            Qubit::basis1().state
-        );
-
-        assert_eq!(
-            Qubit::new_from_amplitudes(1.0, 1.0, 1.0, 1.0).state.norm(),
-            1.0
-        );
-
-        assert_eq!(
-            Qubit::new_from_amplitudes(1.0, 1.0, 1.0, 1.0).state,
-            Vector2::new(Complex::new(0.5, 0.5), Complex::new(0.5, 0.5))
-        );
-
-        assert_eq!(
-            Qubit::new_from_vec(Vector2::new(Complex::new(1.0, 1.0), Complex::new(1.0, 1.0))).state,
-            Qubit::new_from_amplitudes(1.0, 1.0, 1.0, 1.0).state
         );
     }
 
     #[test]
-    fn check_debug_represantation() {
+    fn test_basis_states() {
+        let basis0 = Qubit::basis0();
+        let basis1 = Qubit::basis1();
+
+        assert_eq!(
+            basis0.state(),
+            Vector2::new(Complex::new(1.0, 0.0), Complex::new(0.0, 0.0))
+        );
+
+        assert_eq!(
+            basis1.state(),
+            Vector2::new(Complex::new(0.0, 0.0), Complex::new(1.0, 0.0))
+        );
+    }
+
+    #[test]
+    fn test_normalized_state_creation() {
+        let qubit = Qubit::new_from_amplitudes(1.0, 1.0, 1.0, 1.0);
+
+        assert_eq!(qubit.state.norm(), 1.0);
+        assert_eq!(
+            qubit.state(),
+            Vector2::new(Complex::new(0.5, 0.5), Complex::new(0.5, 0.5))
+        );
+
+        let qubit_vec =
+            Qubit::new_from_vec(Vector2::new(Complex::new(1.0, 1.0), Complex::new(1.0, 1.0)));
+        assert_eq!(qubit.state(), qubit_vec.state());
+    }
+
+    #[test]
+    fn test_debug_represantation() {
         assert_eq!(
             String::from("[0.5+0.5i, 0.5-0.5i]"),
             format!("{:?}", Qubit::new_from_amplitudes(1.0, 1.0, 1.0, -1.0))
