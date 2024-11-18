@@ -85,7 +85,7 @@ impl PauliZ {
                 Complex::new(1.0, 0.0),
                 Complex::new(0.0, 0.0),
                 Complex::new(0.0, 0.0),
-                Complex::new(0.0, -1.0),
+                Complex::new(-1.0, 0.0),
             ),
         }
     }
@@ -126,6 +126,8 @@ impl Gate for Hadamard {
 
 #[cfg(test)]
 mod tests {
+    use nalgebra::Vector2;
+
     use crate::qubit::Qubit;
 
     use super::*;
@@ -147,6 +149,57 @@ mod tests {
         assert_eq!(
             qubit.state(),
             Qubit::new_from_amplitudes(1.0, 1.0, 1.0, 1.0).state()
+        );
+    }
+
+    #[test]
+    fn test_pauli_x_gate() {
+        let pauli_x = PauliX::new();
+
+        let mut qubit = Qubit::basis0();
+        qubit.apply_gate(&pauli_x);
+        assert_eq!(qubit.state(), Qubit::basis1().state());
+
+        let mut qubit = Qubit::basis1();
+        qubit.apply_gate(&pauli_x);
+        assert_eq!(qubit.state(), Qubit::basis0().state());
+    }
+
+    #[test]
+    fn test_pauli_y_gate() {
+        let pauli_y = PauliY::new();
+
+        let mut qubit = Qubit::basis0();
+        qubit.apply_gate(&pauli_y);
+        assert_eq!(
+            qubit.state(),
+            Vector2::new(Complex::new(0.0, 0.0), Complex::new(0.0, 1.0))
+        );
+
+        qubit = Qubit::basis1();
+        qubit.apply_gate(&pauli_y);
+        assert_eq!(
+            qubit.state(),
+            Vector2::new(Complex::new(0.0, -1.0), Complex::new(0.0, 0.0))
+        );
+    }
+
+    #[test]
+    fn test_pauli_z_gate() {
+        let pauli_z = PauliZ::new();
+
+        let mut qubit = Qubit::basis0();
+        qubit.apply_gate(&pauli_z);
+        assert_eq!(qubit.state(), Qubit::basis0().state());
+
+        qubit = Qubit::basis1();
+        println!("{:?}", qubit);
+        qubit.apply_gate(&pauli_z);
+        println!("{:?}", qubit);
+
+        assert_eq!(
+            qubit.state(),
+            Qubit::new_from_amplitudes(0.0, 0.0, -1.0, 0.0).state()
         );
     }
 }
