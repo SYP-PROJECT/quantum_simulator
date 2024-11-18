@@ -1,15 +1,26 @@
+use gate::{Hadamard, Identity, PauliX};
 use qubit::Qubit;
 
+mod gate;
 mod qubit;
 
 fn main() {
-    let _qubit1 = Qubit::new(1.0, 0.0);
-    let _qubit2 = Qubit::new(0.0, 1.0);
-    let _qubit3 = Qubit::new(3.0, 2.0);
-    let _qubit4 = Qubit::new(1.0 / f64::sqrt(2.0), 1.0 / f64::sqrt(2.0));
+    let mut qubit1 = Qubit::new();
+    println!("{:?}", qubit1);
 
-    println!("{:?}", _qubit1);
-    println!("{:?}", _qubit2);
-    println!("{:?}", _qubit3);
-    println!("{:?}", _qubit4);
+    let identity = Identity::new();
+    qubit1.apply_gate(&identity);
+
+    println!("{:?}", qubit1);
+
+    let paulix = PauliX::new();
+    qubit1.apply_gate(&paulix);
+    println!("{:?}", qubit1);
+
+    qubit1.apply_gate(&paulix);
+    println!("{:?}", qubit1);
+
+    let hadamard = Hadamard::new();
+    qubit1.apply_gate(&hadamard);
+    println!("{:?}", qubit1);
 }
