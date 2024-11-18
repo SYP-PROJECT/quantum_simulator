@@ -1,28 +1,69 @@
-use std::fmt::{ Debug, Formatter, Pointer};
-use float_cmp::approx_eq;
-use nalgebra::{SVector, Vector2};
+use nalgebra::{Complex, ComplexField, Vector2};
+use rand::prelude::*;
+use std::fmt::{Debug, Formatter};
+
+use crate::gate::Gate;
+
+pub type Measurment = u8;
 
 pub struct Qubit {
-    a: f64,
-    b: f64,
-    vector_representation: SVector<f64, 2>
+    state: Vector2<Complex<f64>>,
 }
 
 impl Qubit {
-    pub fn new(a: f64, b: f64) -> Option<Self> {
-        let amplitude = (a.powi(2) + b.powi(2)).sqrt();
-
-        if !approx_eq!(f64, amplitude, 1.0, ulps = 2) {
-            println!("Invalid probability amplitudes.");
-            return None;
+    pub fn new() -> Self {
+        Self {
+            state: Vector2::new(Complex::new(1.0, 0.0), Complex::new(0.0, 0.0)),
         }
+    }
 
-        Some(Qubit { a, b, vector_representation: Vector2::new(a, b) })
+    pub fn basis0() -> Self {
+        Self::new()
+    }
+
+    pub fn basis1() -> Self {
+        Self::new_from_vec(Vector2::new(Complex::new(0.0, 0.0), Complex::new(1.0, 0.0)))
+    }
+
+    pub fn new_from_vec(state: Vector2<Complex<f64>>) -> Self {
+        Self {
+            state: state.normalize(),
+        }
+    }
+
+    pub fn apply_gate(&mut self, gate: &impl Gate) {
+        self.state = gate.matrix_representation() * self.state;
+    }
+
+    pub fn measure(&mut self) -> Measurment {
+        let mut rng = rand::thread_rng();
+        let random_num = rng.gen_range(0.0_f64..1.0);
+        let prob_0 = self.state[0].norm_sqr();
+
+        if random_num < prob_0 {
+            self.state = Vector2::new(Complex::new(1.0, 0.0), Complex::new(0.0, 0.0));
+            0
+        } else {
+            self.state = Vector2::new(Complex::new(0.0, 0.0), Complex::new(1.0, 0.0));
+            1
+        }
     }
 }
 
 impl Debug for Qubit {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self.vector_representation)
+        let number1 = if self.state.x.imaginary() >= 0.0 {
+            format!("{}+{}i", self.state.x.real(), self.state.x.imaginary())
+        } else {
+            format!("{}-{}i", self.state.x.real(), self.state.x.imaginary())
+        };
+
+        let number2 = if self.state.y.imaginary() >= 0.0 {
+            format!("{}+{}i", self.state.y.real(), self.state.y.imaginary())
+        } else {
+            format!("{}-{}i", self.state.y.real(), self.state.y.imaginary())
+        };
+
+        write!(f, "[{}, {}]", number1, number2)
     }
 }
