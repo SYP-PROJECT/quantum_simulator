@@ -71,7 +71,7 @@ impl Debug for Qubit {
         let number2 = if self.state.y.imaginary() >= 0.0 {
             format!("{}+{}i", self.state.y.real(), self.state.y.imaginary())
         } else {
-            format!("{}-{}i", self.state.y.real(), self.state.y.imaginary())
+            format!("{}{}i", self.state.y.real(), self.state.y.imaginary())
         };
 
         write!(f, "[{}, {}]", number1, number2)
@@ -109,6 +109,14 @@ mod tests {
         assert_eq!(
             Qubit::new_from_vec(Vector2::new(Complex::new(1.0, 1.0), Complex::new(1.0, 1.0))).state,
             Qubit::new_from_amplitudes(1.0, 1.0, 1.0, 1.0).state
+        );
+    }
+
+    #[test]
+    fn check_debug_represantation() {
+        assert_eq!(
+            String::from("[0.5+0.5i, 0.5-0.5i]"),
+            format!("{:?}", Qubit::new_from_amplitudes(1.0, 1.0, 1.0, -1.0))
         );
     }
 }
