@@ -22,12 +22,12 @@ QuanVi is a web-based application designed to simulate and visualize quantum cir
 - People who have and interest in the world of quantum computing.
 
 ### Project Milestones
- - Product description, use case Diagram (Nico, Roland, Vincent)
- - Creation of basic simulation of qbits and single qbit circuit elements (Zsombor)
- - Basic CI/CD pipeline (Vincent)
- - Implementation of basic editor and visualizer (Nico, Roland)
- - Implementation of multi qbit circuit elements (Zsombor)
- - Implementation of user friendly tutorials (Nico, Roland, Vincent)
- - Create github action for testing (Vincent)
+ - Completion of product description and use case Diagram (Nico, Roland, Vincent) - 19.11.2024
+ - Finished basic simulation of qbits and single qbit circuit elements (Zsombor) - 03.12.2024
+ - Finished Basic CI/CD pipeline (Vincent) - 17.12.2024
+ - Finished implementation of basic editor and visualizer (Nico, Roland) - 03.12.2024
+ - Finished implementation of multi qbit circuit elements (Zsombor) - 17.12.2024
+ - Finished implementation of user friendly tutorials (Nico, Roland, Vincent) - 21.01.2025
+ - Completed creation of github action for testing (Vincent) - 19.11.2024
 
 QuanVi provides a hands-on experience for users to deepen their knowledge of quantum circuits, making the abstract world of quantum computing more accessible.
