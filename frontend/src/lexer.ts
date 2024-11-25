@@ -25,6 +25,7 @@ export class Lexer {
     { type: TokenType.CREATE, regex: /^create/ },
     { type: TokenType.QUBIT, regex: /^qubit/ },
     { type: TokenType.CONNECT, regex: /^connect/ },
+    { type: TokenType.IMAGINARY_UNIT, regex: /^i(?![a-zA-Z0-9_])/ },
     { type: TokenType.IDENTIFIER, regex: /^[a-zA-Z_][a-zA-Z0-9_]*/ },
     { type: TokenType.EQUALS, regex: /^=/ },
     { type: TokenType.COMMA, regex: /^,/ },
@@ -34,8 +35,7 @@ export class Lexer {
     { type: TokenType.PLUS, regex: /^\+/ },
     { type: TokenType.MINUS, regex: /^-/ },
     { type: TokenType.NUMBER, regex: /^[0-9]+(\.[0-9]+)?/ },
-    { type: TokenType.IMAGINARY_UNIT, regex: /^i/ },
-    { type: TokenType.WHITESPACE, regex: /^\s+/ }
+    { type: TokenType.WHITESPACE, regex: /^\s+/ },
   ];
 
   static tokenize(input: string): Token[] {
