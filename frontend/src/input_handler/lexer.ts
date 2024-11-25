@@ -1,4 +1,4 @@
-enum TokenType {
+export enum TokenType {
   CREATE = "CREATE",
   QUBIT = "QUBIT",
   CONNECT = "CONNECT",
@@ -15,7 +15,7 @@ enum TokenType {
   WHITESPACE = "WHITESPACE"
 }
 
-interface Token {
+export interface Token {
   type: TokenType;
   value: string;
 }
