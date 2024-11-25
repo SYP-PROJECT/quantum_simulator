@@ -21,50 +21,102 @@ export interface Token {
 }
 
 export class Lexer {
-  private static rules: { type: TokenType; regex: RegExp }[] = [
-    { type: TokenType.CREATE, regex: /^create/ },
-    { type: TokenType.QUBIT, regex: /^qubit/ },
-    { type: TokenType.CONNECT, regex: /^connect/ },
-    { type: TokenType.IMAGINARY_UNIT, regex: /^i(?![a-zA-Z0-9_])/ },
-    { type: TokenType.IDENTIFIER, regex: /^[a-zA-Z_][a-zA-Z0-9_]*/ },
-    { type: TokenType.EQUALS, regex: /^=/ },
-    { type: TokenType.COMMA, regex: /^,/ },
-    { type: TokenType.SEMICOLON, regex: /^;/ },
-    { type: TokenType.LBRACKET, regex: /^\[/ },
-    { type: TokenType.RBRACKET, regex: /^\]/ },
-    { type: TokenType.PLUS, regex: /^\+/ },
-    { type: TokenType.MINUS, regex: /^-/ },
-    { type: TokenType.NUMBER, regex: /^[0-9]+(\.[0-9]+)?/ },
-    { type: TokenType.WHITESPACE, regex: /^\s+/ },
-  ];
+  private input: string = "";
+  private position: number = 0;
 
-  static tokenize(input: string): Token[] {
+  constructor(input: string) {
+    this.input = input;
+  }
+
+  tokenize(): Token[] {
     const tokens: Token[] = [];
 
-    let remaining = input;
+    while (this.position < this.input.length) {
+      const char = this.input[this.position];
 
-    while (remaining.length > 0) {
-      let matched = false;
+      if (/\s/.test(char)) {
+        this.position++;
+        continue;
+      }
 
-      for (const { type, regex } of this.rules) {
-        const match = regex.exec(remaining);
+      if (/[a-zA-Z]/.test(char)) {
+        const word = this.readWhile(/[a-zA-Z0-9]/);
 
-        if (match) {
-          matched = true;
+        switch (word) {
+          case "create":
+            tokens.push({ type: TokenType.CREATE, value: word });
+            break;
+          case "qubit":
+            tokens.push({ type: TokenType.QUBIT, value: word });
+            break;
+          case "connect":
+            tokens.push({ type: TokenType.CONNECT, value: word });
+            break;
+          case "i":
+            const prevToken = tokens[tokens.length - 1];
 
-          if (type !== TokenType.WHITESPACE) {
-            tokens.push({ type, value: match[0] });
-          }
-          remaining = remaining.slice(match[0].length);
-          break;
+            if (prevToken && prevToken.type === TokenType.NUMBER) {
+              tokens.push({ type: TokenType.IMAGINARY_UNIT, value: word });
+            }
+            else {
+              tokens.push({ type: TokenType.IDENTIFIER, value: word });
+            }
+            break;
+          default:
+            tokens.push({ type: TokenType.IDENTIFIER, value: word });
+            break;
         }
+        continue;
       }
 
-      if (!matched) {
-        throw new Error(`Unexpected token: ${remaining[0]}`);
+      if (/\d/.test(char) || char === ".") {
+        const number = this.readWhile(/[0-9.]/);
+
+        if (number.includes(".") && number.split(".").length > 2) {
+          throw new Error(`Invalid number format: ${number}`);
+        }
+        tokens.push({ type: TokenType.NUMBER, value: number });
+        continue;
       }
+
+
+      switch (char) {
+        case "+":
+          tokens.push({ type: TokenType.PLUS, value: char });
+          break;
+        case "-":
+          tokens.push({ type: TokenType.MINUS, value: char });
+          break;
+        case ",":
+          tokens.push({ type: TokenType.COMMA, value: char });
+          break;
+        case "=":
+          tokens.push({ type: TokenType.EQUALS, value: char });
+          break;
+        case ";":
+          tokens.push({ type: TokenType.SEMICOLON, value: char });
+          break;
+        case "[":
+          tokens.push({ type: TokenType.LBRACKET, value: char });
+          break;
+        case "]":
+          tokens.push({ type: TokenType.RBRACKET, value: char });
+          break;
+        default:
+          throw new Error(`Unexpected token: ${char}`);
+      }
+      this.position++;
     }
 
     return tokens;
+  }
+
+  private readWhile(pattern: RegExp): string {
+    let result = "";
+    while (this.position < this.input.length && pattern.test(this.input[this.position])) {
+      result += this.input[this.position];
+      this.position++;
+    }
+    return result;
   }
 }
