@@ -39,8 +39,8 @@ export class Lexer {
         continue;
       }
 
-      if (/[a-zA-Z]/.test(char)) {
-        const word = this.readWhile(/[a-zA-Z0-9]/);
+      if (/[a-zA-Z_]/.test(char)) {
+        const word = this.readWhile(/[a-zA-Z0-9_]/);
 
         switch (word) {
           case "create":
