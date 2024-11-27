@@ -1,4 +1,4 @@
-import { TokenType, Token } from "./lexer";
+import { Token, TokenType } from "./lexer";
 
 enum NodeType {
   Program = "Program",
@@ -9,43 +9,43 @@ enum NodeType {
   Number = "Number",
 }
 
-type ProgramNode = {
+export type ProgramNode = {
   type: NodeType.Program;
   statements: StatementNode[];
 }
 
-type StatementNode = CreateStatementNode | ConnectStatementNode;
+export type StatementNode = CreateStatementNode | ConnectStatementNode;
 
-type CreateStatementNode = {
+export type CreateStatementNode = {
   type: NodeType.CreateStatement;
   identifier: string;
   complexArray: ComplexArrayNode;
 };
 
-type ConnectStatementNode = {
+export type ConnectStatementNode = {
   type: NodeType.ConnectStatement;
   identifier1: string;
   identifier2: string;
 }
 
-type ComplexArrayNode = {
+export type ComplexArrayNode = {
   type: NodeType.ComplexArray;
   values: ComplexNumberNode[];
 }
 
-type ComplexNumberNode = {
+export type ComplexNumberNode = {
   type: NodeType.ComplexNumber;
   realPart: NumberNode;
   sign: string;
   imaginaryPart: NumberNode;
 }
 
-type NumberNode = {
+export type NumberNode = {
   type: NodeType.Number;
   value: number;
 }
 
-class Parser {
+export class Parser {
   private tokens: Token[];
   private current: number;
 
@@ -55,7 +55,7 @@ class Parser {
   }
 
   private peek(): Token | null {
-    return this.current < this.tokens.length ? this.tokens[this.current + 1] : null;
+    return this.current < this.tokens.length ? this.tokens[this.current] : null;
   }
 
   private consume(expectedType: TokenType): Token {
@@ -118,6 +118,7 @@ class Parser {
     const complexNumbers: ComplexNumberNode[] = [this.parseComplexNumber()];
 
     while (this.peek() && this.peek()!.type === TokenType.COMMA) {
+      this.consume(TokenType.COMMA);
       complexNumbers.push(this.parseComplexNumber());
     }
 
