@@ -10,6 +10,7 @@ describe("Lexer", () => {
       { type: TokenType.CREATE, value: "create" },
       { type: TokenType.QUBIT, value: "qubit" },
       { type: TokenType.CONNECT, value: "connect" },
+      { type: TokenType.EOF, value: "" },
     ]);
   });
 
@@ -22,6 +23,7 @@ describe("Lexer", () => {
       { type: TokenType.NUMBER, value: "3.14" },
       { type: TokenType.NUMBER, value: "5" },
       { type: TokenType.IMAGINARY_UNIT, value: "i" },
+      { type: TokenType.EOF, value: "" },
     ]);
   });
 
@@ -37,6 +39,7 @@ describe("Lexer", () => {
       { type: TokenType.SEMICOLON, value: ";" },
       { type: TokenType.LBRACKET, value: "[" },
       { type: TokenType.RBRACKET, value: "]" },
+      { type: TokenType.EOF, value: "" },
     ]);
   });
 
@@ -48,7 +51,8 @@ describe("Lexer", () => {
       { type: TokenType.IDENTIFIER, value: "myIdentifier" },
       { type: TokenType.IDENTIFIER, value: "another1" },
       { type: TokenType.IDENTIFIER, value: "_third" },
-      { type: TokenType.IDENTIFIER, value: "i" }
+      { type: TokenType.IDENTIFIER, value: "i" },
+      { type: TokenType.EOF, value: "" },
     ]);
   });
 
@@ -73,6 +77,7 @@ describe("Lexer", () => {
       { type: TokenType.IMAGINARY_UNIT, value: "i" },
       { type: TokenType.RBRACKET, value: "]" },
       { type: TokenType.SEMICOLON, value: ";" },
+      { type: TokenType.EOF, value: "" },
     ]);
   });
 
@@ -98,6 +103,7 @@ describe("Lexer", () => {
       { type: TokenType.IMAGINARY_UNIT, value: "i" },
       { type: TokenType.RBRACKET, value: "]" },
       { type: TokenType.SEMICOLON, value: ";" },
+      { type: TokenType.EOF, value: "" },
     ]);
   });
 
@@ -123,7 +129,7 @@ describe("Lexer", () => {
       { type: TokenType.IMAGINARY_UNIT, value: "i" },
       { type: TokenType.RBRACKET, value: "]" },
       { type: TokenType.SEMICOLON, value: ";" },
-
+      { type: TokenType.EOF, value: "" },
     ]);
   });
 
@@ -148,6 +154,7 @@ describe("Lexer", () => {
       { type: TokenType.IMAGINARY_UNIT, value: "i" },
       { type: TokenType.RBRACKET, value: "]" },
       { type: TokenType.SEMICOLON, value: ";" },
+      { type: TokenType.EOF, value: "" },
     ]);
   });
 
