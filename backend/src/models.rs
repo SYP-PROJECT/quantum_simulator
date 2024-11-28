@@ -21,8 +21,8 @@ pub struct ProgramNode {
 #[derive(Deserialize, Debug)]
 #[serde(untagged)]
 enum StatementNode {
-    Create(),
-    Connect(),
+    Create(CreateStatementNode),
+    Connect(ConnectStatementNode),
 }
 
 #[derive(Deserialize, Debug)]
