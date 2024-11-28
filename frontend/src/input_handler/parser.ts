@@ -35,9 +35,8 @@ export type ComplexArrayNode = {
 
 export type ComplexNumberNode = {
   type: NodeType.ComplexNumber;
-  realPart: NumberNode;
-  sign: string;
-  imaginaryPart: NumberNode;
+  realPart: NumberNode | null;
+  imaginaryPart: NumberNode | null;
 }
 
 export type NumberNode = {
@@ -127,17 +126,45 @@ export class Parser {
   }
 
   private parseComplexNumber(): ComplexNumberNode {
-    const realPart = this.parseNumber();
+    let realPart: NumberNode | null = null;
+    let imaginaryPart: NumberNode | null = null;
 
-    const signToken = this.peek();
-    if (!signToken || (signToken.type !== TokenType.PLUS && signToken.type !== TokenType.MINUS)) {
-      throw new Error(`Expected '+' or '-' but got ${signToken?.type || "end of input"} `);
+    let sign = "";
+    if (this.peek()?.type === TokenType.PLUS || this.peek()?.type === TokenType.MINUS) {
+      sign = this.consume(this.peek()!.type).value;
     }
 
-    const sign = this.consume(signToken.type).value;
-    const imaginaryPart = this.parseNumber();
-    this.consume(TokenType.IMAGINARY_UNIT);
-    return { type: NodeType.ComplexNumber, realPart, sign, imaginaryPart };
+    if (this.peek()?.type === TokenType.NUMBER) {
+      realPart = this.parseNumber();
+      if (sign) {
+        realPart.value = parseFloat(sign + realPart.value);
+      }
+      sign = "";
+    }
+
+    if (this.peek()?.type === TokenType.PLUS || this.peek()?.type === TokenType.MINUS) {
+      sign = this.consume(this.peek()!.type).value;
+    }
+
+    if (this.peek()?.type === TokenType.NUMBER) {
+      imaginaryPart = this.parseNumber();
+
+      if (sign) {
+        imaginaryPart.value = parseFloat(sign + imaginaryPart.value);
+      }
+      this.consume(TokenType.IMAGINARY_UNIT);
+    }
+
+    if (!realPart && !imaginaryPart) {
+      throw new Error("Invalid complex number: both real and imaginary parts are missing");
+    }
+
+    return {
+      type: NodeType.ComplexNumber,
+      realPart,
+      imaginaryPart,
+    };
+
   }
 
   private parseNumber(): NumberNode {
