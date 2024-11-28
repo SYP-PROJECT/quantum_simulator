@@ -12,7 +12,8 @@ export enum TokenType {
   MINUS = "MINUS",
   NUMBER = "NUMBER",
   IMAGINARY_UNIT = "IMAGINARY_UNIT",
-  WHITESPACE = "WHITESPACE"
+  WHITESPACE = "WHITESPACE",
+  EOF = ""
 }
 
 export interface Token {
@@ -108,6 +109,7 @@ export class Lexer {
       this.position++;
     }
 
+    tokens.push({ type: TokenType.EOF, value: "" });
     return tokens;
   }
 
