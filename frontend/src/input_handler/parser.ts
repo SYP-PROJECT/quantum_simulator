@@ -123,8 +123,6 @@ export class Parser {
     this.consume(TokenType.MEASURE);
     const identifier = this.consume(TokenType.IDENTIFIER).value;
 
-    this.consume(TokenType.SEMICOLON);
-
     return { type: NodeType.MeasureStatement, identifier };
   }
 

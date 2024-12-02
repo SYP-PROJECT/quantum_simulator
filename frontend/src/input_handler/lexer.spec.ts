@@ -1,4 +1,3 @@
-import { Token } from "monaco-editor";
 import { Lexer, TokenType } from "./lexer"
 
 describe("Lexer", () => {
