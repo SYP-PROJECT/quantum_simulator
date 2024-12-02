@@ -21,6 +21,7 @@ export default function Home() {
 
       try {
         const programNode = parser.parseProgram();
+        console.log(JSON.stringify(programNode));
 
         const response = await fetch("http://localhost:8000/api/", {
           headers: {
@@ -31,8 +32,8 @@ export default function Home() {
           body: JSON.stringify(programNode)
         });
 
-        const json = await response.text();
-        setOutput(json);
+        const json: string[] = await response.json();
+        setOutput(json.join("\n"));
       }
       catch (e) {
         const message = e instanceof Error ? e.message : String(e);
