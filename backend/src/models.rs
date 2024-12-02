@@ -1,12 +1,13 @@
 use serde::Deserialize;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "PascalCase")]
 pub enum NodeType {
     Program,
     CreateStatement,
     ConnectStatement,
     MeasureStatement,
+    DisplayStatement,
     ComplexArray,
     ComplexNumber,
     Number,
@@ -25,7 +26,6 @@ pub enum StatementNode {
     Create(CreateStatementNode),
     Connect(ConnectStatementNode),
     Measure(MeasureStatementNode),
-    Display(DisplayStatementNode),
 }
 
 #[derive(Deserialize, Debug)]
@@ -47,13 +47,6 @@ pub struct ConnectStatementNode {
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct MeasureStatementNode {
-    pub r#type: NodeType,
-    pub identifier: String,
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct DisplayStatementNode {
     pub r#type: NodeType,
     pub identifier: String,
 }

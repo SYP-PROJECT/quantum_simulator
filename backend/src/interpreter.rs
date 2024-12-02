@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::{
-    models::{ComplexNumberNode, ProgramNode, StatementNode},
+    models::{ComplexNumberNode, NodeType, ProgramNode, StatementNode},
     qubit::Qubit,
 };
 
@@ -48,7 +48,7 @@ fn interpret_statement(
             }
         }
         //StatementNode::Connect(_) => None,
-        StatementNode::Measure(measure_statement) => {
+        StatementNode::Measure(measure_statement) if measure_statement.r#type == NodeType::MeasureStatement => {
             let identifier = measure_statement.identifier;
 
             if !variables.contains_key(&identifier) {
@@ -57,8 +57,17 @@ fn interpret_statement(
                 Some(format!("Result of measurment: {}", variables.get_mut(&identifier).unwrap().measure()))
             }
         }
+        
+        StatementNode::Measure(measure_statement) if measure_statement.r#type == NodeType::DisplayStatement => {
+            let identifier = measure_statement.identifier;
 
-        //StatementNode::Display(_) => None,
+            if !variables.contains_key(&identifier) {
+                Some(format!("Cannot resolve symbol '{}'", identifier))
+            } else {
+                Some(format!("{}: {:?}", identifier, variables.get_mut(&identifier).unwrap()))
+            }
+        }
+        
         _ => Some(format!("Unknown node type: "))
     }
 }
