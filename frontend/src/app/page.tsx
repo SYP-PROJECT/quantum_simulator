@@ -17,7 +17,7 @@ export default function Home() {
           <Editor
               height="100vh"
               width="100%"
-              defaultLanguage="javascript"
+              defaultLanguage=""
               defaultValue="// Start coding here..."
               theme="vs-dark"
           />
