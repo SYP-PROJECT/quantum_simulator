@@ -8,3 +8,7 @@ pub async fn simulation_handler(
     println!("{:?}", body);
     Ok(StatusCode::NO_CONTENT)
 }
+
+pub async fn up() -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+    Ok((StatusCode::OK, Json("The server is up!")))
+}
