@@ -2,6 +2,7 @@ export enum TokenType {
   CREATE = "CREATE",
   QUBIT = "QUBIT",
   CONNECT = "CONNECT",
+  MEASURE = "MEASURE",
   IDENTIFIER = "IDENTIFIER",
   EQUALS = "EQUALS",
   COMMA = "COMMA",
@@ -25,10 +26,10 @@ export class Lexer {
   private input: string = "";
   private position: number = 0;
 
-  constructor(){
-    
+  constructor() {
+
   }
-  
+
   tokenize(): Token[] {
     const tokens: Token[] = [];
 
@@ -52,6 +53,9 @@ export class Lexer {
             break;
           case "connect":
             tokens.push({ type: TokenType.CONNECT, value: word });
+            break;
+          case "measure":
+            tokens.push({ type: TokenType.MEASURE, value: word });
             break;
           case "i":
             const prevToken = tokens[tokens.length - 1];
@@ -121,8 +125,8 @@ export class Lexer {
     }
     return result;
   }
-  
-  reset(input: string){
+
+  reset(input: string) {
     this.input = input;
     this.position = 0;
   }

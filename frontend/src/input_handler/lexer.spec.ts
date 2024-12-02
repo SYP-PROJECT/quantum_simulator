@@ -1,3 +1,4 @@
+import { Token } from "monaco-editor";
 import { Lexer, TokenType } from "./lexer"
 
 describe("Lexer", () => {
@@ -130,6 +131,18 @@ describe("Lexer", () => {
       { type: TokenType.RBRACKET, value: "]" },
       { type: TokenType.SEMICOLON, value: ";" },
       { type: TokenType.EOF, value: "" },
+    ]);
+  });
+
+  test("measure qubit", () => {
+    lexer.reset("measure q1;");
+    const tokens = lexer.tokenize();
+
+    expect(tokens).toEqual([
+      { type: TokenType.MEASURE, value: "measure" },
+      { type: TokenType.IDENTIFIER, value: "q1" },
+      { type: TokenType.SEMICOLON, value: ";" },
+      { type: TokenType.EOF, value: "" }
     ]);
   });
 
