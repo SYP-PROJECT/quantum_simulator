@@ -1,10 +1,10 @@
 use axum::{http::StatusCode, response::IntoResponse, Json};
 
-use crate::models::ProgramNode;
+use crate::{interpreter::interpret_program, models::ProgramNode};
 
 pub async fn simulation_handler(
     Json(body): Json<ProgramNode>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-    println!("{:?}", body);
+    let result = interpret_program(body);
     Ok(StatusCode::NO_CONTENT)
 }

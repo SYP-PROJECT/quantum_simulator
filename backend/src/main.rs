@@ -4,6 +4,7 @@ use tower_http::cors::CorsLayer;
 
 mod gate;
 mod handler;
+mod interpreter;
 mod models;
 mod qubit;
 mod route;
