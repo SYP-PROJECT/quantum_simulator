@@ -13,7 +13,7 @@ export enum TokenType {
   NUMBER = "NUMBER",
   IMAGINARY_UNIT = "IMAGINARY_UNIT",
   WHITESPACE = "WHITESPACE",
-  EOF = ""
+  EOF = "EOF"
 }
 
 export interface Token {
@@ -25,10 +25,10 @@ export class Lexer {
   private input: string = "";
   private position: number = 0;
 
-  constructor(input: string) {
-    this.input = input;
+  constructor(){
+    
   }
-
+  
   tokenize(): Token[] {
     const tokens: Token[] = [];
 
@@ -120,5 +120,10 @@ export class Lexer {
       this.position++;
     }
     return result;
+  }
+  
+  reset(input: string){
+    this.input = input;
+    this.position = 0;
   }
 }

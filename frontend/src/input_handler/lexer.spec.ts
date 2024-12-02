@@ -1,9 +1,9 @@
 import { Lexer, TokenType } from "./lexer"
 
 describe("Lexer", () => {
-
+  const lexer = new Lexer();
   test("keywords", () => {
-    const lexer = new Lexer("create qubit connect");
+    lexer.reset("create qubit connect");
     const tokens = lexer.tokenize();
 
     expect(tokens).toEqual([
@@ -15,7 +15,7 @@ describe("Lexer", () => {
   });
 
   test("numbers and imaginary unit", () => {
-    const lexer = new Lexer("42 3.14 5i");
+    lexer.reset("42 3.14 5i");
     const tokens = lexer.tokenize();
 
     expect(tokens).toEqual([
@@ -28,7 +28,7 @@ describe("Lexer", () => {
   });
 
   test("symbols", () => {
-    const lexer = new Lexer("= + - , ; [ ]");
+    lexer.reset("= + - , ; [ ]");
     const tokens = lexer.tokenize();
 
     expect(tokens).toEqual([
@@ -44,7 +44,7 @@ describe("Lexer", () => {
   });
 
   test("identifiers", () => {
-    const lexer = new Lexer("myIdentifier another1 _third i");
+    lexer.reset("myIdentifier another1 _third i");
     const tokens = lexer.tokenize();
 
     expect(tokens).toEqual([
@@ -57,7 +57,7 @@ describe("Lexer", () => {
   });
 
   test("a simple create qubit statement", () => {
-    const lexer = new Lexer("create qubit q1 = [1 + 2i, 2 - 3i];");
+    lexer.reset("create qubit q1 = [1 + 2i, 2 - 3i];");
     const tokens = lexer.tokenize();
 
     expect(tokens).toEqual([
@@ -82,7 +82,7 @@ describe("Lexer", () => {
   });
 
   test("create with floating points", () => {
-    const lexer = new Lexer("create qubit q2 = [1.5 + 2.3i, -3.1 - 4.0i];");
+    lexer.reset("create qubit q2 = [1.5 + 2.3i, -3.1 - 4.0i];");
     const tokens = lexer.tokenize();
 
     expect(tokens).toEqual([
@@ -108,7 +108,7 @@ describe("Lexer", () => {
   });
 
   test("create with i identifier", () => {
-    const lexer = new Lexer("create qubit i = [1 + 2i, -3 - 4i];");
+    lexer.reset("create qubit i = [1 + 2i, -3 - 4i];");
     const tokens = lexer.tokenize();
 
     expect(tokens).toEqual([
@@ -134,7 +134,7 @@ describe("Lexer", () => {
   });
 
   test("create with whitespace", () => {
-    const lexer = new Lexer("   create    qubit   q1 = [ 1 + 2i , 2 - 3i ]; ");
+    lexer.reset("   create    qubit   q1 = [ 1 + 2i , 2 - 3i ]; ");
     const tokens = lexer.tokenize();
 
     expect(tokens).toEqual([
@@ -159,12 +159,12 @@ describe("Lexer", () => {
   });
 
   test("throws error for unexpected tokens", () => {
-    const lexer = new Lexer("create unknown@");
+    lexer.reset("create unknown@");
     expect(() => lexer.tokenize()).toThrowError("Unexpected token: @");
   });
 
   test("throws error for invalid number format", () => {
-    const lexer = new Lexer("4.2.3");
+    lexer.reset("4.2.3");
 
     expect(() => lexer.tokenize()).toThrowError("Invalid number format: 4.2.3");
   });
