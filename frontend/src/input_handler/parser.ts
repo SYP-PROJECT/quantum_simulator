@@ -45,12 +45,10 @@ export type NumberNode = {
 }
 
 export class Parser {
-  private tokens: Token[];
-  private current: number;
+  private tokens: Token[] = [];
+  private current: number = 0;
 
-  constructor(tokens: Token[]) {
-    this.tokens = tokens;
-    this.current = 0;
+  constructor() {
   }
 
   private peek(): Token | null {
@@ -170,5 +168,10 @@ export class Parser {
   private parseNumber(): NumberNode {
     const token = this.consume(TokenType.NUMBER);
     return { type: NodeType.Number, value: parseFloat(token.value) };
+  }
+  
+  reset(tokens: Token[]){
+    this.tokens = tokens;
+    this.current = 0;
   }
 }
