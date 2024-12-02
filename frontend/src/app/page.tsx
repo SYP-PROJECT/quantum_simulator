@@ -18,17 +18,30 @@ export default function Home() {
     if (editorRef.current) {
       lexer.reset(editorRef.current.getValue());
       parser.reset(lexer.tokenize());
+
       try {
-        setOutput(JSON.stringify(parser.parseProgram()));
+        const programNode = parser.parseProgram();
+
+        const response = await fetch("http://localhost:8000/api/", {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          mode: "cors",
+          method: 'POST',
+          body: JSON.stringify(programNode)
+        });
+
+        const json = await response.text();
+        setOutput(json);
       }
-      catch(e){
+      catch (e) {
         const message = e instanceof Error ? e.message : String(e);
         setOutput(message);
       }
     }
   };
-  
-  const handleEditorMount = (editor: monaco.editor.IStandaloneCodeEditor, ) => {
+
+  const handleEditorMount = (editor: monaco.editor.IStandaloneCodeEditor,) => {
     editorRef.current = editor;
   }
 
@@ -42,7 +55,7 @@ export default function Home() {
           defaultLanguage=""
           defaultValue="// Start coding here..."
           theme="vs-dark"
-          onMount = {handleEditorMount}
+          onMount={handleEditorMount}
         />
       </div>
 
