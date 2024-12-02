@@ -21,7 +21,6 @@ export default function Home() {
 
       try {
         const programNode = parser.parseProgram();
-        console.log(JSON.stringify(programNode));
 
         const response = await fetch("http://localhost:8000/api/", {
           headers: {

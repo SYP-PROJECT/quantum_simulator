@@ -1,4 +1,6 @@
+import { type } from "os";
 import { Lexer, TokenType } from "./lexer"
+import { Token } from "monaco-editor";
 
 describe("Lexer", () => {
   const lexer = new Lexer();
@@ -139,6 +141,18 @@ describe("Lexer", () => {
 
     expect(tokens).toEqual([
       { type: TokenType.MEASURE, value: "measure" },
+      { type: TokenType.IDENTIFIER, value: "q1" },
+      { type: TokenType.SEMICOLON, value: ";" },
+      { type: TokenType.EOF, value: "" }
+    ]);
+  });
+
+  test("display qubit", () => {
+    lexer.reset("measure q1;");
+    const tokens = lexer.tokenize();
+
+    expect(tokens).toEqual([
+      { type: TokenType.DISPLAY, value: "display" },
       { type: TokenType.IDENTIFIER, value: "q1" },
       { type: TokenType.SEMICOLON, value: ";" },
       { type: TokenType.EOF, value: "" }

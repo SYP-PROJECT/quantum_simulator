@@ -5,6 +5,7 @@ enum NodeType {
   CreateStatement = "CreateStatement",
   ConnectStatement = "ConnectStatement",
   MeasureStatement = "MeasureStatement",
+  DisplayStatement = "DisplayStatement",
   ComplexArray = "ComplexArray",
   ComplexNumber = "ComplexNumber",
   Number = "Number",
@@ -15,7 +16,7 @@ export type ProgramNode = {
   statements: StatementNode[];
 }
 
-export type StatementNode = CreateStatementNode | ConnectStatementNode | MeasureStatementNode;
+export type StatementNode = CreateStatementNode | ConnectStatementNode | MeasureStatementNode | DisplayStatementNode;
 
 export type CreateStatementNode = {
   type: NodeType.CreateStatement;
@@ -31,6 +32,11 @@ export type ConnectStatementNode = {
 
 export type MeasureStatementNode = {
   type: NodeType.MeasureStatement;
+  identifier: string;
+}
+
+export type DisplayStatementNode = {
+  type: NodeType.DisplayStatement;
   identifier: string;
 }
 
@@ -93,6 +99,9 @@ export class Parser {
     else if (token?.type === TokenType.MEASURE) {
       return this.parseMeasureStatement();
     }
+    else if (token?.type === TokenType.DISPLAY) {
+      return this.parseDisplayStatement();
+    }
     else {
       throw new Error(`Unexpected token ${token?.value}`);
     }
@@ -124,6 +133,13 @@ export class Parser {
     const identifier = this.consume(TokenType.IDENTIFIER).value;
 
     return { type: NodeType.MeasureStatement, identifier };
+  }
+
+  private parseDisplayStatement(): DisplayStatementNode {
+    this.consume(TokenType.DISPLAY);
+    const identifier = this.consume(TokenType.IDENTIFIER).value;
+
+    return { type: NodeType.DisplayStatement, identifier };
   }
 
   private parseComplexArray(): ComplexArrayNode {

@@ -3,6 +3,7 @@ export enum TokenType {
   QUBIT = "QUBIT",
   CONNECT = "CONNECT",
   MEASURE = "MEASURE",
+  DISPLAY = "DISPLAY",
   IDENTIFIER = "IDENTIFIER",
   EQUALS = "EQUALS",
   COMMA = "COMMA",
@@ -56,6 +57,9 @@ export class Lexer {
             break;
           case "measure":
             tokens.push({ type: TokenType.MEASURE, value: word });
+            break;
+          case "display":
+            tokens.push({ type: TokenType.DISPLAY, value: word });
             break;
           case "i":
             const prevToken = tokens[tokens.length - 1];
