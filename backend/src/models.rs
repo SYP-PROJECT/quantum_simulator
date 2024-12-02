@@ -6,6 +6,7 @@ pub enum NodeType {
     Program,
     CreateStatement,
     ConnectStatement,
+    MeasureStatement,
     ComplexArray,
     ComplexNumber,
     Number,
