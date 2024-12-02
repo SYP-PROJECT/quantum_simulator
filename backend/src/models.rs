@@ -2,7 +2,7 @@ use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
-enum NodeType {
+pub enum NodeType {
     Program,
     CreateStatement,
     ConnectStatement,
@@ -14,51 +14,67 @@ enum NodeType {
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ProgramNode {
-    r#type: NodeType,
-    statements: Vec<StatementNode>,
+    pub r#type: NodeType,
+    pub statements: Vec<StatementNode>,
 }
 
 #[derive(Deserialize, Debug)]
 #[serde(untagged)]
-enum StatementNode {
+pub enum StatementNode {
     Create(CreateStatementNode),
     Connect(ConnectStatementNode),
+    Measure(MeasureStatementNode),
+    Display(DisplayStatementNode),
 }
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-struct CreateStatementNode {
-    r#type: NodeType,
-    identifier: String,
-    complex_array: ComplexArrayNode,
+pub struct CreateStatementNode {
+    pub r#type: NodeType,
+    pub identifier: String,
+    pub complex_array: ComplexArrayNode,
 }
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-struct ConnectStatementNode {
-    r#type: NodeType,
-    identifier1: String,
-    identifier2: String,
+pub struct ConnectStatementNode {
+    pub r#type: NodeType,
+    pub identifier1: String,
+    pub identifier2: String,
 }
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-struct ComplexArrayNode {
-    r#type: NodeType,
-    values: Vec<ComplexNumberNode>,
+pub struct MeasureStatementNode {
+    pub r#type: NodeType,
+    pub identifier: String,
 }
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-struct ComplexNumberNode {
-    r#type: NodeType,
-    real_part: Option<NumberNode>,
-    imaginary_part: Option<NumberNode>,
+pub struct DisplayStatementNode {
+    pub r#type: NodeType,
+    pub identifier: String,
 }
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-struct NumberNode {
-    r#type: NodeType,
-    value: f64,
+pub struct ComplexArrayNode {
+    pub r#type: NodeType,
+    pub values: Vec<ComplexNumberNode>,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct ComplexNumberNode {
+    pub r#type: NodeType,
+    pub real_part: Option<NumberNode>,
+    pub imaginary_part: Option<NumberNode>,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct NumberNode {
+    pub r#type: NodeType,
+    pub value: f64,
 }
