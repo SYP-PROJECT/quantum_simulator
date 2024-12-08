@@ -41,7 +41,7 @@ impl Qubit {
         self.state
     }
 
-    pub fn apply_gate(&mut self, gate: &impl Gate) {
+    pub fn apply_gate(&mut self, gate: &dyn Gate) {
         self.state = gate.matrix_representation() * self.state;
     }
 

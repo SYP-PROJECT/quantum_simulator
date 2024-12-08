@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use crate::{
+    gate::{Gate, Hadamard, Identity, PauliX, PauliY, PauliZ},
     models::{ComplexNumberNode, NodeType, ProgramNode, StatementNode},
     qubit::Qubit,
 };
@@ -8,9 +9,11 @@ use crate::{
 pub fn interpret_program(program: ProgramNode) -> Vec<String> {
     let mut results = vec![];
     let mut variables: HashMap<String, Qubit> = HashMap::new();
+    let mut gates: HashMap<String, Box<dyn Gate>> = HashMap::new();
+    initialize_gate_map(&mut gates);
 
     for statement in program.statements {
-        let result = interpret_statement(statement, &mut variables);
+        let result = interpret_statement(statement, &mut variables, &mut gates);
 
         if let Some(result) = result {
             results.push(result);
@@ -25,6 +28,7 @@ pub fn interpret_program(program: ProgramNode) -> Vec<String> {
 fn interpret_statement(
     statement: StatementNode,
     variables: &mut HashMap<String, Qubit>,
+    gates: &mut HashMap<String, Box<dyn Gate>>,
 ) -> Option<String> {
     match statement {
         StatementNode::Create(create_statement) => {
@@ -47,29 +51,67 @@ fn interpret_statement(
                 None
             }
         }
-        //StatementNode::Connect(_) => None,
-        StatementNode::Measure(measure_statement) if measure_statement.r#type == NodeType::MeasureStatement => {
+
+        StatementNode::Connect(connect_statement) => {
+            let qubit_identifier = connect_statement.identifier1;
+            let gate_identifier = connect_statement.identifier2;
+
+            if !variables.contains_key(&qubit_identifier) {
+                return Some(format!("Cannot resolve symbol '{}'", qubit_identifier));
+            }
+
+            if !gates.contains_key(&gate_identifier) {
+                return Some(format!("Cannot resolve gate '{}'", gate_identifier));
+            }
+
+            let qubit = variables.get_mut(&qubit_identifier).unwrap();
+            let gate = gates.get_mut(&gate_identifier).unwrap();
+
+            qubit.apply_gate(&**gate);
+
+            None
+        }
+        StatementNode::Measure(measure_statement)
+            if measure_statement.r#type == NodeType::MeasureStatement =>
+        {
             let identifier = measure_statement.identifier;
 
             if !variables.contains_key(&identifier) {
                 Some(format!("Cannot resolve symbol '{}'", identifier))
             } else {
-                Some(format!("Result of measurment: {}", variables.get_mut(&identifier).unwrap().measure()))
+                Some(format!(
+                    "Result of measurment: {}",
+                    variables.get_mut(&identifier).unwrap().measure()
+                ))
             }
         }
-        
-        StatementNode::Measure(measure_statement) if measure_statement.r#type == NodeType::DisplayStatement => {
+
+        StatementNode::Measure(measure_statement)
+            if measure_statement.r#type == NodeType::DisplayStatement =>
+        {
             let identifier = measure_statement.identifier;
 
             if !variables.contains_key(&identifier) {
                 Some(format!("Cannot resolve symbol '{}'", identifier))
             } else {
-                Some(format!("{}: {:?}", identifier, variables.get_mut(&identifier).unwrap()))
+                Some(format!(
+                    "{}: {:?}",
+                    identifier,
+                    variables.get_mut(&identifier).unwrap()
+                ))
             }
         }
-        
-        _ => Some(format!("Unknown node type: "))
+
+        _ => Some(format!("Unknown node type: {:?}", statement)),
     }
+}
+
+fn initialize_gate_map(hashmap: &mut HashMap<String, Box<dyn Gate>>) {
+    hashmap.insert("identity".to_string(), Box::new(Identity::new()));
+    hashmap.insert("pauliX".to_string(), Box::new(PauliX::new()));
+    hashmap.insert("pauliY".to_string(), Box::new(PauliY::new()));
+    hashmap.insert("pauliZ".to_string(), Box::new(PauliZ::new()));
+    hashmap.insert("hadamard".to_string(), Box::new(Hadamard::new()));
 }
 
 fn get_real_part(complex_node: &ComplexNumberNode) -> f64 {
