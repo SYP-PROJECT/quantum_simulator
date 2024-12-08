@@ -3,7 +3,7 @@ import { Token, TokenType } from "./lexer";
 enum NodeType {
   Program = "Program",
   CreateStatement = "CreateStatement",
-  ConnectStatement = "ConnectStatement",
+  ApplyStatement = "ApplyStatement",
   MeasureStatement = "MeasureStatement",
   DisplayStatement = "DisplayStatement",
   ComplexArray = "ComplexArray",
@@ -16,7 +16,7 @@ export type ProgramNode = {
   statements: StatementNode[];
 }
 
-export type StatementNode = CreateStatementNode | ConnectStatementNode | MeasureStatementNode | DisplayStatementNode;
+export type StatementNode = CreateStatementNode | ApplyStatementNode | MeasureStatementNode | DisplayStatementNode;
 
 export type CreateStatementNode = {
   type: NodeType.CreateStatement;
@@ -24,8 +24,8 @@ export type CreateStatementNode = {
   complexArray: ComplexArrayNode;
 };
 
-export type ConnectStatementNode = {
-  type: NodeType.ConnectStatement;
+export type ApplyStatementNode = {
+  type: NodeType.ApplyStatement;
   identifier1: string;
   identifier2: string;
 }
@@ -93,7 +93,7 @@ export class Parser {
     if (token?.type === TokenType.CREATE) {
       return this.parseCreateStatement();
     }
-    else if (token?.type === TokenType.CONNECT) {
+    else if (token?.type === TokenType.APPLY) {
       return this.parseConnectStatement();
     }
     else if (token?.type === TokenType.MEASURE) {
@@ -118,14 +118,14 @@ export class Parser {
     return { type: NodeType.CreateStatement, identifier, complexArray };
   }
 
-  private parseConnectStatement(): ConnectStatementNode {
-    this.consume(TokenType.CONNECT);
+  private parseConnectStatement(): ApplyStatementNode {
+    this.consume(TokenType.APPLY);
     const identifier1 = this.consume(TokenType.IDENTIFIER).value;
 
     this.consume(TokenType.COMMA);
 
     const identifier2 = this.consume(TokenType.IDENTIFIER).value;
-    return { type: NodeType.ConnectStatement, identifier1, identifier2 };
+    return { type: NodeType.ApplyStatement, identifier1, identifier2 };
   }
 
   private parseMeasureStatement(): MeasureStatementNode {

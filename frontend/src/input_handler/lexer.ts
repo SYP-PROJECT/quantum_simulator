@@ -1,7 +1,7 @@
 export enum TokenType {
   CREATE = "CREATE",
   QUBIT = "QUBIT",
-  CONNECT = "CONNECT",
+  APPLY = "APPLY",
   MEASURE = "MEASURE",
   DISPLAY = "DISPLAY",
   IDENTIFIER = "IDENTIFIER",
@@ -52,8 +52,8 @@ export class Lexer {
           case "qubit":
             tokens.push({ type: TokenType.QUBIT, value: word });
             break;
-          case "connect":
-            tokens.push({ type: TokenType.CONNECT, value: word });
+          case "apply":
+            tokens.push({ type: TokenType.APPLY, value: word });
             break;
           case "measure":
             tokens.push({ type: TokenType.MEASURE, value: word });

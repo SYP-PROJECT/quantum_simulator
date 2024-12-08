@@ -52,9 +52,9 @@ fn interpret_statement(
             }
         }
 
-        StatementNode::Connect(connect_statement) => {
-            let qubit_identifier = connect_statement.identifier1;
-            let gate_identifier = connect_statement.identifier2;
+        StatementNode::Apply(apply_statement) => {
+            let qubit_identifier = apply_statement.identifier1;
+            let gate_identifier = apply_statement.identifier2;
 
             if !variables.contains_key(&qubit_identifier) {
                 return Some(format!("Cannot resolve symbol '{}'", qubit_identifier));

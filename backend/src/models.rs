@@ -5,7 +5,7 @@ use serde::Deserialize;
 pub enum NodeType {
     Program,
     CreateStatement,
-    ConnectStatement,
+    ApplyStatement,
     MeasureStatement,
     DisplayStatement,
     ComplexArray,
@@ -24,7 +24,7 @@ pub struct ProgramNode {
 #[serde(untagged)]
 pub enum StatementNode {
     Create(CreateStatementNode),
-    Connect(ConnectStatementNode),
+    Apply(ApplyStatement),
     Measure(MeasureStatementNode),
 }
 
@@ -38,7 +38,7 @@ pub struct CreateStatementNode {
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct ConnectStatementNode {
+pub struct ApplyStatement {
     pub r#type: NodeType,
     pub identifier1: String,
     pub identifier2: String,
