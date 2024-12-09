@@ -3,7 +3,9 @@ import { Token, TokenType } from "./lexer";
 enum NodeType {
   Program = "Program",
   CreateStatement = "CreateStatement",
-  ConnectStatement = "ConnectStatement",
+  ApplyStatement = "ApplyStatement",
+  MeasureStatement = "MeasureStatement",
+  DisplayStatement = "DisplayStatement",
   ComplexArray = "ComplexArray",
   ComplexNumber = "ComplexNumber",
   Number = "Number",
@@ -14,7 +16,7 @@ export type ProgramNode = {
   statements: StatementNode[];
 }
 
-export type StatementNode = CreateStatementNode | ConnectStatementNode;
+export type StatementNode = CreateStatementNode | ApplyStatementNode | MeasureStatementNode | DisplayStatementNode;
 
 export type CreateStatementNode = {
   type: NodeType.CreateStatement;
@@ -22,10 +24,20 @@ export type CreateStatementNode = {
   complexArray: ComplexArrayNode;
 };
 
-export type ConnectStatementNode = {
-  type: NodeType.ConnectStatement;
+export type ApplyStatementNode = {
+  type: NodeType.ApplyStatement;
   identifier1: string;
   identifier2: string;
+}
+
+export type MeasureStatementNode = {
+  type: NodeType.MeasureStatement;
+  identifier: string;
+}
+
+export type DisplayStatementNode = {
+  type: NodeType.DisplayStatement;
+  identifier: string;
 }
 
 export type ComplexArrayNode = {
@@ -45,12 +57,10 @@ export type NumberNode = {
 }
 
 export class Parser {
-  private tokens: Token[];
-  private current: number;
+  private tokens: Token[] = [];
+  private current: number = 0;
 
-  constructor(tokens: Token[]) {
-    this.tokens = tokens;
-    this.current = 0;
+  constructor() {
   }
 
   private peek(): Token | null {
@@ -83,8 +93,14 @@ export class Parser {
     if (token?.type === TokenType.CREATE) {
       return this.parseCreateStatement();
     }
-    else if (token?.type === TokenType.CONNECT) {
+    else if (token?.type === TokenType.APPLY) {
       return this.parseConnectStatement();
+    }
+    else if (token?.type === TokenType.MEASURE) {
+      return this.parseMeasureStatement();
+    }
+    else if (token?.type === TokenType.DISPLAY) {
+      return this.parseDisplayStatement();
     }
     else {
       throw new Error(`Unexpected token ${token?.value}`);
@@ -102,14 +118,28 @@ export class Parser {
     return { type: NodeType.CreateStatement, identifier, complexArray };
   }
 
-  private parseConnectStatement(): ConnectStatementNode {
-    this.consume(TokenType.CONNECT);
+  private parseConnectStatement(): ApplyStatementNode {
+    this.consume(TokenType.APPLY);
     const identifier1 = this.consume(TokenType.IDENTIFIER).value;
 
     this.consume(TokenType.COMMA);
 
     const identifier2 = this.consume(TokenType.IDENTIFIER).value;
-    return { type: NodeType.ConnectStatement, identifier1, identifier2 };
+    return { type: NodeType.ApplyStatement, identifier1, identifier2 };
+  }
+
+  private parseMeasureStatement(): MeasureStatementNode {
+    this.consume(TokenType.MEASURE);
+    const identifier = this.consume(TokenType.IDENTIFIER).value;
+
+    return { type: NodeType.MeasureStatement, identifier };
+  }
+
+  private parseDisplayStatement(): DisplayStatementNode {
+    this.consume(TokenType.DISPLAY);
+    const identifier = this.consume(TokenType.IDENTIFIER).value;
+
+    return { type: NodeType.DisplayStatement, identifier };
   }
 
   private parseComplexArray(): ComplexArrayNode {
@@ -170,5 +200,10 @@ export class Parser {
   private parseNumber(): NumberNode {
     const token = this.consume(TokenType.NUMBER);
     return { type: NodeType.Number, value: parseFloat(token.value) };
+  }
+
+  reset(tokens: Token[]) {
+    this.tokens = tokens;
+    this.current = 0;
   }
 }

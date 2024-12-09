@@ -208,7 +208,6 @@ mod tests {
     fn test_hadamard_gate() {
         let hadamard = Hadamard::new();
         let inv_sqrt2 = 1.0_f64 / 2.0_f64.sqrt();
-        let tolerance = 0.0;
 
         let mut qubit = Qubit::basis0();
         let mut expected_state = Qubit::new_from_amplitudes(inv_sqrt2, 0.0, inv_sqrt2, 0.0).state();

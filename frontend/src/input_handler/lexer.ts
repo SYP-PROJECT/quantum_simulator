@@ -1,7 +1,9 @@
 export enum TokenType {
   CREATE = "CREATE",
   QUBIT = "QUBIT",
-  CONNECT = "CONNECT",
+  APPLY = "APPLY",
+  MEASURE = "MEASURE",
+  DISPLAY = "DISPLAY",
   IDENTIFIER = "IDENTIFIER",
   EQUALS = "EQUALS",
   COMMA = "COMMA",
@@ -13,7 +15,7 @@ export enum TokenType {
   NUMBER = "NUMBER",
   IMAGINARY_UNIT = "IMAGINARY_UNIT",
   WHITESPACE = "WHITESPACE",
-  EOF = ""
+  EOF = "EOF"
 }
 
 export interface Token {
@@ -25,8 +27,8 @@ export class Lexer {
   private input: string = "";
   private position: number = 0;
 
-  constructor(input: string) {
-    this.input = input;
+  constructor() {
+
   }
 
   tokenize(): Token[] {
@@ -50,8 +52,14 @@ export class Lexer {
           case "qubit":
             tokens.push({ type: TokenType.QUBIT, value: word });
             break;
-          case "connect":
-            tokens.push({ type: TokenType.CONNECT, value: word });
+          case "apply":
+            tokens.push({ type: TokenType.APPLY, value: word });
+            break;
+          case "measure":
+            tokens.push({ type: TokenType.MEASURE, value: word });
+            break;
+          case "display":
+            tokens.push({ type: TokenType.DISPLAY, value: word });
             break;
           case "i":
             const prevToken = tokens[tokens.length - 1];
@@ -120,5 +128,10 @@ export class Lexer {
       this.position++;
     }
     return result;
+  }
+
+  reset(input: string) {
+    this.input = input;
+    this.position = 0;
   }
 }
