@@ -22,6 +22,7 @@ QuanVi is a web-based application designed to simulate and visualize quantum cir
 - People who have and interest in the world of quantum computing.
 
 ### Project Milestones
+=======
 
 | Milestone Description                                               | Responsible             | Date       |
 |---------------------------------------------------------------------|-------------------------|------------|
