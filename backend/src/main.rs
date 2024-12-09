@@ -1,26 +1,24 @@
-use gate::{Hadamard, Identity, PauliX};
-use qubit::Qubit;
+use axum::http::{header::ACCEPT, header::CONTENT_TYPE, Method};
+use route::create_router;
+use tower_http::cors::{Any, CorsLayer};
 
 mod gate;
+mod handler;
+mod interpreter;
+mod models;
 mod qubit;
+mod route;
 
-fn main() {
-    let mut qubit1 = Qubit::new();
-    println!("{:?}", qubit1);
+#[tokio::main]
+async fn main() {
+    let cors = CorsLayer::new()
+        .allow_origin(Any)
+        .allow_methods([Method::POST, Method::GET])
+        .allow_headers([CONTENT_TYPE, ACCEPT]);
 
-    let identity = Identity::new();
-    qubit1.apply_gate(&identity);
+    let app = create_router().layer(cors);
 
-    println!("{:?}", qubit1);
-
-    let paulix = PauliX::new();
-    qubit1.apply_gate(&paulix);
-    println!("{:?}", qubit1);
-
-    qubit1.apply_gate(&paulix);
-    println!("{:?}", qubit1);
-
-    let hadamard = Hadamard::new();
-    qubit1.apply_gate(&hadamard);
-    println!("{:?}", qubit1);
+    println!("Server started on localhost:8000");
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:8000").await.unwrap();
+    axum::serve(listener, app).await.unwrap();
 }
