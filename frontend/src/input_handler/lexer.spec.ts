@@ -1,6 +1,4 @@
-import { type } from "os";
 import { Lexer, TokenType } from "./lexer"
-import { Token } from "monaco-editor";
 
 describe("Lexer", () => {
   const lexer = new Lexer();
@@ -11,7 +9,7 @@ describe("Lexer", () => {
     expect(tokens).toEqual([
       { type: TokenType.CREATE, value: "create" },
       { type: TokenType.QUBIT, value: "qubit" },
-      { type: TokenType.CONNECT, value: "connect" },
+      { type: TokenType.APPLY, value: "connect" },
       { type: TokenType.EOF, value: "" },
     ]);
   });
