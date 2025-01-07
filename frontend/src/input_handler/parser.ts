@@ -1,6 +1,6 @@
 import { Token, TokenType } from "./lexer";
 
-enum NodeType {
+export enum NodeType {
   Program = "Program",
   CreateStatement = "CreateStatement",
   ApplyStatement = "ApplyStatement",
