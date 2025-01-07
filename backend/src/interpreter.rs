@@ -127,3 +127,252 @@ fn get_imaginary_part(complex_node: &ComplexNumberNode) -> f64 {
     }
     0.0
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::models::{
+        ApplyStatement, ComplexArrayNode, ComplexNumberNode, CreateStatementNode,
+        MeasureStatementNode, NodeType, NumberNode, StatementNode,
+    };
+
+    fn create_complex_number(real: f64, imaginary: f64) -> ComplexNumberNode {
+        ComplexNumberNode {
+            r#type: NodeType::Number,
+            real_part: Some(NumberNode {
+                r#type: NodeType::Number,
+                value: real,
+            }),
+            imaginary_part: Some(NumberNode {
+                r#type: NodeType::Number,
+                value: imaginary,
+            }),
+        }
+    }
+
+    #[test]
+    fn test_create_qubit_success() {
+        let program = ProgramNode {
+            r#type: NodeType::Program,
+            statements: vec![StatementNode::Create(CreateStatementNode {
+                r#type: NodeType::CreateStatement,
+                identifier: "q1".to_string(),
+                complex_array: ComplexArrayNode {
+                    r#type: NodeType::ComplexArray,
+                    values: vec![
+                        create_complex_number(1.0, 0.0),
+                        create_complex_number(0.0, 0.0),
+                    ],
+                },
+            })],
+        };
+
+        let results = interpret_program(program);
+
+        assert!(
+            results.is_empty(),
+            "Expected no errors when creating a qubit"
+        );
+    }
+
+    #[test]
+    fn test_create_qubit_duplicate_identifier() {
+        let program = ProgramNode {
+            r#type: NodeType::Program,
+            statements: vec![
+                StatementNode::Create(CreateStatementNode {
+                    r#type: NodeType::CreateStatement,
+                    identifier: "q1".to_string(),
+                    complex_array: ComplexArrayNode {
+                        r#type: NodeType::ComplexArray,
+                        values: vec![
+                            create_complex_number(1.0, 0.0),
+                            create_complex_number(0.0, 0.0),
+                        ],
+                    },
+                }),
+                StatementNode::Create(CreateStatementNode {
+                    r#type: NodeType::CreateStatement,
+                    identifier: "q1".to_string(),
+                    complex_array: ComplexArrayNode {
+                        r#type: NodeType::ComplexArray,
+                        values: vec![
+                            create_complex_number(0.0, 0.0),
+                            create_complex_number(1.0, 0.0),
+                        ],
+                    },
+                }),
+            ],
+        };
+
+        let results = interpret_program(program);
+
+        assert_eq!(results.len(), 1);
+        assert_eq!(
+            results[0], "Identifier q1 was already declared",
+            "Expected error for duplicate identifier"
+        );
+    }
+
+    #[test]
+    fn test_apply_gate_success() {
+        let program = ProgramNode {
+            r#type: NodeType::Program,
+            statements: vec![
+                StatementNode::Create(CreateStatementNode {
+                    r#type: NodeType::CreateStatement,
+                    identifier: "q1".to_string(),
+                    complex_array: ComplexArrayNode {
+                        r#type: NodeType::ComplexArray,
+                        values: vec![
+                            create_complex_number(1.0, 0.0),
+                            create_complex_number(0.0, 0.0),
+                        ],
+                    },
+                }),
+                StatementNode::Apply(ApplyStatement {
+                    r#type: NodeType::ApplyStatement,
+                    identifier1: "q1".to_string(),
+                    identifier2: "pauliX".to_string(),
+                }),
+            ],
+        };
+
+        let results = interpret_program(program);
+
+        assert!(
+            results.is_empty(),
+            "Expected no errors when applying a gate"
+        );
+    }
+
+    #[test]
+    fn test_apply_gate_unknown_qubit() {
+        let program = ProgramNode {
+            r#type: NodeType::Program,
+            statements: vec![StatementNode::Apply(ApplyStatement {
+                r#type: NodeType::ApplyStatement,
+                identifier1: "q1".to_string(),
+                identifier2: "pauliX".to_string(),
+            })],
+        };
+
+        let results = interpret_program(program);
+
+        assert_eq!(results.len(), 1);
+        assert_eq!(
+            results[0], "Cannot resolve symbol 'q1'",
+            "Expected error for unknown qubit"
+        );
+    }
+
+    #[test]
+    fn test_apply_gate_unknown_gate() {
+        let program = ProgramNode {
+            r#type: NodeType::Program,
+            statements: vec![
+                StatementNode::Create(CreateStatementNode {
+                    r#type: NodeType::CreateStatement,
+                    identifier: "q1".to_string(),
+                    complex_array: ComplexArrayNode {
+                        r#type: NodeType::ComplexArray,
+                        values: vec![
+                            create_complex_number(1.0, 0.0),
+                            create_complex_number(0.0, 0.0),
+                        ],
+                    },
+                }),
+                StatementNode::Apply(ApplyStatement {
+                    r#type: NodeType::ApplyStatement,
+                    identifier1: "q1".to_string(),
+                    identifier2: "unknown_gate".to_string(),
+                }),
+            ],
+        };
+
+        let results = interpret_program(program);
+
+        assert_eq!(results.len(), 1);
+        assert_eq!(
+            results[0], "Cannot resolve gate 'unknown_gate'",
+            "Expected error for unknown gate"
+        );
+    }
+
+    #[test]
+    fn test_measure_qubit_success() {
+        let program = ProgramNode {
+            r#type: NodeType::Program,
+            statements: vec![
+                StatementNode::Create(CreateStatementNode {
+                    r#type: NodeType::CreateStatement,
+                    identifier: "q1".to_string(),
+                    complex_array: ComplexArrayNode {
+                        r#type: NodeType::ComplexArray,
+                        values: vec![
+                            create_complex_number(1.0, 0.0),
+                            create_complex_number(0.0, 0.0),
+                        ],
+                    },
+                }),
+                StatementNode::Measure(MeasureStatementNode {
+                    r#type: NodeType::MeasureStatement,
+                    identifier: "q1".to_string(),
+                }),
+            ],
+        };
+
+        let results = interpret_program(program);
+
+        assert_eq!(results.len(), 1);
+        assert!(results[0].starts_with("Result of measurment:"));
+    }
+
+    #[test]
+    fn test_measure_qubit_unknown_identifier() {
+        let program = ProgramNode {
+            r#type: NodeType::Program,
+            statements: vec![StatementNode::Measure(MeasureStatementNode {
+                r#type: NodeType::MeasureStatement,
+                identifier: "q1".to_string(),
+            })],
+        };
+
+        let results = interpret_program(program);
+
+        assert_eq!(results.len(), 1);
+        assert_eq!(
+            results[0], "Cannot resolve symbol 'q1'",
+            "Expected error for unknown qubit in measurement"
+        );
+    }
+
+    #[test]
+    fn test_display_qubit() {
+        let program = ProgramNode {
+            r#type: NodeType::Program,
+            statements: vec![
+                StatementNode::Create(CreateStatementNode {
+                    r#type: NodeType::CreateStatement,
+                    identifier: "q1".to_string(),
+                    complex_array: ComplexArrayNode {
+                        r#type: NodeType::ComplexArray,
+                        values: vec![
+                            create_complex_number(1.0, 0.0),
+                            create_complex_number(0.0, 0.0),
+                        ],
+                    },
+                }),
+                StatementNode::Measure(MeasureStatementNode {
+                    r#type: NodeType::DisplayStatement,
+                    identifier: "q1".to_string(),
+                }),
+            ],
+        };
+
+        let results = interpret_program(program);
+
+        assert_eq!(results.len(), 1);
+        assert!(results[0].contains("q1:"));
+    }
+}
