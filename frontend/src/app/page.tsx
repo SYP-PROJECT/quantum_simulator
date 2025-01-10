@@ -16,8 +16,14 @@ export default function Home() {
 
   const handleButtonClick = async () => {
     if (editorRef.current) {
-      lexer.reset(editorRef.current.getValue());
-      parser.reset(lexer.tokenize());
+      try{
+        lexer.reset(editorRef.current.getValue());
+        parser.reset(lexer.tokenize());
+      } catch (e){
+        const message = e instanceof Error ? e.message : String(e);
+        setOutput(message);
+        return;
+      }
 
       try {
         const programNode = parser.parseProgram();
@@ -52,8 +58,8 @@ export default function Home() {
           [/i\b/, "imaginary"],
           [/\b[a-zA-Z_][a-zA-Z0-9_]*\b/, "identifier"],
           [/[=;,]/, "delimiter"],
-          [/\[|\]/, "bracket"],
-          [/\+|\-/, "operator"],
+          [/[\[\]]/, "bracket"],
+          [/[+\-]/, "operator"],
           [/\s+/, "whitespace"],
           [/(\/\/.*)/, "comment"],
           [/\/\*[\s\S]*?\*\//, "comment"]
