@@ -150,7 +150,7 @@ mod tests {
         let mut count_0 = 0;
         let mut count_1 = 0;
 
-        let num_measurements = 20000;
+        let num_measurements = 80000;
         for _ in 0..num_measurements {
             let mut qubit = Qubit::new_from_amplitudes(0.6, 0.0, 0.8, 0.0);
             let measurement = qubit.measure();

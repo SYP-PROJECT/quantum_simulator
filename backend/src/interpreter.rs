@@ -32,23 +32,24 @@ fn interpret_statement(
 ) -> Option<String> {
     match statement {
         StatementNode::Create(create_statement) => {
-            let identifier = create_statement.identifier;
-            if variables.contains_key(&identifier) {
-                Some(format!("Identifier {} was already declared", identifier))
-            } else {
+            let identifier = &create_statement.identifier;
+
+            if let std::collections::hash_map::Entry::Vacant(e) =
+                variables.entry(identifier.to_string())
+            {
                 let complex_array = create_statement.complex_array;
                 let complex1 = &complex_array.values[0];
                 let complex2 = &complex_array.values[1];
-
                 let qubit = Qubit::new_from_amplitudes(
                     get_real_part(complex1),
                     get_imaginary_part(complex1),
                     get_real_part(complex2),
                     get_imaginary_part(complex2),
                 );
-
-                variables.insert(identifier, qubit);
+                e.insert(qubit);
                 None
+            } else {
+                Some(format!("Identifier {} was already declared", identifier))
             }
         }
 
