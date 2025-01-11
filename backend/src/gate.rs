@@ -1,8 +1,32 @@
 use nalgebra::Complex;
 use nalgebra::Matrix2;
+use std::fmt::Debug;
 
 pub trait Gate {
     fn matrix_representation(&self) -> Matrix2<Complex<f64>>;
+}
+
+impl Debug for dyn Gate {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let matrix = self.matrix_representation();
+        let m = [
+            [matrix[(0, 0)], matrix[(0, 1)]],
+            [matrix[(1, 0)], matrix[(1, 1)]],
+        ];
+
+        write!(
+            f,
+            "[[{:.2}+{:.2}i, {:.2}+{:.2}i], [{:.2}+{:.2}i, {:.2}+{:.2}i]]",
+            m[0][0].re,
+            m[0][0].im,
+            m[0][1].re,
+            m[0][1].im,
+            m[1][0].re,
+            m[1][0].im,
+            m[1][1].re,
+            m[1][1].im,
+        )
+    }
 }
 
 pub struct Identity {

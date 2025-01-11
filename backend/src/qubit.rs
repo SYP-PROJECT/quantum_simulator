@@ -63,15 +63,27 @@ impl Qubit {
 impl Debug for Qubit {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let number1 = if self.state.x.imaginary() >= 0.0 {
-            format!("{}+{}i", self.state.x.real(), self.state.x.imaginary())
+            format!(
+                "{:.2}+{:.2}i",
+                self.state.x.real(),
+                self.state.x.imaginary()
+            )
         } else {
-            format!("{}-{}i", self.state.x.real(), self.state.x.imaginary())
+            format!(
+                "{:.2}-{:.2}i",
+                self.state.x.real(),
+                self.state.x.imaginary()
+            )
         };
 
         let number2 = if self.state.y.imaginary() >= 0.0 {
-            format!("{}+{}i", self.state.y.real(), self.state.y.imaginary())
+            format!(
+                "{:.2}+{:.2}i",
+                self.state.y.real(),
+                self.state.y.imaginary()
+            )
         } else {
-            format!("{}{}i", self.state.y.real(), self.state.y.imaginary())
+            format!("{:.2}{:.2}i", self.state.y.real(), self.state.y.imaginary())
         };
 
         write!(f, "[{}, {}]", number1, number2)

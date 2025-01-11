@@ -85,14 +85,20 @@ fn interpret_statement(
         }
 
         StatementNode::DisplayStatement { identifier } => {
-            if !variables.contains_key(&identifier) {
-                Some(format!("Cannot resolve symbol '{}'", identifier))
-            } else {
+            if variables.contains_key(&identifier) {
                 Some(format!(
                     "{}: {:?}",
                     identifier,
                     variables.get_mut(&identifier).unwrap()
                 ))
+            } else if gates.contains_key(&identifier) {
+                Some(format!(
+                    "{}: {:?}",
+                    identifier,
+                    gates.get_mut(&identifier).unwrap()
+                ))
+            } else {
+                Some(format!("Cannot resolve symbol '{}'", identifier))
             }
         }
     }
