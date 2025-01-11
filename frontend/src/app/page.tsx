@@ -16,10 +16,10 @@ export default function Home() {
 
   const handleButtonClick = async () => {
     if (editorRef.current) {
-      try{
+      try {
         lexer.reset(editorRef.current.getValue());
         parser.reset(lexer.tokenize());
-      } catch (e){
+      } catch (e) {
         const message = e instanceof Error ? e.message : String(e);
         setOutput(message);
         return;
@@ -27,7 +27,6 @@ export default function Home() {
 
       try {
         const programNode = parser.parseProgram();
-
         const response = await fetch("http://localhost:8000/api/", {
           headers: {
             "Content-Type": "application/json",
