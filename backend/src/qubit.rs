@@ -186,7 +186,7 @@ mod tests {
     #[test]
     fn test_debug_represantation() {
         assert_eq!(
-            String::from("[0.5+0.5i, 0.5-0.5i]"),
+            String::from("[0.50+0.50i, 0.50-0.50i]"),
             format!("{:?}", Qubit::new_from_amplitudes(1.0, 1.0, 1.0, -1.0))
         );
     }
