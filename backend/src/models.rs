@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub enum NodeType {
     Program,
@@ -21,34 +21,24 @@ pub struct ProgramNode {
 }
 
 #[derive(Deserialize, Debug)]
-#[serde(untagged)]
+#[serde(tag = "type", rename_all = "PascalCase")]
 pub enum StatementNode {
-    Create(CreateStatementNode),
-    Apply(ApplyStatement),
-    Measure(MeasureStatementNode),
-}
+    CreateStatement {
+        identifier: String,
 
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct CreateStatementNode {
-    pub r#type: NodeType,
-    pub identifier: String,
-    pub complex_array: ComplexArrayNode,
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct ApplyStatement {
-    pub r#type: NodeType,
-    pub identifier1: String,
-    pub identifier2: String,
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct MeasureStatementNode {
-    pub r#type: NodeType,
-    pub identifier: String,
+        #[serde(rename = "complexArray")]
+        complex_array: ComplexArrayNode,
+    },
+    ApplyStatement {
+        identifier1: String,
+        identifier2: String,
+    },
+    MeasureStatement {
+        identifier: String,
+    },
+    DisplayStatement {
+        identifier: String,
+    },
 }
 
 #[derive(Deserialize, Debug)]

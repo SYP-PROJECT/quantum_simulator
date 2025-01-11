@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::{
     gate::{Gate, Hadamard, Identity, PauliX, PauliY, PauliZ},
-    models::{ComplexNumberNode, NodeType, ProgramNode, StatementNode},
+    models::{ComplexNumberNode, ProgramNode, StatementNode},
     qubit::Qubit,
 };
 
@@ -31,13 +31,13 @@ fn interpret_statement(
     gates: &mut HashMap<String, Box<dyn Gate>>,
 ) -> Option<String> {
     match statement {
-        StatementNode::Create(create_statement) => {
-            let identifier = &create_statement.identifier;
-
+        StatementNode::CreateStatement {
+            identifier,
+            complex_array,
+        } => {
             if let std::collections::hash_map::Entry::Vacant(e) =
                 variables.entry(identifier.to_string())
             {
-                let complex_array = create_statement.complex_array;
                 let complex1 = &complex_array.values[0];
                 let complex2 = &complex_array.values[1];
                 let qubit = Qubit::new_from_amplitudes(
@@ -53,45 +53,38 @@ fn interpret_statement(
             }
         }
 
-        StatementNode::Apply(apply_statement) => {
-            let qubit_identifier = apply_statement.identifier1;
-            let gate_identifier = apply_statement.identifier2;
-
-            if !variables.contains_key(&qubit_identifier) {
-                return Some(format!("Cannot resolve symbol '{}'", qubit_identifier));
+        StatementNode::ApplyStatement {
+            identifier1,
+            identifier2,
+        } => {
+            if !variables.contains_key(&identifier1) {
+                return Some(format!("Cannot resolve symbol '{}'", identifier1));
             }
 
-            if !gates.contains_key(&gate_identifier) {
-                return Some(format!("Cannot resolve gate '{}'", gate_identifier));
+            if !gates.contains_key(&identifier2) {
+                return Some(format!("Cannot resolve gate '{}'", identifier2));
             }
 
-            let qubit = variables.get_mut(&qubit_identifier).unwrap();
-            let gate = gates.get_mut(&gate_identifier).unwrap();
+            let qubit = variables.get_mut(&identifier1).unwrap();
+            let gate = gates.get_mut(&identifier2).unwrap();
 
             qubit.apply_gate(&**gate);
 
             None
         }
-        StatementNode::Measure(measure_statement)
-            if measure_statement.r#type == NodeType::MeasureStatement =>
-        {
-            let identifier = measure_statement.identifier;
 
+        StatementNode::MeasureStatement { identifier } => {
             if !variables.contains_key(&identifier) {
                 Some(format!("Cannot resolve symbol '{}'", identifier))
             } else {
                 Some(format!(
-                    "Result of measurment: {}",
+                    "Result of measurement: {}",
                     variables.get_mut(&identifier).unwrap().measure()
                 ))
             }
         }
 
-        StatementNode::Measure(measure_statement)
-            if measure_statement.r#type == NodeType::DisplayStatement =>
-        {
-            let identifier = measure_statement.identifier;
-
+        StatementNode::DisplayStatement { identifier } => {
             if !variables.contains_key(&identifier) {
                 Some(format!("Cannot resolve symbol '{}'", identifier))
             } else {
@@ -102,8 +95,6 @@ fn interpret_statement(
                 ))
             }
         }
-
-        _ => Some(format!("Unknown node type: {:?}", statement)),
     }
 }
 
@@ -133,8 +124,7 @@ fn get_imaginary_part(complex_node: &ComplexNumberNode) -> f64 {
 mod tests {
     use super::*;
     use crate::models::{
-        ApplyStatement, ComplexArrayNode, ComplexNumberNode, CreateStatementNode,
-        MeasureStatementNode, NodeType, NumberNode, StatementNode,
+        ComplexArrayNode, ComplexNumberNode, NodeType, NumberNode, ProgramNode, StatementNode,
     };
 
     fn create_complex_number(real: f64, imaginary: f64) -> ComplexNumberNode {
@@ -155,8 +145,7 @@ mod tests {
     fn test_create_qubit_success() {
         let program = ProgramNode {
             r#type: NodeType::Program,
-            statements: vec![StatementNode::Create(CreateStatementNode {
-                r#type: NodeType::CreateStatement,
+            statements: vec![StatementNode::CreateStatement {
                 identifier: "q1".to_string(),
                 complex_array: ComplexArrayNode {
                     r#type: NodeType::ComplexArray,
@@ -165,7 +154,7 @@ mod tests {
                         create_complex_number(0.0, 0.0),
                     ],
                 },
-            })],
+            }],
         };
 
         let results = interpret_program(program);
@@ -181,8 +170,7 @@ mod tests {
         let program = ProgramNode {
             r#type: NodeType::Program,
             statements: vec![
-                StatementNode::Create(CreateStatementNode {
-                    r#type: NodeType::CreateStatement,
+                StatementNode::CreateStatement {
                     identifier: "q1".to_string(),
                     complex_array: ComplexArrayNode {
                         r#type: NodeType::ComplexArray,
@@ -191,9 +179,8 @@ mod tests {
                             create_complex_number(0.0, 0.0),
                         ],
                     },
-                }),
-                StatementNode::Create(CreateStatementNode {
-                    r#type: NodeType::CreateStatement,
+                },
+                StatementNode::CreateStatement {
                     identifier: "q1".to_string(),
                     complex_array: ComplexArrayNode {
                         r#type: NodeType::ComplexArray,
@@ -202,7 +189,7 @@ mod tests {
                             create_complex_number(1.0, 0.0),
                         ],
                     },
-                }),
+                },
             ],
         };
 
@@ -220,8 +207,7 @@ mod tests {
         let program = ProgramNode {
             r#type: NodeType::Program,
             statements: vec![
-                StatementNode::Create(CreateStatementNode {
-                    r#type: NodeType::CreateStatement,
+                StatementNode::CreateStatement {
                     identifier: "q1".to_string(),
                     complex_array: ComplexArrayNode {
                         r#type: NodeType::ComplexArray,
@@ -230,12 +216,11 @@ mod tests {
                             create_complex_number(0.0, 0.0),
                         ],
                     },
-                }),
-                StatementNode::Apply(ApplyStatement {
-                    r#type: NodeType::ApplyStatement,
+                },
+                StatementNode::ApplyStatement {
                     identifier1: "q1".to_string(),
                     identifier2: "pauliX".to_string(),
-                }),
+                },
             ],
         };
 
@@ -251,11 +236,10 @@ mod tests {
     fn test_apply_gate_unknown_qubit() {
         let program = ProgramNode {
             r#type: NodeType::Program,
-            statements: vec![StatementNode::Apply(ApplyStatement {
-                r#type: NodeType::ApplyStatement,
+            statements: vec![StatementNode::ApplyStatement {
                 identifier1: "q1".to_string(),
                 identifier2: "pauliX".to_string(),
-            })],
+            }],
         };
 
         let results = interpret_program(program);
@@ -272,8 +256,7 @@ mod tests {
         let program = ProgramNode {
             r#type: NodeType::Program,
             statements: vec![
-                StatementNode::Create(CreateStatementNode {
-                    r#type: NodeType::CreateStatement,
+                StatementNode::CreateStatement {
                     identifier: "q1".to_string(),
                     complex_array: ComplexArrayNode {
                         r#type: NodeType::ComplexArray,
@@ -282,12 +265,11 @@ mod tests {
                             create_complex_number(0.0, 0.0),
                         ],
                     },
-                }),
-                StatementNode::Apply(ApplyStatement {
-                    r#type: NodeType::ApplyStatement,
+                },
+                StatementNode::ApplyStatement {
                     identifier1: "q1".to_string(),
                     identifier2: "unknown_gate".to_string(),
-                }),
+                },
             ],
         };
 
@@ -305,8 +287,7 @@ mod tests {
         let program = ProgramNode {
             r#type: NodeType::Program,
             statements: vec![
-                StatementNode::Create(CreateStatementNode {
-                    r#type: NodeType::CreateStatement,
+                StatementNode::CreateStatement {
                     identifier: "q1".to_string(),
                     complex_array: ComplexArrayNode {
                         r#type: NodeType::ComplexArray,
@@ -315,28 +296,26 @@ mod tests {
                             create_complex_number(0.0, 0.0),
                         ],
                     },
-                }),
-                StatementNode::Measure(MeasureStatementNode {
-                    r#type: NodeType::MeasureStatement,
+                },
+                StatementNode::MeasureStatement {
                     identifier: "q1".to_string(),
-                }),
+                },
             ],
         };
 
         let results = interpret_program(program);
 
         assert_eq!(results.len(), 1);
-        assert!(results[0].starts_with("Result of measurment:"));
+        assert!(results[0].starts_with("Result of measurement:"));
     }
 
     #[test]
     fn test_measure_qubit_unknown_identifier() {
         let program = ProgramNode {
             r#type: NodeType::Program,
-            statements: vec![StatementNode::Measure(MeasureStatementNode {
-                r#type: NodeType::MeasureStatement,
+            statements: vec![StatementNode::MeasureStatement {
                 identifier: "q1".to_string(),
-            })],
+            }],
         };
 
         let results = interpret_program(program);
@@ -353,8 +332,7 @@ mod tests {
         let program = ProgramNode {
             r#type: NodeType::Program,
             statements: vec![
-                StatementNode::Create(CreateStatementNode {
-                    r#type: NodeType::CreateStatement,
+                StatementNode::CreateStatement {
                     identifier: "q1".to_string(),
                     complex_array: ComplexArrayNode {
                         r#type: NodeType::ComplexArray,
@@ -363,11 +341,10 @@ mod tests {
                             create_complex_number(0.0, 0.0),
                         ],
                     },
-                }),
-                StatementNode::Measure(MeasureStatementNode {
-                    r#type: NodeType::DisplayStatement,
+                },
+                StatementNode::DisplayStatement {
                     identifier: "q1".to_string(),
-                }),
+                },
             ],
         };
 
