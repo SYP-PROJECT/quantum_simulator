@@ -188,13 +188,11 @@ export class Parser {
     if (!realPart && !imaginaryPart) {
       throw new Error("Invalid complex number: both real and imaginary parts are missing");
     }
-
     return {
       type: NodeType.ComplexNumber,
       realPart,
       imaginaryPart,
     };
-
   }
 
   private parseNumber(): NumberNode {
