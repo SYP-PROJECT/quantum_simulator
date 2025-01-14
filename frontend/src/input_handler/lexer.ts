@@ -12,6 +12,7 @@ export enum TokenType {
   RBRACKET = "RBRACKET",
   PLUS = "PLUS",
   MINUS = "MINUS",
+  MULTIPLY = "MULTIPLY",
   NUMBER = "NUMBER",
   IMAGINARY_UNIT = "IMAGINARY_UNIT",
   WHITESPACE = "WHITESPACE",
@@ -110,6 +111,9 @@ export class Lexer {
           break;
         case "]":
           tokens.push({ type: TokenType.RBRACKET, value: char });
+          break;
+        case "*":
+          tokens.push({ type: TokenType.MULTIPLY, value: char });
           break;
         default:
           throw new Error(`Unexpected token: ${char}`);

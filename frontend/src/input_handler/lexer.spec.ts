@@ -1,17 +1,15 @@
-import { type } from "os";
 import { Lexer, TokenType } from "./lexer"
-import { Token } from "monaco-editor";
 
 describe("Lexer", () => {
   const lexer = new Lexer();
   test("keywords", () => {
-    lexer.reset("create qubit connect");
+    lexer.reset("create qubit apply");
     const tokens = lexer.tokenize();
 
     expect(tokens).toEqual([
       { type: TokenType.CREATE, value: "create" },
       { type: TokenType.QUBIT, value: "qubit" },
-      { type: TokenType.CONNECT, value: "connect" },
+      { type: TokenType.APPLY, value: "apply" },
       { type: TokenType.EOF, value: "" },
     ]);
   });
@@ -148,7 +146,7 @@ describe("Lexer", () => {
   });
 
   test("display qubit", () => {
-    lexer.reset("measure q1;");
+    lexer.reset("display q1;");
     const tokens = lexer.tokenize();
 
     expect(tokens).toEqual([

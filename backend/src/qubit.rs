@@ -63,15 +63,27 @@ impl Qubit {
 impl Debug for Qubit {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let number1 = if self.state.x.imaginary() >= 0.0 {
-            format!("{}+{}i", self.state.x.real(), self.state.x.imaginary())
+            format!(
+                "{:.2}+{:.2}i",
+                self.state.x.real(),
+                self.state.x.imaginary()
+            )
         } else {
-            format!("{}-{}i", self.state.x.real(), self.state.x.imaginary())
+            format!(
+                "{:.2}-{:.2}i",
+                self.state.x.real(),
+                self.state.x.imaginary()
+            )
         };
 
         let number2 = if self.state.y.imaginary() >= 0.0 {
-            format!("{}+{}i", self.state.y.real(), self.state.y.imaginary())
+            format!(
+                "{:.2}+{:.2}i",
+                self.state.y.real(),
+                self.state.y.imaginary()
+            )
         } else {
-            format!("{}{}i", self.state.y.real(), self.state.y.imaginary())
+            format!("{:.2}{:.2}i", self.state.y.real(), self.state.y.imaginary())
         };
 
         write!(f, "[{}, {}]", number1, number2)
@@ -150,7 +162,7 @@ mod tests {
         let mut count_0 = 0;
         let mut count_1 = 0;
 
-        let num_measurements = 20000;
+        let num_measurements = 80000;
         for _ in 0..num_measurements {
             let mut qubit = Qubit::new_from_amplitudes(0.6, 0.0, 0.8, 0.0);
             let measurement = qubit.measure();
@@ -174,7 +186,7 @@ mod tests {
     #[test]
     fn test_debug_represantation() {
         assert_eq!(
-            String::from("[0.5+0.5i, 0.5-0.5i]"),
+            String::from("[0.50+0.50i, 0.50-0.50i]"),
             format!("{:?}", Qubit::new_from_amplitudes(1.0, 1.0, 1.0, -1.0))
         );
     }
