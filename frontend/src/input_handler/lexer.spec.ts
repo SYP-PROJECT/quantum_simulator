@@ -21,8 +21,7 @@ describe("Lexer", () => {
     expect(tokens).toEqual([
       { type: TokenType.NUMBER, value: "42" },
       { type: TokenType.NUMBER, value: "3.14" },
-      { type: TokenType.NUMBER, value: "5" },
-      { type: TokenType.IMAGINARY_UNIT, value: "i" },
+      { type: TokenType.IMAGINARY_NUMBER, value: "5i" },
       { type: TokenType.EOF, value: "" },
     ]);
   });
@@ -68,13 +67,11 @@ describe("Lexer", () => {
       { type: TokenType.LBRACKET, value: "[" },
       { type: TokenType.NUMBER, value: "1" },
       { type: TokenType.PLUS, value: "+" },
-      { type: TokenType.NUMBER, value: "2" },
-      { type: TokenType.IMAGINARY_UNIT, value: "i" },
+      { type: TokenType.IMAGINARY_NUMBER, value: "2i" },
       { type: TokenType.COMMA, value: "," },
       { type: TokenType.NUMBER, value: "2" },
       { type: TokenType.MINUS, value: "-" },
-      { type: TokenType.NUMBER, value: "3" },
-      { type: TokenType.IMAGINARY_UNIT, value: "i" },
+      { type: TokenType.IMAGINARY_NUMBER, value: "3i" },
       { type: TokenType.RBRACKET, value: "]" },
       { type: TokenType.SEMICOLON, value: ";" },
       { type: TokenType.EOF, value: "" },
@@ -93,14 +90,12 @@ describe("Lexer", () => {
       { type: TokenType.LBRACKET, value: "[" },
       { type: TokenType.NUMBER, value: "1.5" },
       { type: TokenType.PLUS, value: "+" },
-      { type: TokenType.NUMBER, value: "2.3" },
-      { type: TokenType.IMAGINARY_UNIT, value: "i" },
+      { type: TokenType.IMAGINARY_NUMBER, value: "2.3i" },
       { type: TokenType.COMMA, value: "," },
       { type: TokenType.MINUS, value: "-" },
       { type: TokenType.NUMBER, value: "3.1" },
       { type: TokenType.MINUS, value: "-" },
-      { type: TokenType.NUMBER, value: "4.0" },
-      { type: TokenType.IMAGINARY_UNIT, value: "i" },
+      { type: TokenType.IMAGINARY_NUMBER, value: "4.0i" },
       { type: TokenType.RBRACKET, value: "]" },
       { type: TokenType.SEMICOLON, value: ";" },
       { type: TokenType.EOF, value: "" },
@@ -119,14 +114,12 @@ describe("Lexer", () => {
       { type: TokenType.LBRACKET, value: "[" },
       { type: TokenType.NUMBER, value: "1" },
       { type: TokenType.PLUS, value: "+" },
-      { type: TokenType.NUMBER, value: "2" },
-      { type: TokenType.IMAGINARY_UNIT, value: "i" },
+      { type: TokenType.IMAGINARY_NUMBER, value: "2i" },
       { type: TokenType.COMMA, value: "," },
       { type: TokenType.MINUS, value: "-" },
       { type: TokenType.NUMBER, value: "3" },
       { type: TokenType.MINUS, value: "-" },
-      { type: TokenType.NUMBER, value: "4" },
-      { type: TokenType.IMAGINARY_UNIT, value: "i" },
+      { type: TokenType.IMAGINARY_NUMBER, value: "4i" },
       { type: TokenType.RBRACKET, value: "]" },
       { type: TokenType.SEMICOLON, value: ";" },
       { type: TokenType.EOF, value: "" },
@@ -169,13 +162,11 @@ describe("Lexer", () => {
       { type: TokenType.LBRACKET, value: "[" },
       { type: TokenType.NUMBER, value: "1" },
       { type: TokenType.PLUS, value: "+" },
-      { type: TokenType.NUMBER, value: "2" },
-      { type: TokenType.IMAGINARY_UNIT, value: "i" },
+      { type: TokenType.IMAGINARY_NUMBER, value: "2i" },
       { type: TokenType.COMMA, value: "," },
       { type: TokenType.NUMBER, value: "2" },
       { type: TokenType.MINUS, value: "-" },
-      { type: TokenType.NUMBER, value: "3" },
-      { type: TokenType.IMAGINARY_UNIT, value: "i" },
+      { type: TokenType.IMAGINARY_NUMBER, value: "3i" },
       { type: TokenType.RBRACKET, value: "]" },
       { type: TokenType.SEMICOLON, value: ";" },
       { type: TokenType.EOF, value: "" },
@@ -184,12 +175,12 @@ describe("Lexer", () => {
 
   test("throws error for unexpected tokens", () => {
     lexer.reset("create unknown@");
-    expect(() => lexer.tokenize()).toThrowError("Unexpected token: @");
+    expect(() => lexer.tokenize()).toThrow("Unexpected token: @");
   });
 
   test("throws error for invalid number format", () => {
     lexer.reset("4.2.3");
 
-    expect(() => lexer.tokenize()).toThrowError("Invalid number format: 4.2.3");
+    expect(() => lexer.tokenize()).toThrow("Invalid number format: 4.2.3");
   });
 })

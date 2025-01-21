@@ -14,7 +14,7 @@ export enum TokenType {
   MINUS = "MINUS",
   MULTIPLY = "MULTIPLY",
   NUMBER = "NUMBER",
-  IMAGINARY_UNIT = "IMAGINARY_UNIT",
+  IMAGINARY_NUMBER = "IMAGINARY_NUMBER",
   WHITESPACE = "WHITESPACE",
   EOF = "EOF"
 }
@@ -64,9 +64,9 @@ export class Lexer {
             break;
           case "i":
             const prevToken = tokens[tokens.length - 1];
-
             if (prevToken && prevToken.type === TokenType.NUMBER) {
-              tokens.push({ type: TokenType.IMAGINARY_UNIT, value: word });
+              const prevValue = tokens.pop()?.value;
+              tokens.push({ type: TokenType.IMAGINARY_NUMBER, value: prevValue + word });
             }
             else {
               tokens.push({ type: TokenType.IDENTIFIER, value: word });
