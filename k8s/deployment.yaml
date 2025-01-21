@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quantum-backend
+  labels:
+    app: quantum-backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: quantum-backend
+  template:
+    metadata:
+      labels:
+        app: quantum-backend
+    spec:
+      containers:
+        - name: quantum-backend
+          image: <DOCKER_REGISTRY>/quantum-backend:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: RUST_LOG
+              value: "info"
