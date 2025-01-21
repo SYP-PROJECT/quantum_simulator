@@ -44,6 +44,7 @@ $$
 
 #### 2. Pauli-X Gate
 This gate flips the qubit, just like flipping the coin:
+
 $$
 \begin{bmatrix}
 0 & 1 \\
