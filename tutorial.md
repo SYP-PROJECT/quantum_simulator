@@ -53,6 +53,7 @@ $$
 
 #### 3. Pauli-Y Gate
 This gate does a special flip with a twist! It changes **|0⟩** to a special version of **|1⟩** (with an "i" twist) and **|1⟩** to a special version of **|0⟩**:
+
 $$
 \begin{bmatrix}
 0 & -i \\
@@ -72,6 +73,7 @@ $$
 
 #### 5. Hadamard Gate
 This gate makes the qubit spin in a way that has both heads and tails equally likely to happen when you measure it:
+
 $$
 \frac{1}{\sqrt{2}}
 \begin{bmatrix}
