@@ -1,71 +1,39 @@
 Tutorial: 
 # Tutorial
 
-## Qubits and Superposition
 
-Every qubit is represented by a linear combination of states (we say that the qubit is in superposition).  
-Formally:  
-**a|0⟩ + b|1⟩**,  
-where **|0⟩** is the null basis and **|1⟩** is the first basis.  
+### What are Qubits?
 
-### Note: Classical Bits
-You can also represent classical bits using the same notation. The only difference is that instead of the superposition of states, you only have one state:  
-- The state **|0⟩** for 0  
-- The state **|1⟩** for 1  
+Imagine a qubit like a spinning coin. It can be heads, tails, or even both at the same time! This special "both at the same time" state is called superposition.
+
+- If the coin is **heads**, we say the qubit is in state **|0⟩**.
+- If the coin is **tails**, we say the qubit is in state **|1⟩**.
+- But, sometimes the coin can be spinning, and we don't know if it will land heads or tails. That's like a qubit being in superposition, both **|0⟩** and **|1⟩** at the same time!
+
+### Creating Qubits
+
+To make a new qubit, we can say something like:
+```
+create qubit my_qubit = [0, 1];
+```
+This is like creating a new coin that starts out as heads (|0⟩) and tails (|1⟩).
+
+### Measuring a Qubit
+
+If you want to see if the qubit is heads or tails, you "measure" it:
+```
+measure my_qubit;
+```
+This will stop the spinning and tell you if it's heads or tails!
 
 ---
 
-## Creating Qubits
+### Quantum Gates
 
-You can create a qubit in our simulation using the following syntax:  
-```plaintext
-create qubit name = [n1, n2];
-```
+Quantum gates are like magic tricks you can do with the qubit.
 
-You can measure a qubit using: 
-```
-measure q;
-```
-
-# Quantum Gates
-
-## Overview
-
-Quantum computers have gates, much like classical computers.
-
-### Gates for One-Qubit Systems
-These gates are represented by **2x2 matrices**:  
-
-$$
-\begin{bmatrix}
-a & b \\
-c & d
-\end{bmatrix}
-$$
-
-Where **a**, **b**, **c**, and **d** are complex numbers.
-
----
-
-## Classical Gates
-
-You can also represent classical gates with matrices. For example, the classical **NOT gate** is represented by:  
-
-$$
-\begin{bmatrix}
-0 & 1 \\
-1 & 0
-\end{bmatrix}
-$$
-
----
-
-## Supported Quantum Gates
-
-We currently support the following gates:
-
-### 1. Identity Gate
-Leaves a qubit unchanged:  
+#### 1. Identity Gate
+This gate doesn't change the qubit. It's like doing nothing to the coin:
 
 $$
 \begin{bmatrix}
@@ -74,11 +42,8 @@ $$
 \end{bmatrix}
 $$
 
----
-
-### 2. Pauli-X Gate
-The quantum version of the classical NOT gate:  
-
+#### 2. Pauli-X Gate
+This gate flips the qubit, just like flipping the coin:
 $$
 \begin{bmatrix}
 0 & 1 \\
@@ -86,11 +51,8 @@ $$
 \end{bmatrix}
 $$
 
----
-
-### 3. Pauli-Y Gate
-Maps **|0⟩** to **i|1⟩** and **|1⟩** to **-i|0⟩**:  
-
+#### 3. Pauli-Y Gate
+This gate does a special flip with a twist! It changes **|0⟩** to a special version of **|1⟩** (with an "i" twist) and **|1⟩** to a special version of **|0⟩**:
 $$
 \begin{bmatrix}
 0 & -i \\
@@ -98,10 +60,8 @@ i & 0
 \end{bmatrix}
 $$
 
----
-
-### 4. Pauli-Z Gate
-Leaves **|0⟩** unchanged and maps **|1⟩** to **-|1⟩**:  
+#### 4. Pauli-Z Gate
+This gate flips **|1⟩** to a negative **|1⟩**, but leaves **|0⟩** alone:
 
 $$
 \begin{bmatrix}
@@ -110,11 +70,8 @@ $$
 \end{bmatrix}
 $$
 
----
-
-### 5. Hadamard Gate
-Makes both states equally likely:  
-
+#### 5. Hadamard Gate
+This gate makes the qubit spin in a way that has both heads and tails equally likely to happen when you measure it:
 $$
 \frac{1}{\sqrt{2}}
 \begin{bmatrix}
@@ -125,11 +82,12 @@ $$
 
 ---
 
-## Applying Gates
+### Applying Gates
 
-Gates are applied using **matrix multiplication**.
-
-In our simulator, you can apply a gate to a qubit using the following syntax:  
-```plaintext
-apply qubit_name, gate_name;
+To use a gate, you just tell the computer which qubit you want to change and which trick you want to do! Like this:
 ```
+apply my_qubit, Pauli-X;
+```
+This flips your qubit, just like flipping a coin!
+
+Now you're ready to play with qubits and make them do magic tricks!
