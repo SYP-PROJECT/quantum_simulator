@@ -13,6 +13,7 @@ export enum TokenType {
   PLUS = "PLUS",
   MINUS = "MINUS",
   MULTIPLY = "MULTIPLY",
+  DIVIDE = "DIVIDE",
   NUMBER = "NUMBER",
   IMAGINARY_NUMBER = "IMAGINARY_NUMBER",
   WHITESPACE = "WHITESPACE",
@@ -114,6 +115,9 @@ export class Lexer {
           break;
         case "*":
           tokens.push({ type: TokenType.MULTIPLY, value: char });
+          break;
+        case "/":
+          tokens.push({ type: TokenType.DIVIDE, value: char });
           break;
         default:
           throw new Error(`Unexpected token: ${char}`);

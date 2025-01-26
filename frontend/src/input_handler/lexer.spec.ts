@@ -27,13 +27,15 @@ describe("Lexer", () => {
   });
 
   test("symbols", () => {
-    lexer.reset("= + - , ; [ ]");
+    lexer.reset("= + - * / , ; [ ]");
     const tokens = lexer.tokenize();
 
     expect(tokens).toEqual([
       { type: TokenType.EQUALS, value: "=" },
       { type: TokenType.PLUS, value: "+" },
       { type: TokenType.MINUS, value: "-" },
+      { type: TokenType.MULTIPLY, value: "*" },
+      { type: TokenType.DIVIDE, value: "/" },
       { type: TokenType.COMMA, value: "," },
       { type: TokenType.SEMICOLON, value: ";" },
       { type: TokenType.LBRACKET, value: "[" },
