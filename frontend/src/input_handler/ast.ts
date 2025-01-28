@@ -6,9 +6,10 @@ export enum NodeType {
   DisplayStatement = "DisplayStatement",
   ComplexArray = "ComplexArray",
   RealNumber = "RealNumber",
-  ComplexNumber = "ComplexNumber",
+  ImaginaryNumber = "ImaginaryNumber",
   Number = "Number",
-  InfixExpression = "InfixExpression"
+  InfixExpression = "InfixExpression",
+  PrefixExpression = "PrefixExpression"
 }
 
 export type ProgramNode = {
@@ -42,16 +43,22 @@ export type DisplayStatementNode = {
 
 export type ComplexArrayNode = {
   type: NodeType.ComplexArray;
-  values: ComplexNumberNode[];
+  values: Expression[];
 }
 
-export type Expression = RealNumberNode | ComplexNumberNode | InfixExpression;
+export type Expression = RealNumberNode | ComplexNumberNode | InfixExpression | PrefixExpression;
+
+export type PrefixExpression = {
+  type: NodeType.PrefixExpression;
+  op: string;
+  right: Expression;
+}
 
 export type InfixExpression = {
   type: NodeType.InfixExpression;
   op: string;
-  left: InfixExpression;
-  right: InfixExpression;
+  left: Expression;
+  right: Expression;
 }
 
 export type RealNumberNode = {
@@ -60,6 +67,6 @@ export type RealNumberNode = {
 }
 
 export type ComplexNumberNode = {
-  type: NodeType.ComplexNumber
+  type: NodeType.ImaginaryNumber
   value: number
 }
