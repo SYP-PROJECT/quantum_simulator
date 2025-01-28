@@ -1,10 +1,25 @@
-import { Lexer, TokenType } from "./lexer"
+import { Lexer, TokenType, Token } from "./lexer"
 
 describe("Lexer", () => {
-  const lexer = new Lexer();
+  function tokenize(lexer: Lexer): Token[] {
+    const tokens: Token[] = [];
+
+    let curTok = lexer.nextToken();
+
+    while (curTok.type != TokenType.EOF) {
+      tokens.push(curTok);
+      curTok = lexer.nextToken();
+    }
+
+    tokens.push(curTok);
+    return tokens;
+  }
+
+
+
   test("keywords", () => {
-    lexer.reset("create qubit apply");
-    const tokens = lexer.tokenize();
+    const lexer = new Lexer("create qubit apply");
+    const tokens = tokenize(lexer);
 
     expect(tokens).toEqual([
       { type: TokenType.CREATE, value: "create" },
@@ -15,8 +30,8 @@ describe("Lexer", () => {
   });
 
   test("numbers and imaginary unit", () => {
-    lexer.reset("42 3.14 5i");
-    const tokens = lexer.tokenize();
+    const lexer = new Lexer("42 3.14 5i");
+    const tokens = tokenize(lexer);
 
     expect(tokens).toEqual([
       { type: TokenType.NUMBER, value: "42" },
@@ -27,8 +42,8 @@ describe("Lexer", () => {
   });
 
   test("symbols", () => {
-    lexer.reset("= + - * / , ; [ ]");
-    const tokens = lexer.tokenize();
+    const lexer = new Lexer("= + - * / , ; [ ]");
+    const tokens = tokenize(lexer);
 
     expect(tokens).toEqual([
       { type: TokenType.EQUALS, value: "=" },
@@ -45,8 +60,8 @@ describe("Lexer", () => {
   });
 
   test("identifiers", () => {
-    lexer.reset("myIdentifier another1 _third i");
-    const tokens = lexer.tokenize();
+    const lexer = new Lexer("myIdentifier another1 _third i");
+    const tokens = tokenize(lexer);
 
     expect(tokens).toEqual([
       { type: TokenType.IDENTIFIER, value: "myIdentifier" },
@@ -58,8 +73,8 @@ describe("Lexer", () => {
   });
 
   test("a simple create qubit statement", () => {
-    lexer.reset("create qubit q1 = [1 + 2i, 2 - 3i];");
-    const tokens = lexer.tokenize();
+    const lexer = new Lexer("create qubit q1 = [1 + 2i, 2 - 3i];");
+    const tokens = tokenize(lexer);
 
     expect(tokens).toEqual([
       { type: TokenType.CREATE, value: "create" },
@@ -81,8 +96,8 @@ describe("Lexer", () => {
   });
 
   test("create with floating points", () => {
-    lexer.reset("create qubit q2 = [1.5 + 2.3i, -3.1 - 4.0i];");
-    const tokens = lexer.tokenize();
+    const lexer = new Lexer("create qubit q2 = [1.5 + 2.3i, -3.1 - 4.0i];");
+    const tokens = tokenize(lexer);
 
     expect(tokens).toEqual([
       { type: TokenType.CREATE, value: "create" },
@@ -105,8 +120,8 @@ describe("Lexer", () => {
   });
 
   test("create with i identifier", () => {
-    lexer.reset("create qubit i = [1 + 2i, -3 - 4i];");
-    const tokens = lexer.tokenize();
+    const lexer = new Lexer("create qubit i = [1 + 2i, -3 - 4i];");
+    const tokens = tokenize(lexer);
 
     expect(tokens).toEqual([
       { type: TokenType.CREATE, value: "create" },
@@ -129,8 +144,8 @@ describe("Lexer", () => {
   });
 
   test("measure qubit", () => {
-    lexer.reset("measure q1;");
-    const tokens = lexer.tokenize();
+    const lexer = new Lexer("measure q1;");
+    const tokens = tokenize(lexer);
 
     expect(tokens).toEqual([
       { type: TokenType.MEASURE, value: "measure" },
@@ -141,8 +156,8 @@ describe("Lexer", () => {
   });
 
   test("display qubit", () => {
-    lexer.reset("display q1;");
-    const tokens = lexer.tokenize();
+    const lexer = new Lexer("display q1;");
+    const tokens = tokenize(lexer);
 
     expect(tokens).toEqual([
       { type: TokenType.DISPLAY, value: "display" },
@@ -153,8 +168,8 @@ describe("Lexer", () => {
   });
 
   test("create with whitespace", () => {
-    lexer.reset("   create    qubit   q1 = [ 1 + 2i , 2 - 3i ]; ");
-    const tokens = lexer.tokenize();
+    const lexer = new Lexer("   create    qubit   q1 = [ 1 + 2i , 2 - 3i ]; ");
+    const tokens = tokenize(lexer);
 
     expect(tokens).toEqual([
       { type: TokenType.CREATE, value: "create" },
@@ -176,13 +191,13 @@ describe("Lexer", () => {
   });
 
   test("throws error for unexpected tokens", () => {
-    lexer.reset("create unknown@");
-    expect(() => lexer.tokenize()).toThrow("Unexpected token: @");
+    const lexer = new Lexer("create unknown@");
+    expect(() => tokenize(lexer)).toThrow("Unexpected token: @");
   });
 
   test("throws error for invalid number format", () => {
-    lexer.reset("4.2.3");
+    const lexer = new Lexer("4.2.3");
 
-    expect(() => lexer.tokenize()).toThrow("Invalid number format: 4.2.3");
+    expect(() => tokenize(lexer)).toThrow("Invalid number format: 4.2.3");
   });
 })
