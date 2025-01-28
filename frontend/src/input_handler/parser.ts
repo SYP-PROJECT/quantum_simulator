@@ -1,4 +1,4 @@
-import { DisplayStatementNode, MeasureStatementNode, NodeType, ProgramNode, StatementNode } from "./ast";
+import { ApplyStatementNode, DisplayStatementNode, MeasureStatementNode, NodeType, ProgramNode, StatementNode } from "./ast";
 import { Lexer, Token, TokenType } from "./lexer";
 
 enum Precedence {
@@ -72,10 +72,26 @@ export class Parser {
         return this.parseMeasureStatement();
       case TokenType.DISPLAY:
         return this.parseDisplayStatement();
+      case TokenType.APPLY:
+        return this.parseApplyStatement();
       default:
-        this.errors.push("Only creation, measurement and display can be used as statements");
+        this.errors.push("Only creation, measurement, apply and display can be used as statements");
         throw new Error();
     }
+  }
+
+  private parseApplyStatement(): ApplyStatementNode {
+    this.ExpectPeek(TokenType.IDENTIFIER);
+    const identifier1 = this.curToken.value;
+
+    this.ExpectPeek(TokenType.COMMA);
+
+    this.ExpectPeek(TokenType.IDENTIFIER);
+    const identifier2 = this.curToken.value;
+
+    this.ExpectPeek(TokenType.SEMICOLON);
+
+    return { type: NodeType.ApplyStatement, identifier1: identifier1, identifier2: identifier2 };
   }
 
   private parseDisplayStatement(): DisplayStatementNode {
