@@ -1,207 +1,104 @@
-import { Token, TokenType } from "./lexer";
+import {MeasureStatementNode, NodeType, ProgramNode, StatementNode} from "./ast";
+import {Lexer, Token, TokenType} from "./lexer";
 
-export enum NodeType {
-  Program = "Program",
-  CreateStatement = "CreateStatement",
-  ApplyStatement = "ApplyStatement",
-  MeasureStatement = "MeasureStatement",
-  DisplayStatement = "DisplayStatement",
-  ComplexArray = "ComplexArray",
-  ComplexNumber = "ComplexNumber",
-  Number = "Number",
+enum Precedence {
+  LOWEST,
+  SUM,
+  PRODUCT,
+  PREFIX
 }
 
-export type ProgramNode = {
-  type: NodeType.Program;
-  statements: StatementNode[];
-}
+const precedenceMap: Map<TokenType, Precedence> = new Map([
+  [TokenType.PLUS, Precedence.SUM],
+  [TokenType.MINUS, Precedence.SUM],
+  [TokenType.MULTIPLY, Precedence.PRODUCT],
+  [TokenType.DIVIDE, Precedence.PRODUCT],
+]);
 
-export type StatementNode = CreateStatementNode | ApplyStatementNode | MeasureStatementNode | DisplayStatementNode;
-
-export type CreateStatementNode = {
-  type: NodeType.CreateStatement;
-  identifier: string;
-  complexArray: ComplexArrayNode;
-};
-
-export type ApplyStatementNode = {
-  type: NodeType.ApplyStatement;
-  identifier1: string;
-  identifier2: string;
-}
-
-export type MeasureStatementNode = {
-  type: NodeType.MeasureStatement;
-  identifier: string;
-}
-
-export type DisplayStatementNode = {
-  type: NodeType.DisplayStatement;
-  identifier: string;
-}
-
-export type ComplexArrayNode = {
-  type: NodeType.ComplexArray;
-  values: ComplexNumberNode[];
-}
-
-export type ComplexNumberNode = {
-  type: NodeType.ComplexNumber;
-  realPart: NumberNode | null;
-  imaginaryPart: NumberNode | null;
-}
-
-export type NumberNode = {
-  type: NodeType.Number;
-  value: number;
-}
+const synchronizationPoints = [TokenType.SEMICOLON, TokenType.EOF];
 
 export class Parser {
-  private tokens: Token[] = [];
-  private current: number = 0;
+  private lexer: Lexer = null!;
+  private curToken: Token = null!;
+  private peekToken: Token = null!;
+  private errors: string[] = [];
 
   constructor() {
   }
 
-  private peek(): Token | null {
-    return this.current < this.tokens.length ? this.tokens[this.current] : null;
+  reset(lexer: Lexer) {
+    this.lexer = lexer;
+    this.errors = [];
+
+    this.nextToken();
+    this.nextToken();
   }
 
-  private consume(expectedType: TokenType): Token {
-    const token = this.peek();
-    if (!token || token.type !== expectedType) {
-      throw new Error(
-        `Expected token type ${expectedType} but got ${token?.type || "end of input"}`
-      );
-    }
-    this.current++;
-    return token;
+  public get Errors(): string[] {
+    return this.errors;
   }
 
-  public parseProgram(): ProgramNode {
-    const statements: StatementNode[] = [];
+  private nextToken() {
+    this.curToken = this.peekToken;
+    this.peekToken = this.lexer.nextToken();
+  }
 
-    while (this.peek() && this.peek()?.type !== TokenType.EOF) {
-      statements.push(this.parseStatement());
-      this.consume(TokenType.SEMICOLON);
+  parseProgram(): ProgramNode {
+    const program: ProgramNode = {
+      type: NodeType.Program, statements: []
     }
-    return { type: NodeType.Program, statements };
+
+    while (!this.CurTokenIs(TokenType.EOF)) {
+      try {
+        program.statements.push(this.parseStatement());
+      } catch {
+        this.resynchronize();
+      }
+      this.nextToken();
+    }
+
+    return program;
+  }
+
+  private resynchronize() {
+    while (!synchronizationPoints.includes(this.curToken.type)) {
+      this.nextToken();
+    }
   }
 
   private parseStatement(): StatementNode {
-    const token = this.peek();
-    if (token?.type === TokenType.CREATE) {
-      return this.parseCreateStatement();
+    switch (this.curToken.type) {
+      case TokenType.MEASURE:
+        return this.parseMeasureStatement();
+      default:
+        this.errors.push("Only creation, measurement and display can be used as statements");
+        throw new Error();
     }
-    else if (token?.type === TokenType.APPLY) {
-      return this.parseConnectStatement();
-    }
-    else if (token?.type === TokenType.MEASURE) {
-      return this.parseMeasureStatement();
-    }
-    else if (token?.type === TokenType.DISPLAY) {
-      return this.parseDisplayStatement();
-    }
-    else {
-      throw new Error(`Unexpected token ${token?.value}`);
-    }
-  }
-
-  private parseCreateStatement(): CreateStatementNode {
-    this.consume(TokenType.CREATE);
-    this.consume(TokenType.QUBIT);
-
-    const identifier = this.consume(TokenType.IDENTIFIER).value;
-    this.consume(TokenType.EQUALS);
-
-    const complexArray = this.parseComplexArray();
-    return { type: NodeType.CreateStatement, identifier, complexArray };
-  }
-
-  private parseConnectStatement(): ApplyStatementNode {
-    this.consume(TokenType.APPLY);
-    const identifier1 = this.consume(TokenType.IDENTIFIER).value;
-
-    this.consume(TokenType.COMMA);
-
-    const identifier2 = this.consume(TokenType.IDENTIFIER).value;
-    return { type: NodeType.ApplyStatement, identifier1, identifier2 };
   }
 
   private parseMeasureStatement(): MeasureStatementNode {
-    this.consume(TokenType.MEASURE);
-    const identifier = this.consume(TokenType.IDENTIFIER).value;
+    this.ExpectPeek(TokenType.IDENTIFIER);
+    const identifier = this.curToken.value;
 
-    return { type: NodeType.MeasureStatement, identifier };
+    this.ExpectPeek(TokenType.SEMICOLON);
+
+    return { type: NodeType.MeasureStatement, identifier: identifier };
   }
 
-  private parseDisplayStatement(): DisplayStatementNode {
-    this.consume(TokenType.DISPLAY);
-    const identifier = this.consume(TokenType.IDENTIFIER).value;
+  private ExpectPeek(t: TokenType) {
+    if (this.PeekTokenIs(t)) {
+      this.nextToken();
+      return;
+    }
 
-    return { type: NodeType.DisplayStatement, identifier };
+    this.AddPeekError(t);
+    throw new Error();
   }
 
-  private parseComplexArray(): ComplexArrayNode {
-    this.consume(TokenType.LBRACKET);
-    const complexNumbers: ComplexNumberNode[] = [this.parseComplexNumber()];
-
-    while (this.peek() && this.peek()!.type === TokenType.COMMA) {
-      this.consume(TokenType.COMMA);
-      complexNumbers.push(this.parseComplexNumber());
-    }
-
-    this.consume(TokenType.RBRACKET);
-    return { type: NodeType.ComplexArray, values: complexNumbers };
+  private AddPeekError(t: TokenType) {
+    this.errors.push(`Expected next token to be ${t}, got ${this.peekToken.type} instead`)
   }
 
-  private parseComplexNumber(): ComplexNumberNode {
-    let realPart: NumberNode | null = null;
-    let imaginaryPart: NumberNode | null = null;
-
-    let sign = "";
-    if (this.peek()?.type === TokenType.PLUS || this.peek()?.type === TokenType.MINUS) {
-      sign = this.consume(this.peek()!.type).value;
-    }
-
-    if (this.peek()?.type === TokenType.NUMBER) {
-      realPart = this.parseNumber();
-      if (sign) {
-        realPart.value = parseFloat(sign + realPart.value);
-      }
-      sign = "";
-    }
-
-    if (this.peek()?.type === TokenType.PLUS || this.peek()?.type === TokenType.MINUS) {
-      sign = this.consume(this.peek()!.type).value;
-    }
-
-    if (this.peek()?.type === TokenType.NUMBER) {
-      imaginaryPart = this.parseNumber();
-
-      if (sign) {
-        imaginaryPart.value = parseFloat(sign + imaginaryPart.value);
-      }
-      this.consume(TokenType.IMAGINARY_UNIT);
-    }
-
-    if (!realPart && !imaginaryPart) {
-      throw new Error("Invalid complex number: both real and imaginary parts are missing");
-    }
-    return {
-      type: NodeType.ComplexNumber,
-      realPart,
-      imaginaryPart,
-    };
-  }
-
-  private parseNumber(): NumberNode {
-    const token = this.consume(TokenType.NUMBER);
-    return { type: NodeType.Number, value: parseFloat(token.value) };
-  }
-
-  reset(tokens: Token[]) {
-    this.tokens = tokens;
-    this.current = 0;
-  }
+  private CurTokenIs = (t: TokenType) => this.curToken.type == t;
+  private PeekTokenIs = (t: TokenType) => this.peekToken.type == t;
 }
