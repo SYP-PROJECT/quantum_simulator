@@ -1,5 +1,5 @@
-import {MeasureStatementNode, NodeType, ProgramNode, StatementNode} from "./ast";
-import {Lexer, Token, TokenType} from "./lexer";
+import { DisplayStatementNode, MeasureStatementNode, NodeType, ProgramNode, StatementNode } from "./ast";
+import { Lexer, Token, TokenType } from "./lexer";
 
 enum Precedence {
   LOWEST,
@@ -70,10 +70,21 @@ export class Parser {
     switch (this.curToken.type) {
       case TokenType.MEASURE:
         return this.parseMeasureStatement();
+      case TokenType.DISPLAY:
+        return this.parseDisplayStatement();
       default:
         this.errors.push("Only creation, measurement and display can be used as statements");
         throw new Error();
     }
+  }
+
+  private parseDisplayStatement(): DisplayStatementNode {
+    this.ExpectPeek(TokenType.IDENTIFIER);
+    const identifier = this.curToken.value;
+
+    this.ExpectPeek(TokenType.SEMICOLON);
+
+    return { type: NodeType.DisplayStatement, identifier: identifier };
   }
 
   private parseMeasureStatement(): MeasureStatementNode {
