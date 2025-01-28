@@ -31,14 +31,20 @@ function CreateNewToken(tokenType: TokenType, value: string): Token {
 }
 
 export class Lexer {
-  private input: string;
-  private position: number = 0;
+  private input: string = "";
   private readPosition: number = 0;
   private curChar: string = "";
 
-  constructor(input: string) {
+
+  public reset(input: string) {
     this.input = input;
+    this.readPosition = 0;
+    this.curChar = "";
+
     this.readChar();
+  }
+
+  constructor() {
   }
 
   private readChar() {
@@ -47,7 +53,6 @@ export class Lexer {
     } else {
       this.curChar = this.input.at(this.readPosition)!;
     }
-    this.position = this.readPosition;
     this.readPosition++;
   }
 
