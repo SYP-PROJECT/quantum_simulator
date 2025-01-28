@@ -43,7 +43,7 @@ describe('Parser', () => {
 
     expect(parser.Errors.length).toBe(1);
     expect(parser.Errors).toStrictEqual([
-      "Only creation, measurement and display can be used as statements"
+      "Only creation, measurement, apply and display can be used as statements"
     ]);
 
     expect(program.statements).toHaveLength(0);
@@ -58,7 +58,7 @@ describe('Parser', () => {
 
     expect(parser.Errors.length).toBe(1);
     expect(parser.Errors).toStrictEqual([
-      "Only creation, measurement and display can be used as statements"
+      "Only creation, measurement, apply and display can be used as statements"
     ]);
 
     expect(program.statements).toHaveLength(1);
@@ -78,8 +78,8 @@ describe('Parser', () => {
 
     expect(parser.Errors.length).toBe(2);
     expect(parser.Errors).toStrictEqual([
-      "Only creation, measurement and display can be used as statements",
-      "Only creation, measurement and display can be used as statements"
+      "Only creation, measurement, apply and display can be used as statements",
+      "Only creation, measurement, apply and display can be used as statements"
     ]);
 
     expect(program.statements).toHaveLength(1);
@@ -118,6 +118,73 @@ describe('Parser', () => {
         identifier: "q"
       }
     ]);
+  });
+
+  test('should parse a simple APPLY statement', () => {
+    lexer.reset("apply q1, q2;");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+    expect(parser.Errors.length).toBe(0);
+
+    expect(program.statements).toHaveLength(1);
+    expect(program.statements).toStrictEqual([
+      {
+        type: NodeType.ApplyStatement,
+        identifier1: "q1",
+        identifier2: "q2"
+      }
+    ]);
+  });
+
+  test('should add an error for a missing first identifier in APPLY statement', () => {
+    lexer.reset("apply , q2;");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+
+    expect(parser.Errors.length).toBe(1);
+    expect(parser.Errors).toStrictEqual(["Expected next token to be IDENTIFIER, got COMMA instead"]);
+
+    expect(program.statements).toHaveLength(0);
+  });
+
+
+
+  test('should add an error for a missing second identifier in APPLY statement', () => {
+    lexer.reset("apply q1,;");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+
+    expect(parser.Errors.length).toBe(1);
+    expect(parser.Errors).toStrictEqual(["Expected next token to be IDENTIFIER, got SEMICOLON instead"]);
+
+    expect(program.statements).toHaveLength(0);
+  });
+
+  test('should add an error for missing comma in APPLY statement', () => {
+    lexer.reset("apply q1 q2;");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+
+    expect(parser.Errors.length).toBe(1);
+    expect(parser.Errors).toStrictEqual(["Expected next token to be COMMA, got IDENTIFIER instead"]);
+
+    expect(program.statements).toHaveLength(0);
+  });
+
+  test('should add an error for missing semicolon in APPLY statement', () => {
+    lexer.reset("apply q1, q2");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+
+    expect(parser.Errors.length).toBe(1);
+    expect(parser.Errors).toStrictEqual(["Expected next token to be SEMICOLON, got EOF instead"]);
+
+    expect(program.statements).toHaveLength(0);
   });
 
   test('should parse multiple valid statements', () => {
