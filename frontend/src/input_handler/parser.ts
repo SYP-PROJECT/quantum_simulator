@@ -35,17 +35,17 @@ export class Parser {
   private errors: string[] = [];
 
   private prefixParsers = new Map([
-    [TokenType.NUMBER, Parser.parseNumber],
-    [TokenType.IMAGINARY_NUMBER, Parser.parseImaginaryNumber],
-    [TokenType.PLUS, Parser.parsePrefixExpression],
-    [TokenType.MINUS, Parser.parsePrefixExpression]
+    [TokenType.NUMBER, this.parseNumber.bind(this)],
+    [TokenType.IMAGINARY_NUMBER, this.parseImaginaryNumber.bind(this)],
+    [TokenType.PLUS, this.parsePrefixExpression.bind(this)],
+    [TokenType.MINUS, this.parsePrefixExpression.bind(this)]
   ]);
 
   private infixParsers = new Map([
-    [TokenType.PLUS, Parser.parseInfixExpression],
-    [TokenType.MINUS, Parser.parseInfixExpression],
-    [TokenType.DIVIDE, Parser.parseInfixExpression],
-    [TokenType.MULTIPLY, Parser.parseInfixExpression],
+    [TokenType.PLUS, this.parseInfixExpression.bind(this)],
+    [TokenType.MINUS, this.parseInfixExpression.bind(this)],
+    [TokenType.DIVIDE, this.parseInfixExpression.bind(this)],
+    [TokenType.MULTIPLY, this.parseInfixExpression.bind(this)],
   ]);
 
   constructor() {
@@ -107,33 +107,33 @@ export class Parser {
     }
   }
 
-  private static parseInfixExpression(instance: Parser, left: Expression): Expression {
-    const operator = instance.curToken.value;
-    const precedence = instance.curPrecedence();
+  private parseInfixExpression(left: Expression): Expression {
+    const operator = this.curToken.value;
+    const precedence = this.curPrecedence();
 
-    instance.nextToken();
+    this.nextToken();
 
-    const right = instance.parseExpression(precedence);
+    const right = this.parseExpression(precedence);
 
     return { type: NodeType.InfixExpression, op: operator, left: left, right: right }
   }
 
 
-  private static parsePrefixExpression(instance: Parser): Expression {
-    const operator = instance.curToken.value;
+  private parsePrefixExpression(): Expression {
+    const operator = this.curToken.value;
 
-    instance.nextToken();
+    this.nextToken();
 
-    const right = instance.parseExpression(Precedence.PREFIX);
+    const right = this.parseExpression(Precedence.PREFIX);
     return { type: NodeType.PrefixExpression, op: operator, right: right };
   }
 
-  private static parseImaginaryNumber(instance: Parser): Expression {
-    return { type: NodeType.ImaginaryNumber, value: parseFloat(instance.curToken.value) };
+  private parseImaginaryNumber(): Expression {
+    return { type: NodeType.ImaginaryNumber, value: parseFloat(this.curToken.value) };
   }
 
-  private static parseNumber(instance: Parser): Expression {
-    return { type: NodeType.RealNumber, value: parseFloat(instance.curToken.value) };
+  private parseNumber(): Expression {
+    return { type: NodeType.RealNumber, value: parseFloat(this.curToken.value) };
   }
 
   private parseCreateStatement(): CreateStatementNode {
@@ -180,7 +180,7 @@ export class Parser {
       throw new Error();
     }
 
-    let left: Expression = prefix(this);
+    let left: Expression = prefix();
 
     while (!this.peekTokenIs(TokenType.SEMICOLON) && precedence < this.peekPrecedence()) {
       const infixParser = this.infixParsers.get(this.peekToken.type);
@@ -191,7 +191,7 @@ export class Parser {
 
       this.nextToken();
 
-      left = infixParser(this, left);
+      left = infixParser(left);
     }
     return left;
   }
