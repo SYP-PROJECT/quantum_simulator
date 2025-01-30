@@ -191,6 +191,29 @@ describe("Lexer", () => {
     ]);
   });
 
+  test("test single line comment with EOF", () => {
+    lexer.reset("//This is a comment");
+
+    const tokens = tokenize();
+
+    expect(tokens).toEqual([
+      { type: TokenType.EOF, value: "" }
+    ])
+  });
+
+  test("test single line comment with statement", () => {
+    lexer.reset("//This is a comment\nmeasure q1;");
+
+    const tokens = tokenize();
+
+    expect(tokens).toEqual([
+      { type: TokenType.MEASURE, value: "measure" },
+      { type: TokenType.IDENTIFIER, value: "q1" },
+      { type: TokenType.SEMICOLON, value: ";" },
+      { type: TokenType.EOF, value: "" }
+    ])
+  });
+
   test("throws error for unexpected tokens", () => {
     lexer.reset("create unknown@");
     expect(() => tokenize()).toThrow("Unexpected token: @");

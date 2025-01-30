@@ -135,6 +135,11 @@ export class Lexer {
         newToken = CreateNewToken(TokenType.MULTIPLY, this.curChar);
         break;
       case "/":
+        if (this.input.at(this.readPosition) == "/") {
+          this.readWhile(/[^\n]/)
+          newToken = this.nextToken();
+          break;
+        }
         newToken = CreateNewToken(TokenType.DIVIDE, this.curChar);
         break;
       case "":
