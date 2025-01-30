@@ -6,7 +6,6 @@ import {
   Expression,
   MeasureStatementNode,
   NodeType,
-  PrefixExpression,
   ProgramNode,
   StatementNode
 } from "./ast";
@@ -26,6 +25,7 @@ const precedenceMap: Map<TokenType, Precedence> = new Map([
   [TokenType.DIVIDE, Precedence.PRODUCT],
 ]);
 
+
 const synchronizationPoints = [TokenType.SEMICOLON, TokenType.EOF];
 
 export class Parser {
@@ -34,12 +34,18 @@ export class Parser {
   private peekToken: Token = null!;
   private errors: string[] = [];
 
-
   private prefixParsers = new Map([
     [TokenType.NUMBER, Parser.parseNumber],
     [TokenType.IMAGINARY_NUMBER, Parser.parseImaginaryNumber],
     [TokenType.PLUS, Parser.parsePrefixExpression],
     [TokenType.MINUS, Parser.parsePrefixExpression]
+  ]);
+
+  private infixParsers = new Map([
+    [TokenType.PLUS, Parser.parseInfixExpression],
+    [TokenType.MINUS, Parser.parseInfixExpression],
+    [TokenType.DIVIDE, Parser.parseInfixExpression],
+    [TokenType.MULTIPLY, Parser.parseInfixExpression],
   ]);
 
   constructor() {
@@ -101,6 +107,18 @@ export class Parser {
     }
   }
 
+  private static parseInfixExpression(instance: Parser, left: Expression): Expression {
+    const operator = instance.curToken.value;
+    const precedence = instance.curPrecedence();
+
+    instance.nextToken();
+
+    const right = instance.parseExpression(precedence);
+
+    return { type: NodeType.InfixExpression, op: operator, left: left, right: right }
+  }
+
+
   private static parsePrefixExpression(instance: Parser): Expression {
     const operator = instance.curToken.value;
 
@@ -157,12 +175,25 @@ export class Parser {
   private parseExpression(precedence: Precedence): Expression {
     const prefix = this.prefixParsers.get(this.curToken.type);
 
-    if(prefix === undefined) {
+    if (prefix === undefined) {
       this.errors.push(`No prefix parse function for ${this.curToken.type} found`);
       throw new Error();
     }
 
-    return prefix(this);
+    let left: Expression = prefix(this);
+
+    while (!this.peekTokenIs(TokenType.SEMICOLON) && precedence < this.peekPrecedence()) {
+      const infixParser = this.infixParsers.get(this.peekToken.type);
+
+      if (infixParser === undefined) {
+        return left;
+      }
+
+      this.nextToken();
+
+      left = infixParser(this, left);
+    }
+    return left;
   }
 
   private parseApplyStatement(): ApplyStatementNode {
@@ -209,6 +240,18 @@ export class Parser {
 
   private addPeekError(t: TokenType) {
     this.errors.push(`Expected next token to be ${t}, got ${this.peekToken.type} instead`)
+  }
+
+  private peekPrecedence(): Precedence {
+    const precedence = precedenceMap.get(this.peekToken.type);
+
+    return precedence === undefined ? Precedence.LOWEST : precedence;
+  }
+
+  private curPrecedence(): Precedence {
+    const precedence = precedenceMap.get(this.curToken.type);
+
+    return precedence === undefined ? Precedence.LOWEST : precedence;
   }
 
   private curTokenIs = (t: TokenType) => this.curToken.type == t;
