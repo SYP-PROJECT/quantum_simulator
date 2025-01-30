@@ -6,10 +6,11 @@ import {
   Expression,
   MeasureStatementNode,
   NodeType,
+  PrefixExpression,
   ProgramNode,
   StatementNode
 } from "./ast";
-import {Lexer, Token, TokenType} from "./lexer";
+import { Lexer, Token, TokenType } from "./lexer";
 
 enum Precedence {
   LOWEST,
@@ -36,7 +37,9 @@ export class Parser {
 
   private prefixParsers = new Map([
     [TokenType.NUMBER, Parser.parseNumber],
-    [TokenType.IMAGINARY_NUMBER, Parser.parseImaginaryNumber]
+    [TokenType.IMAGINARY_NUMBER, Parser.parseImaginaryNumber],
+    [TokenType.PLUS, Parser.parsePrefixExpression],
+    [TokenType.MINUS, Parser.parsePrefixExpression]
   ]);
 
   constructor() {
@@ -98,8 +101,17 @@ export class Parser {
     }
   }
 
+  private static parsePrefixExpression(instance: Parser): Expression {
+    const operator = instance.curToken.value;
+
+    instance.nextToken();
+
+    const right = instance.parseExpression(Precedence.PREFIX);
+    return { type: NodeType.PrefixExpression, op: operator, right: right };
+  }
+
   private static parseImaginaryNumber(instance: Parser): Expression {
-    return {type: NodeType.ImaginaryNumber, value: parseFloat(instance.curToken.value)};
+    return { type: NodeType.ImaginaryNumber, value: parseFloat(instance.curToken.value) };
   }
 
   private static parseNumber(instance: Parser): Expression {
@@ -145,7 +157,12 @@ export class Parser {
   private parseExpression(precedence: Precedence): Expression {
     const prefix = this.prefixParsers.get(this.curToken.type);
 
-    return prefix!(this);
+    if(prefix === undefined) {
+      this.errors.push(`No prefix parse function for ${this.curToken.type} found`);
+      throw new Error();
+    }
+
+    return prefix(this);
   }
 
   private parseApplyStatement(): ApplyStatementNode {
