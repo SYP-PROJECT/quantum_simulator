@@ -1,6 +1,6 @@
-import { Parser } from "./parser";
-import { TokenType, Lexer } from "./lexer";
-import { NodeType } from "./ast";
+import {Parser} from "./parser";
+import {Lexer} from "./lexer";
+import {NodeType} from "./ast";
 
 describe('Parser', () => {
   const lexer = new Lexer();
@@ -333,6 +333,32 @@ describe('Parser', () => {
     ]);
   });
 
+  test('should parse CRATE statement with prefix expression', () => {
+    lexer.reset("create qubit q1 = [-1, +2, -3i, +4i];");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+    expect(parser.Errors.length).toBe(0);
+
+    expect(program.statements).toHaveLength(1);
+
+    expect(program.statements).toStrictEqual([
+      {
+        type: NodeType.CreateStatement,
+        identifier: "q1",
+        complexArray: {
+          type: NodeType.ComplexArray,
+          values: [
+            {type: NodeType.PrefixExpression, op: "-", right: {type: NodeType.RealNumber, value: 1}},
+            {type: NodeType.PrefixExpression, op: "+", right: {type: NodeType.RealNumber, value: 2}},
+            {type: NodeType.PrefixExpression, op: "-", right: {type: NodeType.ImaginaryNumber, value: 3}},
+            {type: NodeType.PrefixExpression, op: "+", right: {type: NodeType.ImaginaryNumber, value: 4}},
+          ]
+        }
+      }
+    ]);
+  });
+
   test('should add an error for missing qubit in CREATE statement', () => {
     lexer.reset("create q1 = [1];");
     parser.reset(lexer);
@@ -418,6 +444,17 @@ describe('Parser', () => {
     expect(program.statements).toHaveLength(0);
   });
 
+  test('should add an error for missing number in PREFIX expression', () => {
+    lexer.reset("create qubit q1 = [-];");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+
+    expect(parser.Errors.length).toBe(1);
+    expect(parser.Errors).toStrictEqual(["No prefix parse function for RBRACKET found"]);
+
+    expect(program.statements).toHaveLength(0);
+  });
 
   test('should parse multiple valid statements', () => {
     lexer.reset("measure q1; display q1; create qubit a = [1];");
