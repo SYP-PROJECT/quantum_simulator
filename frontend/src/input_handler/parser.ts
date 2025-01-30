@@ -1,5 +1,15 @@
-import { ApplyStatementNode, DisplayStatementNode, MeasureStatementNode, NodeType, ProgramNode, StatementNode } from "./ast";
-import { Lexer, Token, TokenType } from "./lexer";
+import {
+  ApplyStatementNode,
+  ComplexArrayNode,
+  CreateStatementNode,
+  DisplayStatementNode,
+  Expression,
+  MeasureStatementNode,
+  NodeType,
+  ProgramNode,
+  StatementNode
+} from "./ast";
+import {Lexer, Token, TokenType} from "./lexer";
 
 enum Precedence {
   LOWEST,
@@ -22,6 +32,12 @@ export class Parser {
   private curToken: Token = null!;
   private peekToken: Token = null!;
   private errors: string[] = [];
+
+
+  private prefixParsers = new Map([
+    [TokenType.NUMBER, Parser.parseNumber],
+    [TokenType.IMAGINARY_NUMBER, Parser.parseImaginaryNumber]
+  ]);
 
   constructor() {
   }
@@ -48,7 +64,7 @@ export class Parser {
       type: NodeType.Program, statements: []
     }
 
-    while (!this.CurTokenIs(TokenType.EOF)) {
+    while (!this.curTokenIs(TokenType.EOF)) {
       try {
         program.statements.push(this.parseStatement());
       } catch {
@@ -74,58 +90,110 @@ export class Parser {
         return this.parseDisplayStatement();
       case TokenType.APPLY:
         return this.parseApplyStatement();
+      case TokenType.CREATE:
+        return this.parseCreateStatement();
       default:
         this.errors.push("Only creation, measurement, apply and display can be used as statements");
         throw new Error();
     }
   }
 
+  private static parseImaginaryNumber(instance: Parser): Expression {
+    return {type: NodeType.ImaginaryNumber, value: parseFloat(instance.curToken.value)};
+  }
+
+  private static parseNumber(instance: Parser): Expression {
+    return { type: NodeType.RealNumber, value: parseFloat(instance.curToken.value) };
+  }
+
+  private parseCreateStatement(): CreateStatementNode {
+    this.expectPeek(TokenType.QUBIT);
+    this.expectPeek(TokenType.IDENTIFIER);
+
+    const identifier = this.curToken.value;
+
+    this.expectPeek(TokenType.EQUALS);
+    this.expectPeek(TokenType.LBRACKET);
+    const statement: CreateStatementNode = { type: NodeType.CreateStatement, identifier: identifier, complexArray: this.parseExpressionList() };
+
+    this.expectPeek(TokenType.SEMICOLON);
+    return statement;
+  }
+
+  private parseExpressionList(): ComplexArrayNode {
+    const expressions: Expression[] = [];
+
+    if (this.peekTokenIs(TokenType.RBRACKET)) {
+      this.nextToken();
+      return { type: NodeType.ComplexArray, values: expressions };
+    }
+
+    this.nextToken();
+    expressions.push(this.parseExpression(Precedence.LOWEST));
+
+
+    while (this.peekTokenIs(TokenType.COMMA)) {
+      this.nextToken();
+      this.nextToken();
+      expressions.push(this.parseExpression(Precedence.LOWEST));
+    }
+
+    this.expectPeek(TokenType.RBRACKET);
+    return { type: NodeType.ComplexArray, values: expressions };
+  }
+
+  private parseExpression(precedence: Precedence): Expression {
+    const prefix = this.prefixParsers.get(this.curToken.type);
+
+    return prefix!(this);
+  }
+
   private parseApplyStatement(): ApplyStatementNode {
-    this.ExpectPeek(TokenType.IDENTIFIER);
+    this.expectPeek(TokenType.IDENTIFIER);
     const identifier1 = this.curToken.value;
 
-    this.ExpectPeek(TokenType.COMMA);
+    this.expectPeek(TokenType.COMMA);
 
-    this.ExpectPeek(TokenType.IDENTIFIER);
+    this.expectPeek(TokenType.IDENTIFIER);
     const identifier2 = this.curToken.value;
 
-    this.ExpectPeek(TokenType.SEMICOLON);
+    this.expectPeek(TokenType.SEMICOLON);
 
     return { type: NodeType.ApplyStatement, identifier1: identifier1, identifier2: identifier2 };
   }
 
   private parseDisplayStatement(): DisplayStatementNode {
-    this.ExpectPeek(TokenType.IDENTIFIER);
+    this.expectPeek(TokenType.IDENTIFIER);
     const identifier = this.curToken.value;
 
-    this.ExpectPeek(TokenType.SEMICOLON);
+    this.expectPeek(TokenType.SEMICOLON);
 
     return { type: NodeType.DisplayStatement, identifier: identifier };
   }
 
   private parseMeasureStatement(): MeasureStatementNode {
-    this.ExpectPeek(TokenType.IDENTIFIER);
+    this.expectPeek(TokenType.IDENTIFIER);
     const identifier = this.curToken.value;
 
-    this.ExpectPeek(TokenType.SEMICOLON);
+    this.expectPeek(TokenType.SEMICOLON);
 
     return { type: NodeType.MeasureStatement, identifier: identifier };
   }
 
-  private ExpectPeek(t: TokenType) {
-    if (this.PeekTokenIs(t)) {
+  private expectPeek(t: TokenType) {
+    if (this.peekTokenIs(t)) {
       this.nextToken();
       return;
     }
 
-    this.AddPeekError(t);
+    this.addPeekError(t);
     throw new Error();
   }
 
-  private AddPeekError(t: TokenType) {
+  private addPeekError(t: TokenType) {
     this.errors.push(`Expected next token to be ${t}, got ${this.peekToken.type} instead`)
   }
 
-  private CurTokenIs = (t: TokenType) => this.curToken.type == t;
-  private PeekTokenIs = (t: TokenType) => this.peekToken.type == t;
+  private curTokenIs = (t: TokenType) => this.curToken.type == t;
+  private peekTokenIs = (t: TokenType) => this.peekToken.type == t;
 }
