@@ -187,11 +187,244 @@ describe('Parser', () => {
     expect(program.statements).toHaveLength(0);
   });
 
-  test('should parse multiple valid statements', () => {
-    lexer.reset("measure q1; display q1; measure q2;");
+  test('should parse CREATE statement with no values', () => {
+    lexer.reset("create qubit q1 = [];");
     parser.reset(lexer);
 
     const program = parser.parseProgram();
+    expect(parser.Errors.length).toBe(0);
+
+    expect(program.statements).toHaveLength(1);
+
+    expect(program.statements).toStrictEqual([
+      {
+        type: NodeType.CreateStatement,
+        identifier: "q1",
+        complexArray: {
+          type: NodeType.ComplexArray,
+          values: []
+        }
+      }
+    ]);
+  });
+
+  test('should parse CREATE statement with real number', () => {
+    lexer.reset("create qubit q1 = [1];");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+    expect(parser.Errors.length).toBe(0);
+
+    expect(program.statements).toHaveLength(1);
+
+    expect(program.statements).toStrictEqual([
+      {
+        type: NodeType.CreateStatement,
+        identifier: "q1",
+        complexArray: {
+          type: NodeType.ComplexArray,
+          values: [{type: NodeType.RealNumber, value: 1}]
+        }
+      }
+    ]);
+  });
+
+  test('should parse CREATE statement with multiple real numbers', () => {
+    lexer.reset("create qubit q1 = [1, 2, 3, 4, 5];");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+    expect(parser.Errors.length).toBe(0);
+
+    expect(program.statements).toHaveLength(1);
+
+    expect(program.statements).toStrictEqual([
+      {
+        type: NodeType.CreateStatement,
+        identifier: "q1",
+        complexArray: {
+          type: NodeType.ComplexArray,
+          values: [
+              {type: NodeType.RealNumber, value: 1},
+              {type: NodeType.RealNumber, value: 2},
+              {type: NodeType.RealNumber, value: 3},
+              {type: NodeType.RealNumber, value: 4},
+              {type: NodeType.RealNumber, value: 5}
+          ]
+        }
+      }
+    ]);
+  });
+
+  test('should parse CREATE statement with imaginary number', () => {
+    lexer.reset("create qubit q1 = [1i];");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+    expect(parser.Errors.length).toBe(0);
+
+    expect(program.statements).toHaveLength(1);
+
+    expect(program.statements).toStrictEqual([
+      {
+        type: NodeType.CreateStatement,
+        identifier: "q1",
+        complexArray: {
+          type: NodeType.ComplexArray,
+          values: [
+            {type: NodeType.ImaginaryNumber, value: 1}
+          ]
+        }
+      }
+    ]);
+  });
+
+  test('should parse CREATE statement with mutiple imaginary number', () => {
+    lexer.reset("create qubit q1 = [1i, 2i, 3i, 4i, 5i];");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+    expect(parser.Errors.length).toBe(0);
+
+    expect(program.statements).toHaveLength(1);
+
+    expect(program.statements).toStrictEqual([
+      {
+        type: NodeType.CreateStatement,
+        identifier: "q1",
+        complexArray: {
+          type: NodeType.ComplexArray,
+          values: [
+            {type: NodeType.ImaginaryNumber, value: 1},
+            {type: NodeType.ImaginaryNumber, value: 2},
+            {type: NodeType.ImaginaryNumber, value: 3},
+            {type: NodeType.ImaginaryNumber, value: 4},
+            {type: NodeType.ImaginaryNumber, value: 5}
+          ]
+        }
+      }
+    ]);
+  });
+
+  test('should parse CRATE statement with mixed imaginary number', () => {
+    lexer.reset("create qubit q1 = [1i, 2, 3, 4, 5i];");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+    expect(parser.Errors.length).toBe(0);
+
+    expect(program.statements).toHaveLength(1);
+
+    expect(program.statements).toStrictEqual([
+      {
+        type: NodeType.CreateStatement,
+        identifier: "q1",
+        complexArray: {
+          type: NodeType.ComplexArray,
+          values: [
+            {type: NodeType.ImaginaryNumber, value: 1},
+            {type: NodeType.RealNumber, value: 2},
+            {type: NodeType.RealNumber, value: 3},
+            {type: NodeType.RealNumber, value: 4},
+            {type: NodeType.ImaginaryNumber, value: 5}
+          ]
+        }
+      }
+    ]);
+  });
+
+  test('should add an error for missing qubit in CREATE statement', () => {
+    lexer.reset("create q1 = [1];");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+
+    expect(parser.Errors.length).toBe(1);
+    expect(parser.Errors).toStrictEqual(["Expected next token to be QUBIT, got IDENTIFIER instead"]);
+
+    expect(program.statements).toHaveLength(0);
+  });
+
+  test('should add an error for missing identifier in CREATE statement', () => {
+    lexer.reset("create qubit = [1];");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+
+    expect(parser.Errors.length).toBe(1);
+    expect(parser.Errors).toStrictEqual(["Expected next token to be IDENTIFIER, got EQUALS instead"]);
+
+    expect(program.statements).toHaveLength(0);
+  });
+
+
+  test('should add an error for missing equal sign in CREATE statement', () => {
+    lexer.reset("create qubit q1 [1];");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+
+    expect(parser.Errors.length).toBe(1);
+    expect(parser.Errors).toStrictEqual(["Expected next token to be EQUALS, got LBRACKET instead"]);
+
+    expect(program.statements).toHaveLength(0);
+  });
+
+  test('should add an error for missing left bracket in CREATE statement', () => {
+    lexer.reset("create qubit q1 = 1];");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+
+    expect(parser.Errors.length).toBe(1);
+    expect(parser.Errors).toStrictEqual(["Expected next token to be LBRACKET, got NUMBER instead"]);
+
+    expect(program.statements).toHaveLength(0);
+  });
+
+  test('should add an error for missing COMMA in CREATE statement', () => {
+    lexer.reset("create qubit q1 = [1 2];");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+
+    expect(parser.Errors.length).toBe(1);
+    expect(parser.Errors).toStrictEqual(["Expected next token to be RBRACKET, got NUMBER instead"]);
+
+    expect(program.statements).toHaveLength(0);
+  });
+
+  test('should add an error for missing rbracket in CREATE statement', () => {
+    lexer.reset("create qubit q1 = [1;");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+
+    expect(parser.Errors.length).toBe(1);
+    expect(parser.Errors).toStrictEqual(["Expected next token to be RBRACKET, got SEMICOLON instead"]);
+
+    expect(program.statements).toHaveLength(0);
+  });
+
+  test('should add an error for missing semicolon in CREATE statement', () => {
+    lexer.reset("create qubit q1 = [1]");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+
+    expect(parser.Errors.length).toBe(1);
+    expect(parser.Errors).toStrictEqual(["Expected next token to be SEMICOLON, got EOF instead"]);
+
+    expect(program.statements).toHaveLength(0);
+  });
+
+
+  test('should parse multiple valid statements', () => {
+    lexer.reset("measure q1; display q1; create qubit a = [1];");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+    expect(parser.Errors.length).toBe(0);
 
     expect(program.statements).toHaveLength(3);
 
@@ -205,8 +438,14 @@ describe('Parser', () => {
         identifier: "q1"
       },
       {
-        type: NodeType.MeasureStatement,
-        identifier: "q2"
+        type: NodeType.CreateStatement,
+        identifier: "a",
+        complexArray: {
+          type: NodeType.ComplexArray,
+          values: [
+              {type: NodeType.RealNumber, value: 1},
+          ]
+        }
       }
     ]);
   });
