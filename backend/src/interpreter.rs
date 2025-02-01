@@ -37,7 +37,11 @@ fn interpret_statement(
                 variables.entry(identifier.to_string())
             {
                 if complex_array.values.len() != 2 {
-                    return Some("Complex array must contain exactly 2 values".to_string());
+                    return Some(format!(
+                        "Invalid number of states for qubit {}: expected 2, got {}",
+                        identifier,
+                        complex_array.values.len()
+                    ));
                 }
 
                 let (real1, imag1) = evaluate_complex_expression(&complex_array.values[0]);
@@ -156,6 +160,54 @@ mod tests {
 
     fn create_imaginary_number(value: f64) -> Expression {
         Expression::ImaginaryNumber { value }
+    }
+
+    #[test]
+    fn test_create_qubit_wrong_states_count() {
+        let program = ProgramNode {
+            r#type: NodeType::Program,
+            statements: vec![StatementNode::CreateStatement {
+                identifier: "q1".to_string(),
+                complex_array: ComplexArrayNode {
+                    r#type: NodeType::ComplexArray,
+                    values: vec![
+                        create_real_number(1.0),
+                        create_real_number(0.0),
+                        create_real_number(0.0),
+                    ],
+                },
+            }],
+        };
+
+        let results = interpret_program(program);
+
+        assert_eq!(results.len(), 1);
+        assert_eq!(
+            results[0], "Invalid number of states for qubit q1: expected 2, got 3",
+            "Expected error for wrong number of states"
+        );
+    }
+
+    #[test]
+    fn test_create_qubit_empty_states() {
+        let program = ProgramNode {
+            r#type: NodeType::Program,
+            statements: vec![StatementNode::CreateStatement {
+                identifier: "q1".to_string(),
+                complex_array: ComplexArrayNode {
+                    r#type: NodeType::ComplexArray,
+                    values: vec![],
+                },
+            }],
+        };
+
+        let results = interpret_program(program);
+
+        assert_eq!(results.len(), 1);
+        assert_eq!(
+            results[0], "Invalid number of states for qubit q1: expected 2, got 0",
+            "Expected error for empty states"
+        );
     }
 
     #[test]
