@@ -1,207 +1,259 @@
-import { Token, TokenType } from "./lexer";
+import {
+  ApplyStatementNode,
+  ComplexArrayNode,
+  CreateStatementNode,
+  DisplayStatementNode,
+  Expression,
+  MeasureStatementNode,
+  NodeType,
+  ProgramNode,
+  StatementNode
+} from "./ast";
+import { Lexer, Token, TokenType } from "./lexer";
 
-export enum NodeType {
-  Program = "Program",
-  CreateStatement = "CreateStatement",
-  ApplyStatement = "ApplyStatement",
-  MeasureStatement = "MeasureStatement",
-  DisplayStatement = "DisplayStatement",
-  ComplexArray = "ComplexArray",
-  ComplexNumber = "ComplexNumber",
-  Number = "Number",
+enum Precedence {
+  LOWEST,
+  SUM,
+  PRODUCT,
+  PREFIX
 }
 
-export type ProgramNode = {
-  type: NodeType.Program;
-  statements: StatementNode[];
-}
+const precedenceMap: Map<TokenType, Precedence> = new Map([
+  [TokenType.PLUS, Precedence.SUM],
+  [TokenType.MINUS, Precedence.SUM],
+  [TokenType.MULTIPLY, Precedence.PRODUCT],
+  [TokenType.DIVIDE, Precedence.PRODUCT],
+]);
 
-export type StatementNode = CreateStatementNode | ApplyStatementNode | MeasureStatementNode | DisplayStatementNode;
 
-export type CreateStatementNode = {
-  type: NodeType.CreateStatement;
-  identifier: string;
-  complexArray: ComplexArrayNode;
-};
-
-export type ApplyStatementNode = {
-  type: NodeType.ApplyStatement;
-  identifier1: string;
-  identifier2: string;
-}
-
-export type MeasureStatementNode = {
-  type: NodeType.MeasureStatement;
-  identifier: string;
-}
-
-export type DisplayStatementNode = {
-  type: NodeType.DisplayStatement;
-  identifier: string;
-}
-
-export type ComplexArrayNode = {
-  type: NodeType.ComplexArray;
-  values: ComplexNumberNode[];
-}
-
-export type ComplexNumberNode = {
-  type: NodeType.ComplexNumber;
-  realPart: NumberNode | null;
-  imaginaryPart: NumberNode | null;
-}
-
-export type NumberNode = {
-  type: NodeType.Number;
-  value: number;
-}
+const synchronizationPoints = [TokenType.SEMICOLON, TokenType.EOF];
 
 export class Parser {
-  private tokens: Token[] = [];
-  private current: number = 0;
+  private lexer: Lexer = null!;
+  private curToken: Token = null!;
+  private peekToken: Token = null!;
+  private errors: string[] = [];
+
+  private prefixParsers = new Map([
+    [TokenType.NUMBER, this.parseNumber.bind(this)],
+    [TokenType.IMAGINARY_NUMBER, this.parseImaginaryNumber.bind(this)],
+    [TokenType.PLUS, this.parsePrefixExpression.bind(this)],
+    [TokenType.MINUS, this.parsePrefixExpression.bind(this)]
+  ]);
+
+  private infixParsers = new Map([
+    [TokenType.PLUS, this.parseInfixExpression.bind(this)],
+    [TokenType.MINUS, this.parseInfixExpression.bind(this)],
+    [TokenType.DIVIDE, this.parseInfixExpression.bind(this)],
+    [TokenType.MULTIPLY, this.parseInfixExpression.bind(this)],
+  ]);
 
   constructor() {
   }
 
-  private peek(): Token | null {
-    return this.current < this.tokens.length ? this.tokens[this.current] : null;
+  reset(lexer: Lexer) {
+    this.lexer = lexer;
+    this.errors = [];
+
+    this.nextToken();
+    this.nextToken();
   }
 
-  private consume(expectedType: TokenType): Token {
-    const token = this.peek();
-    if (!token || token.type !== expectedType) {
-      throw new Error(
-        `Expected token type ${expectedType} but got ${token?.type || "end of input"}`
-      );
-    }
-    this.current++;
-    return token;
+  public get Errors(): string[] {
+    return this.errors;
   }
 
-  public parseProgram(): ProgramNode {
-    const statements: StatementNode[] = [];
+  private nextToken() {
+    this.curToken = this.peekToken;
+    this.peekToken = this.lexer.nextToken();
+  }
 
-    while (this.peek() && this.peek()?.type !== TokenType.EOF) {
-      statements.push(this.parseStatement());
-      this.consume(TokenType.SEMICOLON);
+  parseProgram(): ProgramNode {
+    const program: ProgramNode = {
+      type: NodeType.Program, statements: []
     }
-    return { type: NodeType.Program, statements };
+
+    while (!this.curTokenIs(TokenType.EOF)) {
+      try {
+        program.statements.push(this.parseStatement());
+      } catch {
+        this.resynchronize();
+      }
+      this.nextToken();
+    }
+
+    return program;
+  }
+
+  private resynchronize() {
+    while (!synchronizationPoints.includes(this.curToken.type)) {
+      this.nextToken();
+    }
   }
 
   private parseStatement(): StatementNode {
-    const token = this.peek();
-    if (token?.type === TokenType.CREATE) {
-      return this.parseCreateStatement();
+    switch (this.curToken.type) {
+      case TokenType.MEASURE:
+        return this.parseMeasureStatement();
+      case TokenType.DISPLAY:
+        return this.parseDisplayStatement();
+      case TokenType.APPLY:
+        return this.parseApplyStatement();
+      case TokenType.CREATE:
+        return this.parseCreateStatement();
+      default:
+        this.errors.push("Only creation, measurement, apply and display can be used as statements");
+        throw new Error();
     }
-    else if (token?.type === TokenType.APPLY) {
-      return this.parseConnectStatement();
-    }
-    else if (token?.type === TokenType.MEASURE) {
-      return this.parseMeasureStatement();
-    }
-    else if (token?.type === TokenType.DISPLAY) {
-      return this.parseDisplayStatement();
-    }
-    else {
-      throw new Error(`Unexpected token ${token?.value}`);
-    }
+  }
+
+  private parseInfixExpression(left: Expression): Expression {
+    const operator = this.curToken.value;
+    const precedence = this.curPrecedence();
+
+    this.nextToken();
+
+    const right = this.parseExpression(precedence);
+
+    return { type: NodeType.InfixExpression, op: operator, left: left, right: right }
+  }
+
+
+  private parsePrefixExpression(): Expression {
+    const operator = this.curToken.value;
+
+    this.nextToken();
+
+    const right = this.parseExpression(Precedence.PREFIX);
+    return { type: NodeType.PrefixExpression, op: operator, right: right };
+  }
+
+  private parseImaginaryNumber(): Expression {
+    return { type: NodeType.ImaginaryNumber, value: parseFloat(this.curToken.value) };
+  }
+
+  private parseNumber(): Expression {
+    return { type: NodeType.RealNumber, value: parseFloat(this.curToken.value) };
   }
 
   private parseCreateStatement(): CreateStatementNode {
-    this.consume(TokenType.CREATE);
-    this.consume(TokenType.QUBIT);
+    this.expectPeek(TokenType.QUBIT);
+    this.expectPeek(TokenType.IDENTIFIER);
 
-    const identifier = this.consume(TokenType.IDENTIFIER).value;
-    this.consume(TokenType.EQUALS);
+    const identifier = this.curToken.value;
 
-    const complexArray = this.parseComplexArray();
-    return { type: NodeType.CreateStatement, identifier, complexArray };
+    this.expectPeek(TokenType.EQUALS);
+    this.expectPeek(TokenType.LBRACKET);
+    const statement: CreateStatementNode = { type: NodeType.CreateStatement, identifier: identifier, complexArray: this.parseExpressionList() };
+
+    this.expectPeek(TokenType.SEMICOLON);
+    return statement;
   }
 
-  private parseConnectStatement(): ApplyStatementNode {
-    this.consume(TokenType.APPLY);
-    const identifier1 = this.consume(TokenType.IDENTIFIER).value;
+  private parseExpressionList(): ComplexArrayNode {
+    const expressions: Expression[] = [];
 
-    this.consume(TokenType.COMMA);
+    if (this.peekTokenIs(TokenType.RBRACKET)) {
+      this.nextToken();
+      return { type: NodeType.ComplexArray, values: expressions };
+    }
 
-    const identifier2 = this.consume(TokenType.IDENTIFIER).value;
-    return { type: NodeType.ApplyStatement, identifier1, identifier2 };
+    this.nextToken();
+    expressions.push(this.parseExpression(Precedence.LOWEST));
+
+
+    while (this.peekTokenIs(TokenType.COMMA)) {
+      this.nextToken();
+      this.nextToken();
+      expressions.push(this.parseExpression(Precedence.LOWEST));
+    }
+
+    this.expectPeek(TokenType.RBRACKET);
+    return { type: NodeType.ComplexArray, values: expressions };
   }
 
-  private parseMeasureStatement(): MeasureStatementNode {
-    this.consume(TokenType.MEASURE);
-    const identifier = this.consume(TokenType.IDENTIFIER).value;
+  private parseExpression(precedence: Precedence): Expression {
+    const prefix = this.prefixParsers.get(this.curToken.type);
 
-    return { type: NodeType.MeasureStatement, identifier };
+    if (prefix === undefined) {
+      this.errors.push(`No prefix parse function for ${this.curToken.type} found`);
+      throw new Error();
+    }
+
+    let left: Expression = prefix();
+
+    while (!this.peekTokenIs(TokenType.SEMICOLON) && precedence < this.peekPrecedence()) {
+      const infixParser = this.infixParsers.get(this.peekToken.type);
+
+      if (infixParser === undefined) {
+        return left;
+      }
+
+      this.nextToken();
+
+      left = infixParser(left);
+    }
+    return left;
+  }
+
+  private parseApplyStatement(): ApplyStatementNode {
+    this.expectPeek(TokenType.IDENTIFIER);
+    const identifier1 = this.curToken.value;
+
+    this.expectPeek(TokenType.COMMA);
+
+    this.expectPeek(TokenType.IDENTIFIER);
+    const identifier2 = this.curToken.value;
+
+    this.expectPeek(TokenType.SEMICOLON);
+
+    return { type: NodeType.ApplyStatement, identifier1: identifier1, identifier2: identifier2 };
   }
 
   private parseDisplayStatement(): DisplayStatementNode {
-    this.consume(TokenType.DISPLAY);
-    const identifier = this.consume(TokenType.IDENTIFIER).value;
+    this.expectPeek(TokenType.IDENTIFIER);
+    const identifier = this.curToken.value;
 
-    return { type: NodeType.DisplayStatement, identifier };
+    this.expectPeek(TokenType.SEMICOLON);
+
+    return { type: NodeType.DisplayStatement, identifier: identifier };
   }
 
-  private parseComplexArray(): ComplexArrayNode {
-    this.consume(TokenType.LBRACKET);
-    const complexNumbers: ComplexNumberNode[] = [this.parseComplexNumber()];
+  private parseMeasureStatement(): MeasureStatementNode {
+    this.expectPeek(TokenType.IDENTIFIER);
+    const identifier = this.curToken.value;
 
-    while (this.peek() && this.peek()!.type === TokenType.COMMA) {
-      this.consume(TokenType.COMMA);
-      complexNumbers.push(this.parseComplexNumber());
-    }
+    this.expectPeek(TokenType.SEMICOLON);
 
-    this.consume(TokenType.RBRACKET);
-    return { type: NodeType.ComplexArray, values: complexNumbers };
+    return { type: NodeType.MeasureStatement, identifier: identifier };
   }
 
-  private parseComplexNumber(): ComplexNumberNode {
-    let realPart: NumberNode | null = null;
-    let imaginaryPart: NumberNode | null = null;
-
-    let sign = "";
-    if (this.peek()?.type === TokenType.PLUS || this.peek()?.type === TokenType.MINUS) {
-      sign = this.consume(this.peek()!.type).value;
+  private expectPeek(t: TokenType) {
+    if (this.peekTokenIs(t)) {
+      this.nextToken();
+      return;
     }
 
-    if (this.peek()?.type === TokenType.NUMBER) {
-      realPart = this.parseNumber();
-      if (sign) {
-        realPart.value = parseFloat(sign + realPart.value);
-      }
-      sign = "";
-    }
-
-    if (this.peek()?.type === TokenType.PLUS || this.peek()?.type === TokenType.MINUS) {
-      sign = this.consume(this.peek()!.type).value;
-    }
-
-    if (this.peek()?.type === TokenType.NUMBER) {
-      imaginaryPart = this.parseNumber();
-
-      if (sign) {
-        imaginaryPart.value = parseFloat(sign + imaginaryPart.value);
-      }
-      this.consume(TokenType.IMAGINARY_UNIT);
-    }
-
-    if (!realPart && !imaginaryPart) {
-      throw new Error("Invalid complex number: both real and imaginary parts are missing");
-    }
-    return {
-      type: NodeType.ComplexNumber,
-      realPart,
-      imaginaryPart,
-    };
+    this.addPeekError(t);
+    throw new Error();
   }
 
-  private parseNumber(): NumberNode {
-    const token = this.consume(TokenType.NUMBER);
-    return { type: NodeType.Number, value: parseFloat(token.value) };
+  private addPeekError(t: TokenType) {
+    this.errors.push(`Expected next token to be ${t}, got ${this.peekToken.type} instead`)
   }
 
-  reset(tokens: Token[]) {
-    this.tokens = tokens;
-    this.current = 0;
+  private peekPrecedence(): Precedence {
+    const precedence = precedenceMap.get(this.peekToken.type);
+
+    return precedence === undefined ? Precedence.LOWEST : precedence;
   }
+
+  private curPrecedence(): Precedence {
+    const precedence = precedenceMap.get(this.curToken.type);
+
+    return precedence === undefined ? Precedence.LOWEST : precedence;
+  }
+
+  private curTokenIs = (t: TokenType) => this.curToken.type == t;
+  private peekTokenIs = (t: TokenType) => this.peekToken.type == t;
 }

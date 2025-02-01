@@ -13,8 +13,9 @@ export enum TokenType {
   PLUS = "PLUS",
   MINUS = "MINUS",
   MULTIPLY = "MULTIPLY",
+  DIVIDE = "DIVIDE",
   NUMBER = "NUMBER",
-  IMAGINARY_UNIT = "IMAGINARY_UNIT",
+  IMAGINARY_NUMBER = "IMAGINARY_NUMBER",
   WHITESPACE = "WHITESPACE",
   EOF = "EOF"
 }
@@ -24,118 +25,139 @@ export interface Token {
   value: string;
 }
 
+
+function CreateNewToken(tokenType: TokenType, value: string): Token {
+  return { type: tokenType, value: value };
+}
+
 export class Lexer {
   private input: string = "";
-  private position: number = 0;
+  private readPosition: number = 0;
+  private curChar: string = "";
 
-  constructor() {
 
+  public reset(input: string) {
+    this.input = input;
+    this.readPosition = 0;
+    this.curChar = "";
+
+    this.readChar();
   }
 
-  tokenize(): Token[] {
-    const tokens: Token[] = [];
+  constructor() {
+  }
 
-    while (this.position < this.input.length) {
-      const char = this.input[this.position];
-
-      if (/\s/.test(char)) {
-        this.position++;
-        continue;
-      }
-
-      if (/[a-zA-Z_]/.test(char)) {
-        const word = this.readWhile(/[a-zA-Z0-9_]/);
-
-        switch (word) {
-          case "create":
-            tokens.push({ type: TokenType.CREATE, value: word });
-            break;
-          case "qubit":
-            tokens.push({ type: TokenType.QUBIT, value: word });
-            break;
-          case "apply":
-            tokens.push({ type: TokenType.APPLY, value: word });
-            break;
-          case "measure":
-            tokens.push({ type: TokenType.MEASURE, value: word });
-            break;
-          case "display":
-            tokens.push({ type: TokenType.DISPLAY, value: word });
-            break;
-          case "i":
-            const prevToken = tokens[tokens.length - 1];
-
-            if (prevToken && prevToken.type === TokenType.NUMBER) {
-              tokens.push({ type: TokenType.IMAGINARY_UNIT, value: word });
-            }
-            else {
-              tokens.push({ type: TokenType.IDENTIFIER, value: word });
-            }
-            break;
-          default:
-            tokens.push({ type: TokenType.IDENTIFIER, value: word });
-            break;
-        }
-        continue;
-      }
-
-      if (/\d/.test(char) || char === ".") {
-        const number = this.readWhile(/[0-9.]/);
-
-        if (number.includes(".") && number.split(".").length > 2) {
-          throw new Error(`Invalid number format: ${number}`);
-        }
-        tokens.push({ type: TokenType.NUMBER, value: number });
-        continue;
-      }
+  private readChar() {
+    if (this.readPosition >= this.input.length) {
+      this.curChar = "";
+    } else {
+      this.curChar = this.input.at(this.readPosition)!;
+    }
+    this.readPosition++;
+  }
 
 
-      switch (char) {
-        case "+":
-          tokens.push({ type: TokenType.PLUS, value: char });
+  nextToken(): Token {
+    this.readWhile(/\s/);
+
+    let newToken;
+
+    if (/[a-zA-Z_]/.test(this.curChar)) {
+      const word = this.readWhile(/[a-zA-Z0-9_]/);
+
+      switch (word) {
+        case "create":
+          newToken = CreateNewToken(TokenType.CREATE, word);
           break;
-        case "-":
-          tokens.push({ type: TokenType.MINUS, value: char });
+        case "qubit":
+          newToken = CreateNewToken(TokenType.QUBIT, word);
           break;
-        case ",":
-          tokens.push({ type: TokenType.COMMA, value: char });
+        case "apply":
+          newToken = CreateNewToken(TokenType.APPLY, word);
           break;
-        case "=":
-          tokens.push({ type: TokenType.EQUALS, value: char });
+        case "measure":
+          newToken = CreateNewToken(TokenType.MEASURE, word);
           break;
-        case ";":
-          tokens.push({ type: TokenType.SEMICOLON, value: char });
-          break;
-        case "[":
-          tokens.push({ type: TokenType.LBRACKET, value: char });
-          break;
-        case "]":
-          tokens.push({ type: TokenType.RBRACKET, value: char });
-          break;
-        case "*":
-          tokens.push({ type: TokenType.MULTIPLY, value: char });
+        case "display":
+          newToken = CreateNewToken(TokenType.DISPLAY, word);
           break;
         default:
-          throw new Error(`Unexpected token: ${char}`);
+          newToken = CreateNewToken(TokenType.IDENTIFIER, word);
+          break;
       }
-      this.position++;
+      return newToken;
     }
 
-    tokens.push({ type: TokenType.EOF, value: "" });
-    return tokens;
+    if (/\d/.test(this.curChar) || this.curChar === ".") {
+      const number = this.readWhile(/[0-9.i]/);
+
+      const parts = number.split(".");
+      if (parts.length > 2) {
+        throw new Error(`Invalid number format: ${number}`);
+      }
+
+      if (number.includes("i")) {
+        if (number.indexOf("i") !== number.length - 1) {
+          throw new Error(`Invalid imaginary number format: ${number}`);
+        }
+      }
+
+      return CreateNewToken(
+        number.includes("i") ? TokenType.IMAGINARY_NUMBER : TokenType.NUMBER,
+        number,
+      );
+    }
+
+
+    switch (this.curChar) {
+      case "+":
+        newToken = CreateNewToken(TokenType.PLUS, this.curChar);
+        break;
+      case "-":
+        newToken = CreateNewToken(TokenType.MINUS, this.curChar);
+        break;
+      case ",":
+        newToken = CreateNewToken(TokenType.COMMA, this.curChar);
+        break;
+      case "=":
+        newToken = CreateNewToken(TokenType.EQUALS, this.curChar);
+        break;
+      case ";":
+        newToken = CreateNewToken(TokenType.SEMICOLON, this.curChar);
+        break;
+      case "[":
+        newToken = CreateNewToken(TokenType.LBRACKET, this.curChar);
+        break;
+      case "]":
+        newToken = CreateNewToken(TokenType.RBRACKET, this.curChar);
+        break;
+      case "*":
+        newToken = CreateNewToken(TokenType.MULTIPLY, this.curChar);
+        break;
+      case "/":
+        if (this.input.at(this.readPosition) == "/") {
+          this.readWhile(/[^\n]/)
+          newToken = this.nextToken();
+          break;
+        }
+        newToken = CreateNewToken(TokenType.DIVIDE, this.curChar);
+        break;
+      case "":
+        newToken = CreateNewToken(TokenType.EOF, this.curChar);
+        break;
+      default:
+        throw new Error(`Unexpected token: ${this.curChar}`);
+    }
+    this.readChar();
+    return newToken;
   }
 
   private readWhile(pattern: RegExp): string {
     let result = "";
-    while (this.position < this.input.length && pattern.test(this.input[this.position])) {
-      result += this.input[this.position];
-      this.position++;
+    while (pattern.test(this.curChar)) {
+      result += this.curChar;
+      this.readChar();
     }
     return result;
-  }
-
-  reset(input: string) {
-    this.input = input;
-    this.position = 0;
   }
 }

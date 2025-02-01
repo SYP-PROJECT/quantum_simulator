@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Lexer } from "@/input_handler/lexer";
@@ -16,17 +15,17 @@ export default function Home() {
 
   const handleButtonClick = async () => {
     if (editorRef.current) {
-      try {
-        lexer.reset(editorRef.current.getValue());
-        parser.reset(lexer.tokenize());
-      } catch (e) {
-        const message = e instanceof Error ? e.message : String(e);
-        setOutput(message);
-        return;
-      }
+      lexer.reset(editorRef.current.getValue());
+      parser.reset(lexer);
 
       try {
         const programNode = parser.parseProgram();
+
+        if (parser.Errors.length != 0) {
+          setOutput(parser.Errors.join("\n"));
+          return;
+        }
+
         const response = await fetch("http://localhost:8000/api/", {
           headers: {
             "Content-Type": "application/json",
@@ -37,7 +36,10 @@ export default function Home() {
         });
 
         const json: string[] = await response.json();
+        console.log(json);
+
         setOutput(json.join("\n"));
+
       } catch (e) {
         const message = e instanceof Error ? e.message : String(e);
         setOutput(message);
@@ -58,10 +60,10 @@ export default function Home() {
           [/\b[a-zA-Z_][a-zA-Z0-9_]*\b/, "identifier"],
           [/[=;,]/, "delimiter"],
           [/[\[\]]/, "bracket"],
-          [/[+\-]/, "operator"],
-          [/\s+/, "whitespace"],
           [/(\/\/.*)/, "comment"],
-          [/\/\*[\s\S]*?\*\//, "comment"]
+          [/\/\*[\s\S]*?\*\//, "comment"],
+          [/[+\-\*\/]/, "operator"],
+          [/\s+/, "whitespace"],
         ],
       },
     });
