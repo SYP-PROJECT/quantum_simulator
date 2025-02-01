@@ -9,11 +9,8 @@ pub enum NodeType {
     MeasureStatement,
     DisplayStatement,
     ComplexArray,
-    RealNumber,
-    ImaginaryNumber,
+    ComplexNumber,
     Number,
-    InfixExpression,
-    PrefixExpression,
 }
 
 #[derive(Deserialize, Debug)]
@@ -28,6 +25,7 @@ pub struct ProgramNode {
 pub enum StatementNode {
     CreateStatement {
         identifier: String,
+
         #[serde(rename = "complexArray")]
         complex_array: ComplexArrayNode,
     },
@@ -47,25 +45,20 @@ pub enum StatementNode {
 #[serde(rename_all = "camelCase")]
 pub struct ComplexArrayNode {
     pub r#type: NodeType,
-    pub values: Vec<Expression>,
+    pub values: Vec<ComplexNumberNode>,
 }
 
 #[derive(Deserialize, Debug)]
-#[serde(tag = "type", rename_all = "PascalCase")]
-pub enum Expression {
-    RealNumber {
-        value: f64,
-    },
-    ImaginaryNumber {
-        value: f64,
-    },
-    InfixExpression {
-        op: String,
-        left: Box<Expression>,
-        right: Box<Expression>,
-    },
-    PrefixExpression {
-        op: String,
-        right: Box<Expression>,
-    },
+#[serde(rename_all = "camelCase")]
+pub struct ComplexNumberNode {
+    pub r#type: NodeType,
+    pub real_part: Option<NumberNode>,
+    pub imaginary_part: Option<NumberNode>,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct NumberNode {
+    pub r#type: NodeType,
+    pub value: f64,
 }
