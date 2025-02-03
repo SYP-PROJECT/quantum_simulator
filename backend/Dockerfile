@@ -9,7 +9,7 @@
 FROM rust:latest AS builder
 
 # Arbeitsverzeichnis setzen
-WORKDIR /app
+WORKDIR /src
 
 # Alle Dateien des Backend-Ordners in das Container-Image kopieren
 COPY . .
@@ -26,7 +26,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Arbeitsverzeichnis setzen
-WORKDIR /app
+WORKDIR /src
 
 # Binärdatei vom Builder kopieren
 COPY --from=builder /app/target/release/quantum_simulator_backend .
