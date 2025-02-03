@@ -1,10 +1,26 @@
-import { Lexer, TokenType } from "./lexer"
+import { Lexer, TokenType, Token } from "./lexer"
 
 describe("Lexer", () => {
   const lexer = new Lexer();
+
+  function tokenize(): Token[] {
+    const tokens: Token[] = [];
+
+    let curTok = lexer.nextToken();
+
+    while (curTok.type != TokenType.EOF) {
+      tokens.push(curTok);
+      curTok = lexer.nextToken();
+    }
+
+    tokens.push(curTok);
+    return tokens;
+  }
+
+
   test("keywords", () => {
     lexer.reset("create qubit apply");
-    const tokens = lexer.tokenize();
+    const tokens = tokenize();
 
     expect(tokens).toEqual([
       { type: TokenType.CREATE, value: "create" },
@@ -16,25 +32,26 @@ describe("Lexer", () => {
 
   test("numbers and imaginary unit", () => {
     lexer.reset("42 3.14 5i");
-    const tokens = lexer.tokenize();
+    const tokens = tokenize();
 
     expect(tokens).toEqual([
       { type: TokenType.NUMBER, value: "42" },
       { type: TokenType.NUMBER, value: "3.14" },
-      { type: TokenType.NUMBER, value: "5" },
-      { type: TokenType.IMAGINARY_UNIT, value: "i" },
+      { type: TokenType.IMAGINARY_NUMBER, value: "5i" },
       { type: TokenType.EOF, value: "" },
     ]);
   });
 
   test("symbols", () => {
-    lexer.reset("= + - , ; [ ]");
-    const tokens = lexer.tokenize();
+    lexer.reset("= + - * / , ; [ ]");
+    const tokens = tokenize();
 
     expect(tokens).toEqual([
       { type: TokenType.EQUALS, value: "=" },
       { type: TokenType.PLUS, value: "+" },
       { type: TokenType.MINUS, value: "-" },
+      { type: TokenType.MULTIPLY, value: "*" },
+      { type: TokenType.DIVIDE, value: "/" },
       { type: TokenType.COMMA, value: "," },
       { type: TokenType.SEMICOLON, value: ";" },
       { type: TokenType.LBRACKET, value: "[" },
@@ -45,7 +62,7 @@ describe("Lexer", () => {
 
   test("identifiers", () => {
     lexer.reset("myIdentifier another1 _third i");
-    const tokens = lexer.tokenize();
+    const tokens = tokenize();
 
     expect(tokens).toEqual([
       { type: TokenType.IDENTIFIER, value: "myIdentifier" },
@@ -58,7 +75,7 @@ describe("Lexer", () => {
 
   test("a simple create qubit statement", () => {
     lexer.reset("create qubit q1 = [1 + 2i, 2 - 3i];");
-    const tokens = lexer.tokenize();
+    const tokens = tokenize();
 
     expect(tokens).toEqual([
       { type: TokenType.CREATE, value: "create" },
@@ -68,13 +85,11 @@ describe("Lexer", () => {
       { type: TokenType.LBRACKET, value: "[" },
       { type: TokenType.NUMBER, value: "1" },
       { type: TokenType.PLUS, value: "+" },
-      { type: TokenType.NUMBER, value: "2" },
-      { type: TokenType.IMAGINARY_UNIT, value: "i" },
+      { type: TokenType.IMAGINARY_NUMBER, value: "2i" },
       { type: TokenType.COMMA, value: "," },
       { type: TokenType.NUMBER, value: "2" },
       { type: TokenType.MINUS, value: "-" },
-      { type: TokenType.NUMBER, value: "3" },
-      { type: TokenType.IMAGINARY_UNIT, value: "i" },
+      { type: TokenType.IMAGINARY_NUMBER, value: "3i" },
       { type: TokenType.RBRACKET, value: "]" },
       { type: TokenType.SEMICOLON, value: ";" },
       { type: TokenType.EOF, value: "" },
@@ -83,7 +98,7 @@ describe("Lexer", () => {
 
   test("create with floating points", () => {
     lexer.reset("create qubit q2 = [1.5 + 2.3i, -3.1 - 4.0i];");
-    const tokens = lexer.tokenize();
+    const tokens = tokenize();
 
     expect(tokens).toEqual([
       { type: TokenType.CREATE, value: "create" },
@@ -93,14 +108,12 @@ describe("Lexer", () => {
       { type: TokenType.LBRACKET, value: "[" },
       { type: TokenType.NUMBER, value: "1.5" },
       { type: TokenType.PLUS, value: "+" },
-      { type: TokenType.NUMBER, value: "2.3" },
-      { type: TokenType.IMAGINARY_UNIT, value: "i" },
+      { type: TokenType.IMAGINARY_NUMBER, value: "2.3i" },
       { type: TokenType.COMMA, value: "," },
       { type: TokenType.MINUS, value: "-" },
       { type: TokenType.NUMBER, value: "3.1" },
       { type: TokenType.MINUS, value: "-" },
-      { type: TokenType.NUMBER, value: "4.0" },
-      { type: TokenType.IMAGINARY_UNIT, value: "i" },
+      { type: TokenType.IMAGINARY_NUMBER, value: "4.0i" },
       { type: TokenType.RBRACKET, value: "]" },
       { type: TokenType.SEMICOLON, value: ";" },
       { type: TokenType.EOF, value: "" },
@@ -109,7 +122,7 @@ describe("Lexer", () => {
 
   test("create with i identifier", () => {
     lexer.reset("create qubit i = [1 + 2i, -3 - 4i];");
-    const tokens = lexer.tokenize();
+    const tokens = tokenize();
 
     expect(tokens).toEqual([
       { type: TokenType.CREATE, value: "create" },
@@ -119,14 +132,12 @@ describe("Lexer", () => {
       { type: TokenType.LBRACKET, value: "[" },
       { type: TokenType.NUMBER, value: "1" },
       { type: TokenType.PLUS, value: "+" },
-      { type: TokenType.NUMBER, value: "2" },
-      { type: TokenType.IMAGINARY_UNIT, value: "i" },
+      { type: TokenType.IMAGINARY_NUMBER, value: "2i" },
       { type: TokenType.COMMA, value: "," },
       { type: TokenType.MINUS, value: "-" },
       { type: TokenType.NUMBER, value: "3" },
       { type: TokenType.MINUS, value: "-" },
-      { type: TokenType.NUMBER, value: "4" },
-      { type: TokenType.IMAGINARY_UNIT, value: "i" },
+      { type: TokenType.IMAGINARY_NUMBER, value: "4i" },
       { type: TokenType.RBRACKET, value: "]" },
       { type: TokenType.SEMICOLON, value: ";" },
       { type: TokenType.EOF, value: "" },
@@ -135,7 +146,7 @@ describe("Lexer", () => {
 
   test("measure qubit", () => {
     lexer.reset("measure q1;");
-    const tokens = lexer.tokenize();
+    const tokens = tokenize();
 
     expect(tokens).toEqual([
       { type: TokenType.MEASURE, value: "measure" },
@@ -147,7 +158,7 @@ describe("Lexer", () => {
 
   test("display qubit", () => {
     lexer.reset("display q1;");
-    const tokens = lexer.tokenize();
+    const tokens = tokenize();
 
     expect(tokens).toEqual([
       { type: TokenType.DISPLAY, value: "display" },
@@ -159,7 +170,7 @@ describe("Lexer", () => {
 
   test("create with whitespace", () => {
     lexer.reset("   create    qubit   q1 = [ 1 + 2i , 2 - 3i ]; ");
-    const tokens = lexer.tokenize();
+    const tokens = tokenize();
 
     expect(tokens).toEqual([
       { type: TokenType.CREATE, value: "create" },
@@ -169,27 +180,48 @@ describe("Lexer", () => {
       { type: TokenType.LBRACKET, value: "[" },
       { type: TokenType.NUMBER, value: "1" },
       { type: TokenType.PLUS, value: "+" },
-      { type: TokenType.NUMBER, value: "2" },
-      { type: TokenType.IMAGINARY_UNIT, value: "i" },
+      { type: TokenType.IMAGINARY_NUMBER, value: "2i" },
       { type: TokenType.COMMA, value: "," },
       { type: TokenType.NUMBER, value: "2" },
       { type: TokenType.MINUS, value: "-" },
-      { type: TokenType.NUMBER, value: "3" },
-      { type: TokenType.IMAGINARY_UNIT, value: "i" },
+      { type: TokenType.IMAGINARY_NUMBER, value: "3i" },
       { type: TokenType.RBRACKET, value: "]" },
       { type: TokenType.SEMICOLON, value: ";" },
       { type: TokenType.EOF, value: "" },
     ]);
   });
 
+  test("test single line comment with EOF", () => {
+    lexer.reset("//This is a comment");
+
+    const tokens = tokenize();
+
+    expect(tokens).toEqual([
+      { type: TokenType.EOF, value: "" }
+    ])
+  });
+
+  test("test single line comment with statement", () => {
+    lexer.reset("//This is a comment\nmeasure q1;");
+
+    const tokens = tokenize();
+
+    expect(tokens).toEqual([
+      { type: TokenType.MEASURE, value: "measure" },
+      { type: TokenType.IDENTIFIER, value: "q1" },
+      { type: TokenType.SEMICOLON, value: ";" },
+      { type: TokenType.EOF, value: "" }
+    ])
+  });
+
   test("throws error for unexpected tokens", () => {
     lexer.reset("create unknown@");
-    expect(() => lexer.tokenize()).toThrowError("Unexpected token: @");
+    expect(() => tokenize()).toThrow("Unexpected token: @");
   });
 
   test("throws error for invalid number format", () => {
     lexer.reset("4.2.3");
 
-    expect(() => lexer.tokenize()).toThrowError("Invalid number format: 4.2.3");
+    expect(() => tokenize()).toThrow("Invalid number format: 4.2.3");
   });
 })

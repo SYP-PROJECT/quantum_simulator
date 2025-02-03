@@ -1,334 +1,578 @@
-import { Parser, NodeType } from "./parser";
-import { Token, TokenType } from "./lexer";
+import { Parser } from "./parser";
+import { Lexer } from "./lexer";
+import { NodeType } from "./ast";
 
-describe("Parser", () => {
-  let parser: Parser;
+describe('Parser', () => {
+  const lexer = new Lexer();
+  const parser = new Parser();
 
-  beforeEach(() => {
-    parser = new Parser();
+  test('should initialize the parser with a lexer', () => {
+    expect(() => parser.reset(lexer)).not.toThrow();
   });
 
-  const createToken = (type: TokenType, value: string): Token => ({ type, value });
-
-  it("should parse an empty program", () => {
-    const tokens: Token[] = [createToken(TokenType.EOF, "")];
-    parser.reset(tokens);
+  test('should parse an empty program', () => {
+    lexer.reset("");
+    parser.reset(lexer);
 
     const program = parser.parseProgram();
-    expect(program).toEqual({ type: NodeType.Program, statements: [] });
+
+    expect(program.statements).toHaveLength(0);
   });
 
-  it("should parse a CreateStatement", () => {
-    const tokens: Token[] = [
-      createToken(TokenType.CREATE, "create"),
-      createToken(TokenType.QUBIT, "qubit"),
-      createToken(TokenType.IDENTIFIER, "q1"),
-      createToken(TokenType.EQUALS, "="),
-      createToken(TokenType.LBRACKET, "["),
-      createToken(TokenType.NUMBER, "1"),
-      createToken(TokenType.COMMA, ","),
-      createToken(TokenType.NUMBER, "0"),
-      createToken(TokenType.RBRACKET, "]"),
-      createToken(TokenType.SEMICOLON, ";"),
-      createToken(TokenType.EOF, ""),
-    ];
+  test('should parse a simple MEASURE statement', () => {
+    lexer.reset("measure q;");
+    parser.reset(lexer);
 
-    parser.reset(tokens);
+    const program = parser.parseProgram();
+    expect(parser.Errors.length).toBe(0);
+
+    expect(program.statements).toHaveLength(1);
+    expect(program.statements).toStrictEqual([
+      {
+        type: NodeType.MeasureStatement,
+        identifier: "q"
+      }
+    ]);
+  });
+
+  test('should throw an error for an unexpected token', () => {
+    lexer.reset("INVALID");
+    parser.reset(lexer);
+
     const program = parser.parseProgram();
 
-    expect(program).toEqual({
-      type: NodeType.Program,
-      statements: [
-        {
-          type: NodeType.CreateStatement,
-          identifier: "q1",
-          complexArray: {
-            type: NodeType.ComplexArray,
-            values: [
-              { type: NodeType.ComplexNumber, realPart: { type: NodeType.Number, value: 1 }, imaginaryPart: null },
-              { type: NodeType.ComplexNumber, realPart: { type: NodeType.Number, value: 0 }, imaginaryPart: null },
-            ],
-          },
-        },
-      ],
-    });
+    expect(parser.Errors.length).toBe(1);
+    expect(parser.Errors).toStrictEqual([
+      "Only creation, measurement, apply and display can be used as statements"
+    ]);
+
+    expect(program.statements).toHaveLength(0);
   });
 
-  it("should parse an ApplyStatement", () => {
-    const tokens: Token[] = [
-      createToken(TokenType.APPLY, "apply"),
-      createToken(TokenType.IDENTIFIER, "q1"),
-      createToken(TokenType.COMMA, ","),
-      createToken(TokenType.IDENTIFIER, "q2"),
-      createToken(TokenType.SEMICOLON, ";"),
-      createToken(TokenType.EOF, ""),
-    ];
 
-    parser.reset(tokens);
+  test('should resynchronize after encountering an error', () => {
+    lexer.reset("INVALID; measure q1;");
+    parser.reset(lexer);
+
     const program = parser.parseProgram();
 
-    expect(program).toEqual({
-      type: NodeType.Program,
-      statements: [
-        {
-          type: NodeType.ApplyStatement,
-          identifier1: "q1",
-          identifier2: "q2",
-        },
-      ],
-    });
+    expect(parser.Errors.length).toBe(1);
+    expect(parser.Errors).toStrictEqual([
+      "Only creation, measurement, apply and display can be used as statements"
+    ]);
+
+    expect(program.statements).toHaveLength(1);
+    expect(program.statements).toStrictEqual([
+      {
+        type: NodeType.MeasureStatement,
+        identifier: "q1"
+      }
+    ]);
   });
 
-  it("should parse a MeasureStatement", () => {
-    const tokens: Token[] = [
-      createToken(TokenType.MEASURE, "measure"),
-      createToken(TokenType.IDENTIFIER, "q1"),
-      createToken(TokenType.SEMICOLON, ";"),
-      createToken(TokenType.EOF, ""),
-    ];
+  test('should resynchronize on eof', () => {
+    lexer.reset("INVALID; measure q1; INVALID measure q1");
+    parser.reset(lexer);
 
-    parser.reset(tokens);
     const program = parser.parseProgram();
 
-    expect(program).toEqual({
-      type: NodeType.Program,
-      statements: [
-        {
-          type: NodeType.MeasureStatement,
-          identifier: "q1",
-        },
-      ],
-    });
+    expect(parser.Errors.length).toBe(2);
+    expect(parser.Errors).toStrictEqual([
+      "Only creation, measurement, apply and display can be used as statements",
+      "Only creation, measurement, apply and display can be used as statements"
+    ]);
+
+    expect(program.statements).toHaveLength(1);
+    expect(program.statements).toStrictEqual([
+      {
+        type: NodeType.MeasureStatement,
+        identifier: "q1"
+      }
+    ]);
   });
 
-  it("should parse a DisplayStatement", () => {
-    const tokens: Token[] = [
-      createToken(TokenType.DISPLAY, "display"),
-      createToken(TokenType.IDENTIFIER, "q1"),
-      createToken(TokenType.SEMICOLON, ";"),
-      createToken(TokenType.EOF, ""),
-    ];
+  test('should add an error for an unexpected token type', () => {
+    lexer.reset("measure;");
+    parser.reset(lexer);
 
-    parser.reset(tokens);
     const program = parser.parseProgram();
 
-    expect(program).toEqual({
-      type: NodeType.Program,
-      statements: [
-        {
-          type: NodeType.DisplayStatement,
-          identifier: "q1",
-        },
-      ],
-    });
+    expect(parser.Errors.length).toBe(1);
+    expect(parser.Errors).toStrictEqual(["Expected next token to be IDENTIFIER, got SEMICOLON instead"]);
+
+    expect(program.type).toBe(NodeType.Program);
+    expect(program.statements).toHaveLength(0);
   });
 
-  it("should throw an error for an invalid token", () => {
-    const tokens: Token[] = [
-      createToken(TokenType.NUMBER, "42"),
-      createToken(TokenType.EOF, ""),
-    ];
+  test('should parse a simple DISPLAY statement', () => {
+    lexer.reset("display q;");
+    parser.reset(lexer);
 
-    parser.reset(tokens);
+    const program = parser.parseProgram();
+    expect(parser.Errors.length).toBe(0);
 
-    expect(() => parser.parseProgram()).toThrow("Unexpected token 42");
+    expect(program.statements).toHaveLength(1);
+    expect(program.statements).toStrictEqual([
+      {
+        type: NodeType.DisplayStatement,
+        identifier: "q"
+      }
+    ]);
   });
 
-  it("should throw an error for missing semicolon", () => {
-    const tokens: Token[] = [
-      createToken(TokenType.CREATE, "create"),
-      createToken(TokenType.QUBIT, "qubit"),
-      createToken(TokenType.IDENTIFIER, "q1"),
-      createToken(TokenType.EQUALS, "="),
-      createToken(TokenType.LBRACKET, "["),
-      createToken(TokenType.NUMBER, "1"),
-      createToken(TokenType.RBRACKET, "]"),
-      createToken(TokenType.EOF, ""),
-    ];
+  test('should parse a simple APPLY statement', () => {
+    lexer.reset("apply q1, q2;");
+    parser.reset(lexer);
 
-    parser.reset(tokens);
+    const program = parser.parseProgram();
+    expect(parser.Errors.length).toBe(0);
 
-    expect(() => parser.parseProgram()).toThrow("Expected token type SEMICOLON but got EOF");
+    expect(program.statements).toHaveLength(1);
+    expect(program.statements).toStrictEqual([
+      {
+        type: NodeType.ApplyStatement,
+        identifier1: "q1",
+        identifier2: "q2"
+      }
+    ]);
   });
 
-  it("should throw an error for an invalid complex number", () => {
-    const tokens: Token[] = [
-      createToken(TokenType.PLUS, "+"),
-      createToken(TokenType.EOF, ""),
-    ];
+  test('should add an error for a missing first identifier in APPLY statement', () => {
+    lexer.reset("apply , q2;");
+    parser.reset(lexer);
 
-    parser.reset(tokens);
-
-    expect(() => parser["parseComplexNumber"]()).toThrow("Invalid complex number: both real and imaginary parts are missing");
-  });
-
-  it("should parse a complex number with real and imaginary parts", () => {
-    const tokens: Token[] = [
-      createToken(TokenType.NUMBER, "3"),
-      createToken(TokenType.PLUS, "+"),
-      createToken(TokenType.NUMBER, "4"),
-      createToken(TokenType.IMAGINARY_UNIT, "i"),
-    ];
-
-    parser.reset(tokens);
-    const complexNumber = parser["parseComplexNumber"]();
-
-    expect(complexNumber).toEqual({
-      type: NodeType.ComplexNumber,
-      realPart: { type: NodeType.Number, value: 3 },
-      imaginaryPart: { type: NodeType.Number, value: 4 },
-    });
-  });
-
-  it("should parse a program with multiple statements", () => {
-    const tokens: Token[] = [
-      createToken(TokenType.CREATE, "create"),
-      createToken(TokenType.QUBIT, "qubit"),
-      createToken(TokenType.IDENTIFIER, "q1"),
-      createToken(TokenType.EQUALS, "="),
-      createToken(TokenType.LBRACKET, "["),
-      createToken(TokenType.NUMBER, "1"),
-      createToken(TokenType.COMMA, ","),
-      createToken(TokenType.NUMBER, "0"),
-      createToken(TokenType.RBRACKET, "]"),
-      createToken(TokenType.SEMICOLON, ";"),
-      createToken(TokenType.APPLY, "apply"),
-      createToken(TokenType.IDENTIFIER, "q1"),
-      createToken(TokenType.COMMA, ","),
-      createToken(TokenType.IDENTIFIER, "q2"),
-      createToken(TokenType.SEMICOLON, ";"),
-      createToken(TokenType.MEASURE, "measure"),
-      createToken(TokenType.IDENTIFIER, "q1"),
-      createToken(TokenType.SEMICOLON, ";"),
-      createToken(TokenType.DISPLAY, "display"),
-      createToken(TokenType.IDENTIFIER, "q1"),
-      createToken(TokenType.SEMICOLON, ";"),
-      createToken(TokenType.EOF, ""),
-    ];
-
-    parser.reset(tokens);
     const program = parser.parseProgram();
 
-    expect(program).toEqual({
-      type: NodeType.Program,
-      statements: [
-        {
-          type: NodeType.CreateStatement,
-          identifier: "q1",
-          complexArray: {
-            type: NodeType.ComplexArray,
-            values: [
-              { type: NodeType.ComplexNumber, realPart: { type: NodeType.Number, value: 1 }, imaginaryPart: null },
-              { type: NodeType.ComplexNumber, realPart: { type: NodeType.Number, value: 0 }, imaginaryPart: null },
-            ],
-          },
-        },
-        {
-          type: NodeType.ApplyStatement,
-          identifier1: "q1",
-          identifier2: "q2",
-        },
-        {
-          type: NodeType.MeasureStatement,
-          identifier: "q1",
-        },
-        {
-          type: NodeType.DisplayStatement,
-          identifier: "q1",
-        },
-      ],
-    });
+    expect(parser.Errors.length).toBe(1);
+    expect(parser.Errors).toStrictEqual(["Expected next token to be IDENTIFIER, got COMMA instead"]);
+
+    expect(program.statements).toHaveLength(0);
   });
 
-  it("should throw an error for an unexpected token in a CreateStatement", () => {
-    const tokens: Token[] = [
-      createToken(TokenType.CREATE, "create"),
-      createToken(TokenType.QUBIT, "qubit"),
-      createToken(TokenType.IDENTIFIER, "q1"),
-      createToken(TokenType.EQUALS, "="),
-      createToken(TokenType.NUMBER, "1"),
-      createToken(TokenType.SEMICOLON, ";"),
-      createToken(TokenType.EOF, ""),
-    ];
 
-    parser.reset(tokens);
 
-    expect(() => parser.parseProgram()).toThrow("Expected token type LBRACKET but got NUMBER");
+  test('should add an error for a missing second identifier in APPLY statement', () => {
+    lexer.reset("apply q1,;");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+
+    expect(parser.Errors.length).toBe(1);
+    expect(parser.Errors).toStrictEqual(["Expected next token to be IDENTIFIER, got SEMICOLON instead"]);
+
+    expect(program.statements).toHaveLength(0);
   });
 
-  it("should throw an error for missing identifier in an ApplyStatement", () => {
-    const tokens: Token[] = [
-      createToken(TokenType.APPLY, "apply"),
-      createToken(TokenType.COMMA, ","),
-      createToken(TokenType.IDENTIFIER, "q2"),
-      createToken(TokenType.SEMICOLON, ";"),
-      createToken(TokenType.EOF, ""),
-    ];
+  test('should add an error for missing comma in APPLY statement', () => {
+    lexer.reset("apply q1 q2;");
+    parser.reset(lexer);
 
-    parser.reset(tokens);
+    const program = parser.parseProgram();
 
-    expect(() => parser.parseProgram()).toThrow("Expected token type IDENTIFIER but got COMMA");
+    expect(parser.Errors.length).toBe(1);
+    expect(parser.Errors).toStrictEqual(["Expected next token to be COMMA, got IDENTIFIER instead"]);
+
+    expect(program.statements).toHaveLength(0);
   });
 
-  it("should parse a complex number with a negative real part", () => {
-    const tokens: Token[] = [
-      createToken(TokenType.MINUS, "-"),
-      createToken(TokenType.NUMBER, "3"),
-      createToken(TokenType.PLUS, "+"),
-      createToken(TokenType.NUMBER, "4"),
-      createToken(TokenType.IMAGINARY_UNIT, "i"),
-    ];
+  test('should add an error for missing semicolon in APPLY statement', () => {
+    lexer.reset("apply q1, q2");
+    parser.reset(lexer);
 
-    parser.reset(tokens);
-    const complexNumber = parser["parseComplexNumber"]();
+    const program = parser.parseProgram();
 
-    expect(complexNumber).toEqual({
-      type: NodeType.ComplexNumber,
-      realPart: { type: NodeType.Number, value: -3 },
-      imaginaryPart: { type: NodeType.Number, value: 4 },
-    });
+    expect(parser.Errors.length).toBe(1);
+    expect(parser.Errors).toStrictEqual(["Expected next token to be SEMICOLON, got EOF instead"]);
+
+    expect(program.statements).toHaveLength(0);
   });
 
-  it("should parse a complex number with only a real part", () => {
-    const tokens: Token[] = [
-      createToken(TokenType.NUMBER, "5"),
-    ];
+  test('should parse CREATE statement with no values', () => {
+    lexer.reset("create qubit q1 = [];");
+    parser.reset(lexer);
 
-    parser.reset(tokens);
-    const complexNumber = parser["parseComplexNumber"]();
+    const program = parser.parseProgram();
+    expect(parser.Errors.length).toBe(0);
 
-    expect(complexNumber).toEqual({
-      type: NodeType.ComplexNumber,
-      realPart: { type: NodeType.Number, value: 5 },
-      imaginaryPart: null,
-    });
+    expect(program.statements).toHaveLength(1);
+
+    expect(program.statements).toStrictEqual([
+      {
+        type: NodeType.CreateStatement,
+        identifier: "q1",
+        complexArray: {
+          type: NodeType.ComplexArray,
+          values: []
+        }
+      }
+    ]);
   });
 
-  it("should throw an error for an invalid complex array", () => {
-    const tokens: Token[] = [
-      createToken(TokenType.LBRACKET, "["),
-      createToken(TokenType.NUMBER, "3"),
-      createToken(TokenType.COMMA, ","),
-      createToken(TokenType.RBRACKET, "]"),
-      createToken(TokenType.SEMICOLON, ";"),
-      createToken(TokenType.EOF, ""),
-    ];
+  test('should parse CREATE statement with real number', () => {
+    lexer.reset("create qubit q1 = [1];");
+    parser.reset(lexer);
 
-    parser.reset(tokens);
+    const program = parser.parseProgram();
+    expect(parser.Errors.length).toBe(0);
 
-    expect(() => parser.parseProgram()).toThrow("Unexpected token [");
+    expect(program.statements).toHaveLength(1);
+
+    expect(program.statements).toStrictEqual([
+      {
+        type: NodeType.CreateStatement,
+        identifier: "q1",
+        complexArray: {
+          type: NodeType.ComplexArray,
+          values: [{ type: NodeType.RealNumber, value: 1 }]
+        }
+      }
+    ]);
   });
 
-  it("should throw an error for a missing imaginary unit", () => {
-    const tokens: Token[] = [
-      createToken(TokenType.NUMBER, "5"),
-      createToken(TokenType.PLUS, "+"),
-      createToken(TokenType.NUMBER, "5"),
-    ];
+  test('should parse CREATE statement with multiple real numbers', () => {
+    lexer.reset("create qubit q1 = [1, 2, 3, 4, 5];");
+    parser.reset(lexer);
 
-    parser.reset(tokens);
+    const program = parser.parseProgram();
+    expect(parser.Errors.length).toBe(0);
 
-    expect(() => parser["parseComplexNumber"]()).toThrow("Expected token type IMAGINARY_UNIT but got end of input");
+    expect(program.statements).toHaveLength(1);
+
+    expect(program.statements).toStrictEqual([
+      {
+        type: NodeType.CreateStatement,
+        identifier: "q1",
+        complexArray: {
+          type: NodeType.ComplexArray,
+          values: [
+            { type: NodeType.RealNumber, value: 1 },
+            { type: NodeType.RealNumber, value: 2 },
+            { type: NodeType.RealNumber, value: 3 },
+            { type: NodeType.RealNumber, value: 4 },
+            { type: NodeType.RealNumber, value: 5 }
+          ]
+        }
+      }
+    ]);
   });
 
+  test('should parse CREATE statement with imaginary number', () => {
+    lexer.reset("create qubit q1 = [1i];");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+    expect(parser.Errors.length).toBe(0);
+
+    expect(program.statements).toHaveLength(1);
+
+    expect(program.statements).toStrictEqual([
+      {
+        type: NodeType.CreateStatement,
+        identifier: "q1",
+        complexArray: {
+          type: NodeType.ComplexArray,
+          values: [
+            { type: NodeType.ImaginaryNumber, value: 1 }
+          ]
+        }
+      }
+    ]);
+  });
+
+  test('should parse CREATE statement with mutiple imaginary number', () => {
+    lexer.reset("create qubit q1 = [1i, 2i, 3i, 4i, 5i];");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+    expect(parser.Errors.length).toBe(0);
+
+    expect(program.statements).toHaveLength(1);
+
+    expect(program.statements).toStrictEqual([
+      {
+        type: NodeType.CreateStatement,
+        identifier: "q1",
+        complexArray: {
+          type: NodeType.ComplexArray,
+          values: [
+            { type: NodeType.ImaginaryNumber, value: 1 },
+            { type: NodeType.ImaginaryNumber, value: 2 },
+            { type: NodeType.ImaginaryNumber, value: 3 },
+            { type: NodeType.ImaginaryNumber, value: 4 },
+            { type: NodeType.ImaginaryNumber, value: 5 }
+          ]
+        }
+      }
+    ]);
+  });
+
+  test('should parse CRATE statement with mixed numbers', () => {
+    lexer.reset("create qubit q1 = [1i, 2, 3, 4, 5i];");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+    expect(parser.Errors.length).toBe(0);
+
+    expect(program.statements).toHaveLength(1);
+
+    expect(program.statements).toStrictEqual([
+      {
+        type: NodeType.CreateStatement,
+        identifier: "q1",
+        complexArray: {
+          type: NodeType.ComplexArray,
+          values: [
+            { type: NodeType.ImaginaryNumber, value: 1 },
+            { type: NodeType.RealNumber, value: 2 },
+            { type: NodeType.RealNumber, value: 3 },
+            { type: NodeType.RealNumber, value: 4 },
+            { type: NodeType.ImaginaryNumber, value: 5 }
+          ]
+        }
+      }
+    ]);
+  });
+
+  test('should parse CRATE statement with prefix expression', () => {
+    lexer.reset("create qubit q1 = [-1, +2, -3i, +4i];");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+    expect(parser.Errors.length).toBe(0);
+
+    expect(program.statements).toHaveLength(1);
+
+    expect(program.statements).toStrictEqual([
+      {
+        type: NodeType.CreateStatement,
+        identifier: "q1",
+        complexArray: {
+          type: NodeType.ComplexArray,
+          values: [
+            { type: NodeType.PrefixExpression, op: "-", right: { type: NodeType.RealNumber, value: 1 } },
+            { type: NodeType.PrefixExpression, op: "+", right: { type: NodeType.RealNumber, value: 2 } },
+            { type: NodeType.PrefixExpression, op: "-", right: { type: NodeType.ImaginaryNumber, value: 3 } },
+            { type: NodeType.PrefixExpression, op: "+", right: { type: NodeType.ImaginaryNumber, value: 4 } },
+          ]
+        }
+      }
+    ]);
+  });
+
+  test('should parse CRATE statement with INFIX expression', () => {
+    lexer.reset("create qubit q1 = [1 + 2,  3 - 4i, 5i * 6, 7i / 8i];");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+    expect(parser.Errors.length).toBe(0);
+
+    expect(program.statements).toHaveLength(1);
+
+    expect(program.statements).toStrictEqual([
+      {
+        type: NodeType.CreateStatement,
+        identifier: "q1",
+        complexArray: {
+          type: NodeType.ComplexArray,
+          values: [
+            {
+              type: NodeType.InfixExpression, op: "+",
+              left: { type: NodeType.RealNumber, value: 1 },
+              right: { type: NodeType.RealNumber, value: 2 }
+            },
+            {
+              type: NodeType.InfixExpression, op: "-",
+              left: { type: NodeType.RealNumber, value: 3 },
+              right: { type: NodeType.ImaginaryNumber, value: 4 }
+            },
+            {
+              type: NodeType.InfixExpression, op: "*",
+              left: { type: NodeType.ImaginaryNumber, value: 5 },
+              right: { type: NodeType.RealNumber, value: 6 }
+            },
+            {
+              type: NodeType.InfixExpression, op: "/",
+              left: { type: NodeType.ImaginaryNumber, value: 7 },
+              right: { type: NodeType.ImaginaryNumber, value: 8 }
+            }
+          ]
+        }
+      }
+    ]);
+  });
+
+  test('should parse CRATE statement with INFIX and PREFIX expression', () => {
+    lexer.reset("create qubit q1 = [+1 + -2];");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+    expect(parser.Errors.length).toBe(0);
+
+    expect(program.statements).toHaveLength(1);
+
+    expect(program.statements).toStrictEqual([
+      {
+        type: NodeType.CreateStatement,
+        identifier: "q1",
+        complexArray: {
+          type: NodeType.ComplexArray,
+          values: [
+            {
+              type: NodeType.InfixExpression, op: "+",
+              left: {
+                type: NodeType.PrefixExpression, op: "+",
+                right: { type: NodeType.RealNumber, value: 1 }
+              },
+              right: {
+                type: NodeType.PrefixExpression, op: "-",
+                right: { type: NodeType.RealNumber, value: 2 }
+              },
+            },
+          ]
+        }
+      }
+    ]);
+  });
+
+
+  test('should add an error for missing qubit in CREATE statement', () => {
+    lexer.reset("create q1 = [1];");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+
+    expect(parser.Errors.length).toBe(1);
+    expect(parser.Errors).toStrictEqual(["Expected next token to be QUBIT, got IDENTIFIER instead"]);
+
+    expect(program.statements).toHaveLength(0);
+  });
+
+  test('should add an error for missing identifier in CREATE statement', () => {
+    lexer.reset("create qubit = [1];");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+
+    expect(parser.Errors.length).toBe(1);
+    expect(parser.Errors).toStrictEqual(["Expected next token to be IDENTIFIER, got EQUALS instead"]);
+
+    expect(program.statements).toHaveLength(0);
+  });
+
+
+  test('should add an error for missing equal sign in CREATE statement', () => {
+    lexer.reset("create qubit q1 [1];");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+
+    expect(parser.Errors.length).toBe(1);
+    expect(parser.Errors).toStrictEqual(["Expected next token to be EQUALS, got LBRACKET instead"]);
+
+    expect(program.statements).toHaveLength(0);
+  });
+
+  test('should add an error for missing left bracket in CREATE statement', () => {
+    lexer.reset("create qubit q1 = 1];");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+
+    expect(parser.Errors.length).toBe(1);
+    expect(parser.Errors).toStrictEqual(["Expected next token to be LBRACKET, got NUMBER instead"]);
+
+    expect(program.statements).toHaveLength(0);
+  });
+
+  test('should add an error for missing COMMA in CREATE statement', () => {
+    lexer.reset("create qubit q1 = [1 2];");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+
+    expect(parser.Errors.length).toBe(1);
+    expect(parser.Errors).toStrictEqual(["Expected next token to be RBRACKET, got NUMBER instead"]);
+
+    expect(program.statements).toHaveLength(0);
+  });
+
+  test('should add an error for missing rbracket in CREATE statement', () => {
+    lexer.reset("create qubit q1 = [1;");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+
+    expect(parser.Errors.length).toBe(1);
+    expect(parser.Errors).toStrictEqual(["Expected next token to be RBRACKET, got SEMICOLON instead"]);
+
+    expect(program.statements).toHaveLength(0);
+  });
+
+  test('should add an error for missing semicolon in CREATE statement', () => {
+    lexer.reset("create qubit q1 = [1]");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+
+    expect(parser.Errors.length).toBe(1);
+    expect(parser.Errors).toStrictEqual(["Expected next token to be SEMICOLON, got EOF instead"]);
+
+    expect(program.statements).toHaveLength(0);
+  });
+
+  test('should add an error for missing number in PREFIX expression', () => {
+    lexer.reset("create qubit q1 = [-];");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+
+    expect(parser.Errors.length).toBe(1);
+    expect(parser.Errors).toStrictEqual(["No prefix parse function for RBRACKET found"]);
+
+    expect(program.statements).toHaveLength(0);
+  });
+
+  test('should add an error for missing number in INFIX expression', () => {
+    lexer.reset("create qubit q1 = [1 - ];");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+
+    expect(parser.Errors.length).toBe(1);
+    expect(parser.Errors).toStrictEqual(["No prefix parse function for RBRACKET found"]);
+
+    expect(program.statements).toHaveLength(0);
+  });
+
+
+  test('should parse multiple valid statements', () => {
+    lexer.reset("measure q1; display q1; create qubit a = [1];");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+    expect(parser.Errors.length).toBe(0);
+
+    expect(program.statements).toHaveLength(3);
+
+    expect(program.statements).toStrictEqual([
+      {
+        type: NodeType.MeasureStatement,
+        identifier: "q1"
+      },
+      {
+        type: NodeType.DisplayStatement,
+        identifier: "q1"
+      },
+      {
+        type: NodeType.CreateStatement,
+        identifier: "a",
+        complexArray: {
+          type: NodeType.ComplexArray,
+          values: [
+            { type: NodeType.RealNumber, value: 1 },
+          ]
+        }
+      }
+    ]);
+  });
 });
