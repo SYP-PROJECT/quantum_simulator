@@ -1,38 +1,38 @@
-#FROM rust:latest
-#WORKDIR /app
-#COPY . .
-#RUN cargo build --release
-#ENTRYPOINT ["top", "-b"]
+# Stage 1: Build the Rust application
+FROM rust:1.75 as builder
 
+# Set the working directory
+WORKDIR /app
 
-# Basis-Image mit Rust-Umgebung
-FROM rust:latest AS builder
+# Copy Cargo.toml and Cargo.lock first to cache dependencies
+COPY Cargo.toml Cargo.lock ./
 
-# Arbeitsverzeichnis setzen
-WORKDIR /src
+# Create a dummy main.rs to build dependencies
+RUN mkdir src && \
+    echo "fn main() {}" > src/main.rs && \
+    cargo build && \
+    rm -rf src
 
-# Alle Dateien des Backend-Ordners in das Container-Image kopieren
-COPY . .
+# Now copy the actual source code
+COPY src src/
 
-# Abhängigkeiten cachen und Projekt bauen
+# Build the application with the actual source code
 RUN cargo build --release
 
-# Produktions-Image
-FROM debian:buster-slim
+# Stage 2: Create a minimal runtime image
+FROM debian:bookworm-slim
 
-# Erforderliche Systembibliotheken installieren
-RUN apt-get update && apt-get install -y \
-    libssl-dev \
-    && rm -rf /var/lib/apt/lists/*
+# Install necessary dependencies
+RUN apt-get update && apt-get install -y libssl-dev ca-certificates && rm -rf /var/lib/apt/lists/*
 
-# Arbeitsverzeichnis setzen
-WORKDIR /src
+# Set the working directory
+WORKDIR /app
 
-# Binärdatei vom Builder kopieren
-COPY --from=builder /app/target/release/quantum_simulator_backend .
+# Copy the compiled binary from the builder stage
+COPY --from=builder /app/target/release/quantum_simulator .
 
-# Standard-Port freigeben (falls zutreffend)
-EXPOSE 8080
+# Expose the port your application listens on
+EXPOSE 8000
 
-# Startbefehl für den Container
-CMD ["./quantum_simulator_backend"]
+# Run the application
+CMD ["./quantum_simulator"]
