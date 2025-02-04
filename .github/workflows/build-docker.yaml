@@ -1,0 +1,53 @@
+name: Build and publish a Docker image to ghcr.io
+on:
+
+  # Publish on releases, e.g., v2.1.13 (image tagged as "2.1.13" - "v" prefix is removed)
+  release:
+    types: [published]
+
+  # Publish on pushes to the main branch (image tagged as "latest")
+  push:
+    branches:
+      - main
+      - leocloud
+
+
+jobs:
+  docker_publish_backend:
+    runs-on: "ubuntu-20.04"
+
+    steps:
+      - uses: actions/checkout@v2
+
+      # Specify the Dockerfile and context for building the image
+      - name: Build and publish a Docker image for ${{ github.repository }}
+        uses: macbre/push-to-ghcr@master
+        with:
+          image_name: ${{ github.repository }}-backend  # it will be lowercased internally
+          github_token: ${{ secrets.GHCR_TOKEN }}
+          # Specify the context (path to the directory containing the Dockerfile)
+          context: ./backend
+          dockerfile: ./backend/Dockerfile
+          # optionally push to the Docker Hub (docker.io)
+          # docker_io_token: ${{ secrets.DOCKER_IO_ACCESS_TOKEN }}  # see https://hub.docker.com/settings/security
+          # customize the username to be used when pushing to the Docker Hub
+          # docker_io_user: foobar  # see https://github.com/macbre/push-to-ghcr/issues/14
+  docker_publish_frontend:
+    runs-on: "ubuntu-20.04"
+
+    steps:
+      - uses: actions/checkout@v2
+
+      # Specify the Dockerfile and context for building the image
+      - name: Build and publish a Docker image for ${{ github.repository }}
+        uses: macbre/push-to-ghcr@master
+        with:
+          image_name: ${{ github.repository }}-frontend  # it will be lowercased internally
+          github_token: ${{ secrets.GHCR_TOKEN }}
+          # Specify the context (path to the directory containing the Dockerfile)
+          context: ./frontend
+          dockerfile: ./frontend/Dockerfile
+          # optionally push to the Docker Hub (docker.io)
+          # docker_io_token: ${{ secrets.DOCKER_IO_ACCESS_TOKEN }}  # see https://hub.docker.com/settings/security
+          # customize the username to be used when pushing to the Docker Hub
+          # docker_io_user: foobar  # see https://github.com/macbre/push-to-ghcr/issues/14ker push <DOCKER_REGISTRY>/quantum-backend:latest
