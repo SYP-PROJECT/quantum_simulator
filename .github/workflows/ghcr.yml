@@ -10,6 +10,7 @@ on:
     branches:
       - main
       - backend_docker_test
+      - workflow_dispatch 
 
 jobs:
   docker_publish:
