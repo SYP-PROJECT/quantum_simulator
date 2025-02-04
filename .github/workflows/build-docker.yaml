@@ -11,6 +11,7 @@ on:
       - main
       - leocloud
       - backend_docker_test
+      - workflow_dispatch 
 
 jobs:
   docker_publish_backend:
