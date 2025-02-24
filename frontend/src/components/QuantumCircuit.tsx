@@ -38,7 +38,6 @@ function generateQuantumCircuit(program: ProgramNode, container: HTMLElement, mi
   });
 
   const svgWidth = Math.max(totalWidth, minLineWidth);
-
   const svgHeight = program.statements.length * qubitSpacing + padding * 2;
 
   const svg = d3.select(container)
@@ -64,7 +63,7 @@ function generateQuantumCircuit(program: ProgramNode, container: HTMLElement, mi
     .attr("x2", svgWidth - padding)
     .attr("y1", (_, i) => padding + i * qubitSpacing)
     .attr("y2", (_, i) => padding + i * qubitSpacing)
-    .attr("stroke", "white");
+    .attr("stroke", "#8be9fd");
 
   svg.selectAll(".qubit-label")
     .data(qubitList)
@@ -73,29 +72,21 @@ function generateQuantumCircuit(program: ProgramNode, container: HTMLElement, mi
     .attr("x", padding - 20)
     .attr("y", (_, i) => padding + i * qubitSpacing)
     .attr("dy", "0.35em")
-    .text(d => `${d}`);
+    .text(d => `${d}`)
+    .attr("fill", "#8be9fd");
 
   let currentX = padding;
   program.statements.forEach(statement => {
     if (statement.type === NodeType.ApplyStatement) {
-      const qubitIndex1 = qubitList.indexOf(statement.identifier1);
-      const qubitIndex2 = qubitList.indexOf(statement.identifier2);
+      const qubitIndex = qubitList.indexOf(statement.identifier1);
       const gate = svg.append("g");
 
       gate.append("rect")
         .attr("x", currentX)
-        .attr("y", padding + qubitIndex1 * qubitSpacing - 15)
+        .attr("y", padding + qubitIndex * qubitSpacing - 15)
         .attr("width", gateWidth)
-        .attr("height", (qubitIndex2 - qubitIndex1) * qubitSpacing + 30)
+        .attr("height", 30)
         .attr("fill", "lightblue");
-
-      gate.append("text")
-        .attr("x", currentX + gateWidth / 2)
-        .attr("y", padding + (qubitIndex1 + qubitIndex2) * qubitSpacing / 2) // Center the text vertically
-        .attr("dy", "0.35em")
-        .attr("text-anchor", "middle")
-        .text("CNOT")
-        .attr("fill", "white");
 
       currentX += gateWidth + gateSpacing;
     }
