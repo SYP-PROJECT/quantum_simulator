@@ -19,13 +19,13 @@ describe("SemanticAnalyzer", () => {
     };
 
     const programNode: ProgramNode = {
-      statements: [createStatement],
+      statements: [createStatement, createStatement],
       type: NodeType.Program
     };
 
     analyzer.analyze(programNode);
     expect(analyzer.variables).toContain("q1");
-    expect(analyzer.Errors).toHaveLength(0);
+    expect(analyzer.Errors).toHaveLength(1);
 
     analyzer.analyze(programNode);
     expect(analyzer.Errors).toContain("Identifier 'q1' was already declared");
