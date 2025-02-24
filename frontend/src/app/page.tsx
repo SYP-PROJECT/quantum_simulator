@@ -39,7 +39,6 @@ export default function Home() {
           return;
         }
 
-        // Set the program node for the QuantumCircuit component
         setProgramNode(programNode);
 
         const response = await fetch("http://localhost:8000/api/", {
@@ -151,9 +150,22 @@ export default function Home() {
     marginTop: "10px",
   };
 
+  const mainMargin = "20px";
+  const halfMargin = "10px";
+
   return (
-    <div style={{ display: "flex", height: "100vh", flexDirection: "row", padding: "10px", gap: "10px" }}>
-      <div style={{ flex: "0 0 60%", height: "100%" }}>
+    <div style={{
+      display: "flex",
+      height: "100vh",
+      flexDirection: "row",
+      padding: mainMargin
+    }}>
+      {/* Left tile - Editor */}
+      <div style={{
+        flex: 1,
+        height: "100%",
+        marginRight: halfMargin
+      }}>
         <Editor
           height="100%"
           width="100%"
@@ -164,16 +176,26 @@ export default function Home() {
         />
       </div>
 
-
-      <div style={{ flex: "0 0 35%", height: "100%", display: "flex", flexDirection: "column", gap: "10px" }}>
-        <div style={{ flex: "0 0 50%" }}>
+      {/* Right tile - Other components */}
+      <div style={{
+        flex: 1,
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        gap: mainMargin,
+        marginLeft: halfMargin
+      }}>
+        {/* Quantum Circuit */}
+        <div style={{ flex: "0 0 50%", ...commonEditorStyle }}>
           {programNode && <QuantumCircuit program={programNode} />}
         </div>
 
+        {/* Output */}
         <div style={{ flex: "0 0 40%", ...commonEditorStyle }}>
           {output}
         </div>
 
+        {/* Run Button */}
         <div style={{ flex: "0 0 10%" }}>
           <button onClick={handleButtonClick} style={buttonStyle}>
             Run Code
