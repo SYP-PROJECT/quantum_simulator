@@ -166,7 +166,7 @@ export default function Home() {
 
 
       <div style={{ flex: "0 0 35%", height: "100%", display: "flex", flexDirection: "column", gap: "10px" }}>
-        <div style={{ flex: "0 0 50%", ...commonEditorStyle }}>
+        <div style={{ flex: "0 0 50%" }}>
           {programNode && <QuantumCircuit program={programNode} />}
         </div>
 
