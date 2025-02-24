@@ -1,0 +1,25 @@
+@startuml
+hide circle
+hide empty methods
+skinparam nodesep 80
+skinparam linetype ortho
+
+entity User {
+    
+userName: string <<PK>>
+}
+entity Files{ 
+ 
+blobId: int <<PK>>
+
+}
+
+entity Levels {
+  
+levelID: int <<PK>>
+}
+
+
+Files }o-l-|| User: writes
+User }o--o{ Levels: complets 
+@enduml
