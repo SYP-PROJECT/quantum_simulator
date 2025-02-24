@@ -1,7 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { ProgramNode, NodeType } from '../input_handler/ast'
 import * as d3 from 'd3';
-import './QuantumCircuit.css';
 
 const QuantumCircuit: React.FC<{ program: ProgramNode }> = ({ program }) => {
   const containerRef = useRef<HTMLDivElement>(null);
