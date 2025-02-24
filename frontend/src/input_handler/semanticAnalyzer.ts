@@ -6,10 +6,10 @@ export class SemanticAnalyzer {
   public readonly Errors: string[] = [];
 
   SemanticAnalyzer() {
-    this.initializeGateMap();
   }
 
   public analyze(programNode: ProgramNode) {
+    this.initializeMaps();
     for (const statement of programNode.statements) {
       this.analyzeStatement(statement);
     }
@@ -66,7 +66,10 @@ export class SemanticAnalyzer {
     }
   }
 
-  initializeGateMap() {
+  initializeMaps() {
+    this.gates.length = 0;
+    this.variables.length = 0;
+
     this.gates.push("identity");
     this.gates.push("pauliX");
     this.gates.push("pauliY");
