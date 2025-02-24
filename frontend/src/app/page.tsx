@@ -1,11 +1,14 @@
 "use client";
 
 import { Lexer } from "@/input_handler/lexer";
+import { ProgramNode } from '../input_handler/ast'
 import { Parser } from "@/input_handler/parser";
 import { SemanticAnalyzer } from "@/input_handler/semanticAnalyzer";
+import QuantumCircuit from '../components/QuantumCircuit';
+
 import Editor from '@monaco-editor/react';
 import type monaco from 'monaco-editor';
-import React, { useRef, useState } from "react";
+import React, { useRef, useState } from 'react';
 
 const lexer: Lexer = new Lexer();
 const parser: Parser = new Parser();
@@ -14,6 +17,7 @@ const semanticAnalyzer: SemanticAnalyzer = new SemanticAnalyzer();
 export default function Home() {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const [output, setOutput] = useState("");
+  const [programNode, setProgramNode] = useState<ProgramNode | null>(null);
 
   const handleButtonClick = async () => {
     if (editorRef.current) {
@@ -34,6 +38,9 @@ export default function Home() {
           setOutput(semanticAnalyzer.Errors.join("\n"));
           return;
         }
+
+        // Set the program node for the QuantumCircuit component
+        setProgramNode(programNode);
 
         const response = await fetch("http://localhost:8000/api/", {
           headers: {
@@ -129,7 +136,6 @@ export default function Home() {
     color: "#f8f8f2",
     padding: "10px",
     borderRadius: "5px",
-    height: "100%",
     overflow: "hidden",
     whiteSpace: "pre-wrap",
   };
@@ -141,11 +147,13 @@ export default function Home() {
     color: "#fff",
     cursor: "pointer",
     borderRadius: "5px",
+    width: "100%",
+    marginTop: "10px",
   };
 
   return (
-    <div style={{ display: "flex", height: "100vh", flexDirection: "row" }}>
-      <div style={{ flex: 1, height: "100%" }}>
+    <div style={{ display: "flex", height: "100vh", flexDirection: "row", padding: "10px", gap: "10px" }}>
+      <div style={{ flex: "0 0 60%", height: "100%" }}>
         <Editor
           height="100%"
           width="100%"
@@ -155,15 +163,23 @@ export default function Home() {
           onMount={(editor, monaco) => handleEditorMount(editor, monaco)}
         />
       </div>
-      <div style={{ width: "40%", padding: "10px", height: "100%" }}>
-        <div style={{ ...commonEditorStyle, height: "calc(100% - 50px)", marginBottom: "10px" }}>
+
+
+      <div style={{ flex: "0 0 35%", height: "100%", display: "flex", flexDirection: "column", gap: "10px" }}>
+        <div style={{ flex: "0 0 50%", ...commonEditorStyle }}>
+          {programNode && <QuantumCircuit program={programNode} />}
+        </div>
+
+        <div style={{ flex: "0 0 40%", ...commonEditorStyle }}>
           {output}
         </div>
-        <button onClick={handleButtonClick} style={buttonStyle}>
-          Run Code
-        </button>
-      </div>
 
+        <div style={{ flex: "0 0 10%" }}>
+          <button onClick={handleButtonClick} style={buttonStyle}>
+            Run Code
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
