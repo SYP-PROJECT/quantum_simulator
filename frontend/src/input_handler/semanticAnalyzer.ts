@@ -39,7 +39,7 @@ export class SemanticAnalyzer {
           this.Errors.push(`Cannot resolve symbol '${identifier1}'`);
         }
 
-        if (!this.variables.includes(identifier2)) {
+        if (!this.gates.includes(identifier2)) {
           this.Errors.push(`Cannot resolve symbol '${identifier2}'`);
         }
         break;
