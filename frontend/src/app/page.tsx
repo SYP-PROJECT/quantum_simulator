@@ -2,12 +2,14 @@
 
 import { Lexer } from "@/input_handler/lexer";
 import { Parser } from "@/input_handler/parser";
+import { SemanticAnalyzer } from "@/input_handler/semanticAnalyzer";
 import Editor from '@monaco-editor/react';
 import type monaco from 'monaco-editor';
 import React, { useRef, useState } from "react";
 
 const lexer: Lexer = new Lexer();
 const parser: Parser = new Parser();
+const semanticAnalyzer: SemanticAnalyzer = new SemanticAnalyzer();
 
 export default function Home() {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -23,6 +25,13 @@ export default function Home() {
 
         if (parser.Errors.length != 0) {
           setOutput(parser.Errors.join("\n"));
+          return;
+        }
+
+        semanticAnalyzer.analyze(programNode);
+
+        if (semanticAnalyzer.Errors.length != 0) {
+          setOutput(semanticAnalyzer.Errors.join("\n"));
           return;
         }
 
