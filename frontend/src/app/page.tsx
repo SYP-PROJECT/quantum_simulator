@@ -8,7 +8,7 @@ import QuantumCircuit from '../components/QuantumCircuit';
 
 import Editor from '@monaco-editor/react';
 import type monaco from 'monaco-editor';
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 
 const lexer: Lexer = new Lexer();
 const parser: Parser = new Parser();
@@ -18,6 +18,24 @@ export default function Home() {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const [output, setOutput] = useState("");
   const [programNode, setProgramNode] = useState<ProgramNode | null>(null);
+
+  useEffect(() => {
+    const originalStyle = {
+      html: document.documentElement.style.cssText,
+      body: document.body.style.cssText
+    };
+
+    document.documentElement.style.overflow = 'hidden';
+    document.documentElement.style.height = '100%';
+    document.body.style.overflow = 'hidden';
+    document.body.style.height = '100%';
+    document.body.style.margin = '0';
+
+    return () => {
+      document.documentElement.style.cssText = originalStyle.html;
+      document.body.style.cssText = originalStyle.body;
+    };
+  }, []);
 
   const handleButtonClick = async () => {
     if (editorRef.current) {
@@ -158,13 +176,15 @@ export default function Home() {
       display: "flex",
       height: "100vh",
       flexDirection: "row",
-      padding: mainMargin
+      padding: mainMargin,
+      overflow: "hidden"
     }}>
       {/* Left tile - Editor */}
       <div style={{
         flex: 1,
         height: "100%",
-        marginRight: halfMargin
+        marginRight: halfMargin,
+        overflow: "hidden"
       }}>
         <Editor
           height="100%"
@@ -182,21 +202,30 @@ export default function Home() {
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        gap: mainMargin,
-        marginLeft: halfMargin
+        gap: halfMargin,
+        marginLeft: halfMargin,
+        overflow: "hidden"
       }}>
         {/* Quantum Circuit */}
-        <div style={{ flex: "0 0 50%", ...commonEditorStyle }}>
+        <div style={{
+          flex: "0 0 47.5%",
+          ...commonEditorStyle,
+          overflow: "auto"
+        }}>
           {programNode && <QuantumCircuit program={programNode} />}
         </div>
 
         {/* Output */}
-        <div style={{ flex: "0 0 40%", ...commonEditorStyle }}>
+        <div style={{
+          flex: "0 0 37.5%",
+          ...commonEditorStyle,
+          overflow: "auto"
+        }}>
           {output}
         </div>
 
         {/* Run Button */}
-        <div style={{ flex: "0 0 10%" }}>
+        <div style={{ flex: "0 0 15%" }}>
           <button onClick={handleButtonClick} style={buttonStyle}>
             Run Code
           </button>
