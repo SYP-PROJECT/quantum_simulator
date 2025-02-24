@@ -18,7 +18,7 @@ export class SemanticAnalyzer {
   analyzeStatement(statement: StatementNode) {
     switch (statement.type) {
       case NodeType.CreateStatement: {
-        let identifier = (statement as CreateStatementNode).identifier;
+        const identifier = (statement as CreateStatementNode).identifier;
 
         if (this.variables.includes(identifier)) {
           this.Errors.push(`Identifier '${identifier}' was already declared`);
@@ -30,10 +30,10 @@ export class SemanticAnalyzer {
       }
 
       case NodeType.ApplyStatement: {
-        let applyStatement = (statement as ApplyStatementNode);
+        const applyStatement = (statement as ApplyStatementNode);
 
-        let identifier1 = applyStatement.identifier1;
-        let identifier2 = applyStatement.identifier2;
+        const identifier1 = applyStatement.identifier1;
+        const identifier2 = applyStatement.identifier2;
 
         if (!this.variables.includes(identifier1)) {
           this.Errors.push(`Cannot resolve symbol '${identifier1}'`);
@@ -46,7 +46,7 @@ export class SemanticAnalyzer {
       }
 
       case NodeType.MeasureStatement: {
-        let identifier = (statement as MeasureStatementNode).identifier;
+        const identifier = (statement as MeasureStatementNode).identifier;
 
         if (!this.variables.includes(identifier)) {
           this.Errors.push(`Cannot resolve symbol '${identifier}'`);
@@ -55,7 +55,7 @@ export class SemanticAnalyzer {
       }
 
       case NodeType.DisplayStatement: {
-        let identifier = (statement as DisplayStatementNode).identifier;
+        const identifier = (statement as DisplayStatementNode).identifier;
 
         if (!this.variables.includes(identifier)) {
           this.Errors.push(`Cannot resolve symbol '${identifier}'`);
