@@ -27,13 +27,13 @@ const QuantumCircuit: React.FC<{ program: ProgramNode }> = ({ program }) => {
 function generateQuantumCircuit(program: ProgramNode, container: HTMLElement, minLineWidth: number) {
   const qubitSpacing = 50;
   const padding = 50;
-  const gateWidth = 30;
+  const gateSize = 30;
   const gateSpacing = 50;
 
   let totalWidth = padding * 2;
   program.statements.forEach(statement => {
     if (statement.type === NodeType.ApplyStatement || statement.type === NodeType.MeasureStatement || statement.type === NodeType.DisplayStatement) {
-      totalWidth += gateWidth + gateSpacing;
+      totalWidth += gateSize + gateSpacing;
     }
   });
 
@@ -43,7 +43,8 @@ function generateQuantumCircuit(program: ProgramNode, container: HTMLElement, mi
   const svg = d3.select(container)
     .append("svg")
     .attr("width", svgWidth)
-    .attr("height", svgHeight);
+    .attr("height", svgHeight)
+    .style("background", "#282a36");
 
   const qubits = new Set<string>();
 
@@ -63,7 +64,8 @@ function generateQuantumCircuit(program: ProgramNode, container: HTMLElement, mi
     .attr("x2", svgWidth - padding)
     .attr("y1", (_, i) => padding + i * qubitSpacing)
     .attr("y2", (_, i) => padding + i * qubitSpacing)
-    .attr("stroke", "#8be9fd");
+    .attr("stroke", "#bd93f9")
+    .attr("stroke-width", 2);
 
   svg.selectAll(".qubit-label")
     .data(qubitList)
@@ -73,7 +75,7 @@ function generateQuantumCircuit(program: ProgramNode, container: HTMLElement, mi
     .attr("y", (_, i) => padding + i * qubitSpacing)
     .attr("dy", "0.35em")
     .text(d => `${d}`)
-    .attr("fill", "#8be9fd");
+    .attr("fill", "#f8f8f2");
 
   let currentX = padding;
   program.statements.forEach(statement => {
@@ -83,35 +85,37 @@ function generateQuantumCircuit(program: ProgramNode, container: HTMLElement, mi
 
       gate.append("rect")
         .attr("x", currentX)
-        .attr("y", padding + qubitIndex * qubitSpacing - 15)
-        .attr("width", gateWidth)
-        .attr("height", 30)
-        .attr("fill", "lightblue");
+        .attr("y", padding + qubitIndex * qubitSpacing - gateSize / 2)
+        .attr("width", gateSize)
+        .attr("height", gateSize)
+        .attr("fill", "#50fa7b");
 
-      currentX += gateWidth + gateSpacing;
+      currentX += gateSize + gateSpacing;
     }
     else if (statement.type === NodeType.MeasureStatement) {
       const qubitIndex = qubitList.indexOf(statement.identifier);
 
       svg.append("circle")
-        .attr("cx", currentX + gateWidth / 2)
+        .attr("cx", currentX + gateSize / 2)
         .attr("cy", padding + qubitIndex * qubitSpacing)
         .attr("r", 10)
-        .attr("fill", "green");
+        .attr("fill", "#ffb86c");
 
-      currentX += gateWidth + gateSpacing;
+      currentX += gateSize + gateSpacing;
     }
     else if (statement.type === NodeType.DisplayStatement) {
       const qubitIndex = qubitList.indexOf(statement.identifier);
 
       svg.append("text")
-        .attr("x", currentX + gateWidth / 2)
+        .attr("x", currentX + gateSize / 2)
         .attr("y", padding + qubitIndex * qubitSpacing)
         .attr("dy", "0.35em")
+        .attr("font-size", "20px")
+        .attr("text-anchor", "middle")
         .text("D")
-        .attr("fill", "red");
+        .attr("fill", "#ff5555");
 
-      currentX += gateWidth + gateSpacing;
+      currentX += gateSize + gateSpacing;
     }
   });
 }
