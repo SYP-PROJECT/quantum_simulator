@@ -1,8 +1,14 @@
-#Use the official PostgreSQL image from the Docker Hub
+# Use the official PostgreSQL image from the Docker Hub
 FROM postgres:latest
 
-#Set environment variables for PostgreSQL
-ENV POSTGRES_USER=root
-ENV POSTGRES_DB=mydatabase
+# Create a directory for persistent data
+RUN mkdir -p /var/lib/postgresql/data/pgdata
 
-#The password will be provided at runtime
+# Set the data directory to the persistent storage location
+ENV PGDATA=/var/lib/postgresql/data/pgdata
+
+# Expose the PostgreSQL port
+EXPOSE 5432
+
+# Start PostgreSQL
+CMD ["postgres"]
