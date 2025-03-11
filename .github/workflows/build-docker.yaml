@@ -75,8 +75,8 @@ jobs:
         with:
           image_name: ${{ github.repository }}-postgres  # it will be lowercased internally
           github_token: ${{ secrets.GHCR_TOKEN }}
-          context: ./database  # Path to the directory containing the Dockerfile
-          dockerfile: ./database/Dockerfile  # Path to the Dockerfile
+          context: ./db  # Path to the directory containing the Dockerfile
+          dockerfile: ./db/Dockerfile  # Path to the Dockerfile
 
       #ADD IF EVERYTHING RUNS ON THE LEOCLOUD 
       # Step 4: Run the PostgreSQL container with secrets
