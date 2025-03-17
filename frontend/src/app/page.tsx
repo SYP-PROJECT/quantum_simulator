@@ -59,7 +59,11 @@ export default function Home() {
 
         setProgramNode(programNode);
 
-        const response = await fetch("http://localhost:8000/api/", {
+        if(!process.env.URL){
+          throw new Error("No URL provided");
+        }
+
+        const response = await fetch(process.env.URL, {
           headers: {
             "Content-Type": "application/json",
           },
