@@ -1,6 +1,7 @@
 export enum NodeType {
   Program = "Program",
-  CreateStatement = "CreateStatement",
+  CreateQubitStatement = "CreateQubitStatement",
+  CreateRegisterStatement = "CreateRegisterStatement",
   ApplyStatement = "ApplyStatement",
   MeasureStatement = "MeasureStatement",
   DisplayStatement = "DisplayStatement",
@@ -17,12 +18,18 @@ export type ProgramNode = {
   statements: StatementNode[];
 }
 
-export type StatementNode = CreateStatementNode | ApplyStatementNode | MeasureStatementNode | DisplayStatementNode;
+export type StatementNode = CreateQubitStatementNode | CreateRegisterStatementNode | ApplyStatementNode | MeasureStatementNode | DisplayStatementNode;
 
-export type CreateStatementNode = {
-  type: NodeType.CreateStatement;
+export type CreateQubitStatementNode = {
+  type: NodeType.CreateQubitStatement;
   identifier: string;
   complexArray: ComplexArrayNode;
+};
+
+export type CreateRegisterStatementNode = {
+  type: NodeType.CreateRegisterStatement;
+  identifier: string;
+  numQubits: number;
 };
 
 export type ApplyStatementNode = {

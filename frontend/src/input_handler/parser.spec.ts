@@ -198,7 +198,7 @@ describe('Parser', () => {
 
     expect(program.statements).toStrictEqual([
       {
-        type: NodeType.CreateStatement,
+        type: NodeType.CreateQubitStatement,
         identifier: "q1",
         complexArray: {
           type: NodeType.ComplexArray,
@@ -219,7 +219,7 @@ describe('Parser', () => {
 
     expect(program.statements).toStrictEqual([
       {
-        type: NodeType.CreateStatement,
+        type: NodeType.CreateQubitStatement,
         identifier: "q1",
         complexArray: {
           type: NodeType.ComplexArray,
@@ -240,7 +240,7 @@ describe('Parser', () => {
 
     expect(program.statements).toStrictEqual([
       {
-        type: NodeType.CreateStatement,
+        type: NodeType.CreateQubitStatement,
         identifier: "q1",
         complexArray: {
           type: NodeType.ComplexArray,
@@ -267,7 +267,7 @@ describe('Parser', () => {
 
     expect(program.statements).toStrictEqual([
       {
-        type: NodeType.CreateStatement,
+        type: NodeType.CreateQubitStatement,
         identifier: "q1",
         complexArray: {
           type: NodeType.ComplexArray,
@@ -290,7 +290,7 @@ describe('Parser', () => {
 
     expect(program.statements).toStrictEqual([
       {
-        type: NodeType.CreateStatement,
+        type: NodeType.CreateQubitStatement,
         identifier: "q1",
         complexArray: {
           type: NodeType.ComplexArray,
@@ -317,7 +317,7 @@ describe('Parser', () => {
 
     expect(program.statements).toStrictEqual([
       {
-        type: NodeType.CreateStatement,
+        type: NodeType.CreateQubitStatement,
         identifier: "q1",
         complexArray: {
           type: NodeType.ComplexArray,
@@ -344,7 +344,7 @@ describe('Parser', () => {
 
     expect(program.statements).toStrictEqual([
       {
-        type: NodeType.CreateStatement,
+        type: NodeType.CreateQubitStatement,
         identifier: "q1",
         complexArray: {
           type: NodeType.ComplexArray,
@@ -370,7 +370,7 @@ describe('Parser', () => {
 
     expect(program.statements).toStrictEqual([
       {
-        type: NodeType.CreateStatement,
+        type: NodeType.CreateQubitStatement,
         identifier: "q1",
         complexArray: {
           type: NodeType.ComplexArray,
@@ -412,7 +412,7 @@ describe('Parser', () => {
 
     expect(program.statements).toStrictEqual([
       {
-        type: NodeType.CreateStatement,
+        type: NodeType.CreateQubitStatement,
         identifier: "q1",
         complexArray: {
           type: NodeType.ComplexArray,
@@ -564,7 +564,7 @@ describe('Parser', () => {
         identifier: "q1"
       },
       {
-        type: NodeType.CreateStatement,
+        type: NodeType.CreateQubitStatement,
         identifier: "a",
         complexArray: {
           type: NodeType.ComplexArray,
