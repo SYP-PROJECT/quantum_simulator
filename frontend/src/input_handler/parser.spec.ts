@@ -187,6 +187,66 @@ describe('Parser', () => {
     expect(program.statements).toHaveLength(0);
   });
 
+  test('should parse CREATE statement with no valid index', () => {
+    lexer.reset("create register q1 = [1];");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+    expect(parser.Errors.length).toBe(0);
+
+    expect(program.statements).toHaveLength(1);
+
+    expect(program.statements).toStrictEqual([
+      {
+        type: NodeType.CreateRegisterStatement,
+        identifier: "q1",
+        numQubits: 1,
+      }
+    ]);
+  });
+
+  test('should parse CREATE statement with valid index', () => {
+    lexer.reset("create register q1 = [1];");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+    expect(parser.Errors.length).toBe(0);
+
+    expect(program.statements).toHaveLength(1);
+
+    expect(program.statements).toStrictEqual([
+      {
+        type: NodeType.CreateRegisterStatement,
+        identifier: "q1",
+        numQubits: 1,
+      }
+    ]);
+  });
+
+  test('should add an error for missing index in CREATE statement', () => {
+        lexer.reset("create register q1 = [];");
+        parser.reset(lexer);
+
+        const program = parser.parseProgram();
+
+        expect(parser.Errors.length).toBe(1);
+        expect(parser.Errors).toStrictEqual(["Expected next token to be NUMBER, got RBRACKET instead"]);
+
+        expect(program.statements).toHaveLength(0);
+  });
+
+  test('should add an error for non-integer index in CREATE statement', () => {
+    lexer.reset("create register q1 = [1.2];");
+    parser.reset(lexer);
+
+    const program = parser.parseProgram();
+
+    expect(parser.Errors.length).toBe(1);
+    expect(parser.Errors).toStrictEqual(["Number of qubits must be an integer"]);
+
+    expect(program.statements).toHaveLength(0);
+  });
+
   test('should parse CREATE statement with no values', () => {
     lexer.reset("create qubit q1 = [];");
     parser.reset(lexer);
@@ -442,7 +502,7 @@ describe('Parser', () => {
     const program = parser.parseProgram();
 
     expect(parser.Errors.length).toBe(1);
-    expect(parser.Errors).toStrictEqual(["Expected next token to be QUBIT, got IDENTIFIER instead"]);
+    expect(parser.Errors).toStrictEqual(["Expected next token to be QUBIT, REGISTER, got IDENTIFIER instead"]);
 
     expect(program.statements).toHaveLength(0);
   });
