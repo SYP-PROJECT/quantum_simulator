@@ -1,6 +1,6 @@
 use nalgebra::{Complex, DMatrix, DVector, Matrix2};
 use rand::Rng;
-use crate::qubit::Measurment;
+use crate::qubit::Measurement;
 
 pub struct QuantumRegister {
     state: DVector<Complex<f64>>
@@ -47,7 +47,7 @@ impl QuantumRegister{
         self.state *= full_matrix;
     }
 
-    pub fn measure(&mut self, qubit_index: usize) -> Measurment {
+    pub fn measure(&mut self, qubit_index: usize) -> Measurement {
         let mut rng = rand::thread_rng();
         let random_num = rng.gen_range(0.0_f64..1.0);
         let prob_0 = self.state.iter().step_by(1 << qubit_index).map(|x| x.norm_sqr()).sum();
