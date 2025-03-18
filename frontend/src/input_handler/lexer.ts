@@ -1,6 +1,7 @@
 export enum TokenType {
   CREATE = "CREATE",
   QUBIT = "QUBIT",
+  REGISTER = "REGISTER",
   APPLY = "APPLY",
   MEASURE = "MEASURE",
   DISPLAY = "DISPLAY",
@@ -72,6 +73,9 @@ export class Lexer {
         case "qubit":
           newToken = CreateNewToken(TokenType.QUBIT, word);
           break;
+        case "register":
+            newToken = CreateNewToken(TokenType.REGISTER, word);
+            break;
         case "apply":
           newToken = CreateNewToken(TokenType.APPLY, word);
           break;

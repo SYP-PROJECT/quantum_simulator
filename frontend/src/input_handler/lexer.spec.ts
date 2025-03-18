@@ -19,13 +19,14 @@ describe("Lexer", () => {
 
 
   test("keywords", () => {
-    lexer.reset("create qubit apply");
+    lexer.reset("create qubit apply register");
     const tokens = tokenize();
 
     expect(tokens).toEqual([
       { type: TokenType.CREATE, value: "create" },
       { type: TokenType.QUBIT, value: "qubit" },
       { type: TokenType.APPLY, value: "apply" },
+      { type: TokenType.REGISTER, value: "register" },
       { type: TokenType.EOF, value: "" },
     ]);
   });
