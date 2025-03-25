@@ -8,10 +8,11 @@
 }
 
 .button-style {
-    padding: "10px";
-    background: "#444";
+    padding: 10px;
+    background: #444;
     border: none;
-    color: #fff cursor: pointer;
+    color: #fff;
+    cursor: pointer;
     borderRadius: 5px;
     width: 100%;
     marginTop: 10px;
