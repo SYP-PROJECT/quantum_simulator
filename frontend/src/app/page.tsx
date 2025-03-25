@@ -59,10 +59,10 @@ export default function Home() {
 
         setProgramNode(programNode);
         let url;
-        if (!process.env.REACT_APP_URL) {
+        if (!process.env.BACKEND_URL) {
           url = "http://localhost:8000/api/"
         } else {
-          url = process.env.REACT_APP_URL;
+          url = process.env.BACKEND_URL;
         }
 
         const response = await fetch(url, {
