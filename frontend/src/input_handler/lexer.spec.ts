@@ -17,7 +17,7 @@ describe('Lexer', () => {
 
     describe('Keywords', () => {
         test('should tokenize all keywords', () => {
-            const input = 'qubit register gate measure if repeat print define as matrix for;';
+            const input = 'qubit register gate measure if repeat print define as matrix for let;';
             tokenizeAndExpect(input, [
                 expectToken(TokenType.QUBIT, "qubit", 1, 1),
                 expectToken(TokenType.REGISTER, "register", 1, 7),
@@ -30,8 +30,9 @@ describe('Lexer', () => {
                 expectToken(TokenType.AS, "as", 1, 52),
                 expectToken(TokenType.MATRIX, "matrix", 1, 55),
                 expectToken(TokenType.FOR, "for", 1, 62),
-                expectToken(TokenType.SEMICOLON, ";", 1, 65),
-                expectToken(TokenType.EOF, "", 1, 66)
+                expectToken(TokenType.LET, "let", 1, 66),
+                expectToken(TokenType.SEMICOLON, ";", 1, 69),
+                expectToken(TokenType.EOF, "", 1, 70)
             ]);
         });
     });
@@ -146,7 +147,7 @@ describe('Lexer', () => {
         test('should tokenize all operators', () => {
             tokenizeAndExpect('= => == + - * / | > >= < <=;', [
                 expectToken(TokenType.ASSIGMENT, "=", 1, 1),
-                expectToken(TokenType.GATE_APPLICATION, "=>", 1, 3),
+                expectToken(TokenType.ARROW, "=>", 1, 3),
                 expectToken(TokenType.EQUALS, "==", 1, 6),
                 expectToken(TokenType.PLUS, "+", 1, 9),
                 expectToken(TokenType.MINUS, "-", 1, 11),
@@ -190,7 +191,7 @@ describe('Lexer', () => {
                 expectToken(TokenType.SEMICOLON, ";", 1, 15),
                 expectToken(TokenType.GATE, "gate", 1, 17),
                 expectToken(TokenType.IDENTIFIER, "H", 1, 22),
-                expectToken(TokenType.GATE_APPLICATION, "=>", 1, 24),
+                expectToken(TokenType.ARROW, "=>", 1, 24),
                 expectToken(TokenType.IDENTIFIER, "q0", 1, 27),
                 expectToken(TokenType.SEMICOLON, ";", 1, 29),
                 expectToken(TokenType.EOF, "", 1, 30)

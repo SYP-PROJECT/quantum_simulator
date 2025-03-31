@@ -11,6 +11,7 @@ export enum TokenType {
     AS = "as",
     MATRIX = "matrix",
     FOR = "for",
+    LET = "let",
 
     //Literals
     IDENTIFIER = "identifier",
@@ -19,7 +20,7 @@ export enum TokenType {
 
     //Operators
     ASSIGMENT = "=",
-    GATE_APPLICATION = "=>",
+    ARROW = "=>",
     EQUALS = "==",
     PLUS = "+",
     MINUS = "-",
@@ -64,7 +65,7 @@ export class Lexer {
     private errors: string[] = [];
 
     private keywords = new Set([
-        "qubit", "register", "gate", "measure", "if", "repeat", "print", "define", "as", "matrix", "for"
+        "qubit", "register", "gate", "measure", "if", "repeat", "print", "define", "as", "matrix", "for", "let"
     ])
 
     public tokenize(input: string): Token[] {
@@ -175,7 +176,7 @@ export class Lexer {
                 const peek = this.peekChar();
 
                 if(peek === ">") {
-                    newToken = CreateNewToken(TokenType.GATE_APPLICATION, this.curChar + peek, row, col);
+                    newToken = CreateNewToken(TokenType.ARROW, this.curChar + peek, row, col);
                     this.readChar();
                 }else if (peek === "=") {
                     newToken = CreateNewToken(TokenType.EQUALS, this.curChar + peek, row, col);
