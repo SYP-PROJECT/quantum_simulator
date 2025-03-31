@@ -410,34 +410,27 @@ describe('Parser', () => {
       }
     ]);
   });
-/*
+
   test('should parse an if statement with identifier comparison', () => {
-    const tokens = lexer.tokenize("if a < b { gate H => q; };");
-    const parser = new Parser(tokens);
-    const program = parser.parseProgram();
+    const tokens = lexer.tokenize("if a < b { gate H => q; }");
+    const parser = new Parser();
+    const program = parser.parseProgram(tokens);
     expect(parser.Errors.length).toBe(0);
     expect(program.statements).toHaveLength(1);
     expect(program.statements).toStrictEqual([
       {
         type: NodeType.IfStatement,
         condition: {
-          type: NodeType.Condition,
-          expression: {
-            type: NodeType.ComplexExpression,
-            left: {
               type: NodeType.InfixExpression,
-              op: "<",
+              operator: "<",
               left: { type: NodeType.Identifier, value: "a" },
               right: { type: NodeType.Identifier, value: "b" }
-            },
-            right: null
-          }
         },
-        body: [
+        statements: [
           {
             type: NodeType.GateApplication,
-            gateIdentifier: "H",
-            targets: [{ type: NodeType.Target, identifier: "q", index: null, secondIdentifier: null }]
+            gate: "H",
+            targets: [{ type: NodeType.Target, identifier: "q", index: null }]
           }
         ]
       }
@@ -445,44 +438,41 @@ describe('Parser', () => {
   });
 
   test('should parse complex expression with identifiers and comparison', () => {
-    const tokens = lexer.tokenize("if a + b < c - d { print q; };");
-    const parser = new Parser(tokens);
-    const program = parser.parseProgram();
+    const tokens = lexer.tokenize("if a + b < c - d { qubit q = |0>; }");
+    const parser = new Parser();
+    const program = parser.parseProgram(tokens);
     expect(parser.Errors.length).toBe(0);
     expect(program.statements).toHaveLength(1);
     expect(program.statements).toStrictEqual([
       {
         type: NodeType.IfStatement,
         condition: {
-          type: NodeType.Condition,
-          expression: {
-            type: NodeType.ComplexExpression,
-            left: {
-              type: NodeType.InfixExpression,
-              op: "<",
-              left: {
-                type: NodeType.InfixExpression,
-                op: "+",
-                left: { type: NodeType.Identifier, value: "a" },
-                right: { type: NodeType.Identifier, value: "b" }
-              },
-              right: {
-                type: NodeType.InfixExpression,
-                op: "-",
-                left: { type: NodeType.Identifier, value: "c" },
-                right: { type: NodeType.Identifier, value: "d" }
-              }
-            },
-            right: null
+          type: NodeType.InfixExpression,
+          operator: "<",
+          left: {
+            type: NodeType.InfixExpression,
+            operator: "+",
+            left: { type: NodeType.Identifier, value: "a" },
+            right: { type: NodeType.Identifier, value: "b" }
+          },
+          right: {
+            type: NodeType.InfixExpression,
+            operator: "-",
+            left: { type: NodeType.Identifier, value: "c" },
+            right: { type: NodeType.Identifier, value: "d" }
           }
         },
-        body: [
-          { type: NodeType.PrintStatement, identifier: "q" }
+        statements: [
+          {
+            type: NodeType.QubitDeclaration,
+            identifier: "q",
+            state: "|0>"
+          }
         ]
-      }
+      },
     ]);
   });
-
+/*
   test('should add an error for malformed if condition', () => {
     const tokens = lexer.tokenize("if a < { gate H => q; };");
     const parser = new Parser(tokens);
@@ -492,6 +482,7 @@ describe('Parser', () => {
     expect(program.statements).toHaveLength(0);
   });
 
+  /*
   test('should parse complex number with identifier in matrix', () => {
     const tokens = lexer.tokenize("define gate X as matrix { [a + bi, c] };");
     const parser = new Parser(tokens);

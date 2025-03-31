@@ -13,6 +13,7 @@ export enum NodeType {
   PrefixExpression = "PrefixExpression",
   InfixExpression = "InfixExpression",
   RepeatStatement = "RepeatStatement",
+  IfStatement = "IfStatement",
 }
 
 export type ProgramNode = {
@@ -20,7 +21,7 @@ export type ProgramNode = {
   statements: StatementNode[];
 }
 
-export type StatementNode = QubitDeclaration | RegisterDeclaration | GateApplication | MeasureStatement | LetStatement | RepeatStatement;
+export type StatementNode = QubitDeclaration | RegisterDeclaration | GateApplication | MeasureStatement | LetStatement | RepeatStatement | IfStatement;
 
 export type QubitDeclaration = {
   type: NodeType.QubitDeclaration;
@@ -49,6 +50,12 @@ export type MeasureStatement = {
 export type RepeatStatement = {
     type: NodeType.RepeatStatement;
     count: number;
+    statements: StatementNode[];
+}
+
+export type IfStatement = {
+    type: NodeType.IfStatement;
+    condition: Expression;
     statements: StatementNode[];
 }
 

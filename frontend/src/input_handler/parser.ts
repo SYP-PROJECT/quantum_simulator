@@ -121,10 +121,33 @@ export class Parser {
                 return this.parseLetStatement();
             case TokenType.REPEAT:
                 return this.parseRepeatStatement();
+            case TokenType.IF:
+                return this.parseIfStatement();
             default:
                 this.errors.push(`(${this.curToken.row}, ${this.curToken.column}): Only creation, measurement, apply and display can be used as statements`);
                 throw new Error();
         }
+    }
+
+    private parseIfStatement(): StatementNode {
+        this.nextToken();
+        const condition = this.parseExpression(Precedence.LOWEST);
+
+        this.expectPeek([TokenType.LBRACE]);
+        this.nextToken();
+
+        const statements: StatementNode[] = [];
+
+        while (!this.curTokenIs(TokenType.RBRACE) && !this.curTokenIs(TokenType.EOF)) {
+            try {
+                statements.push(this.parseStatement());
+            } catch {
+                this.resynchronize();
+            }
+            this.nextToken();
+        }
+
+        return {type: NodeType.IfStatement, condition, statements};
     }
 
     private parseRepeatStatement(): StatementNode {
