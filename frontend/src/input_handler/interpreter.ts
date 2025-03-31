@@ -2,10 +2,12 @@ import * as math from 'mathjs';
 import {
     Expression,
     GateApplication,
-    IfStatement, InfixExpression,
+    IfStatement,
+    InfixExpression,
     LetStatement,
     MeasureStatement,
-    NodeType, PrefixExpression,
+    NodeType,
+    PrefixExpression, PrintStatement,
     ProgramNode,
     RepeatStatement,
     StatementNode
@@ -255,6 +257,7 @@ export class Interpreter {
         try {
             this.quantumSystem = new QuantumSystem();
             this.classicalState = new Map();
+            this.output = [];
             for (const statement of program.statements) {
                 this.executeStatement(statement);
             }
@@ -287,7 +290,15 @@ export class Interpreter {
             case NodeType.IfStatement:
                 this.handleIfStatement(statement);
                 break;
+            case NodeType.PrintStatement:
+                this.handlePrintStatement(statement);
+                break;
         }
+    }
+
+    private handlePrintStatement(node: PrintStatement): void {
+        const value = this.evaluateExpression(node.value);
+        this.output.push(typeof value === "boolean" ? value.toString() : `${value[0]}${value[1] < 0 ? "" : "+"}${value[1]}i`);
     }
 
     private handleGateApplication(node: GateApplication): void {

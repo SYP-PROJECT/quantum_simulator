@@ -61,6 +61,7 @@ export class Parser {
         [TokenType.AND, this.parseInfixExpression.bind(this)],
         [TokenType.OR, this.parseInfixExpression.bind(this)],
         [TokenType.EQUALS, this.parseInfixExpression.bind(this)],
+        [TokenType.NOT_EQUALS, this.parseInfixExpression.bind(this)],
         [TokenType.LEQ, this.parseInfixExpression.bind(this)],
         [TokenType.GEQ, this.parseInfixExpression.bind(this)],
         [TokenType.LESS, this.parseInfixExpression.bind(this)],
@@ -130,10 +131,19 @@ export class Parser {
                 return this.parseRepeatStatement();
             case TokenType.IF:
                 return this.parseIfStatement();
+            case TokenType.PRINT:
+                return this.parsePrintStatement();
             default:
-                this.errors.push(`(${this.curToken.row}, ${this.curToken.column}): Only creation, measurement, apply and display can be used as statements`);
+                this.errors.push(`(${this.curToken.row}, ${this.curToken.column}): Only creation, measurement, apply and print can be used as a statement`);
                 throw new Error();
         }
+    }
+
+    private parsePrintStatement(): StatementNode{
+        this.nextToken();
+        const value = this.parseExpression(Precedence.LOWEST);
+        this.expectPeek([TokenType.SEMICOLON]);
+        return {type: NodeType.PrintStatement, value};
     }
 
     private parseIfStatement(): StatementNode {

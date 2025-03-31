@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+/*import React, { useRef, useEffect } from 'react';
 import * as d3 from 'd3';
 import { ProgramNode, NodeType } from '../input_handler/ast'
 import './QuantumCircuit.css';
@@ -121,3 +121,4 @@ function generateQuantumCircuit(program: ProgramNode, container: HTMLElement, mi
 }
 
 export default QuantumCircuit;
+*/

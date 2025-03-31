@@ -15,6 +15,7 @@ export enum NodeType {
   RepeatStatement = "RepeatStatement",
   IfStatement = "IfStatement",
   BooleanLiteral = "BooleanLiteral",
+  PrintStatement = "PrintStatement",
 }
 
 export type ProgramNode = {
@@ -22,7 +23,7 @@ export type ProgramNode = {
   statements: StatementNode[];
 }
 
-export type StatementNode = QubitDeclaration | RegisterDeclaration | GateApplication | MeasureStatement | LetStatement | RepeatStatement | IfStatement;
+export type StatementNode = QubitDeclaration | RegisterDeclaration | GateApplication | MeasureStatement | LetStatement | RepeatStatement | IfStatement | PrintStatement;
 
 export type QubitDeclaration = {
   type: NodeType.QubitDeclaration;
@@ -64,6 +65,11 @@ export type LetStatement = {
     type: NodeType.LetStatement;
     identifier: string;
     value: Expression;
+}
+
+export type PrintStatement = {
+    type: NodeType.PrintStatement;
+    value: Expression
 }
 
 export type Target = {

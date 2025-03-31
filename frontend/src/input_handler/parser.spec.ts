@@ -210,6 +210,34 @@ describe('Parser', () => {
     ]);
   });
 
+  test('should parse a simple print statement with infix expression', () => {
+    const tokens = lexer.tokenize("print -2i + 2;");
+    const parser = new Parser();
+    const program = parser.parseProgram(tokens);
+    expect(parser.Errors.length).toBe(0);
+    expect(program.statements).toHaveLength(1);
+    expect(program.statements).toStrictEqual([
+      {
+        type: NodeType.PrintStatement,
+        value: {
+          type: NodeType.InfixExpression,
+          left: {
+            type: NodeType.PrefixExpression,
+            operator: "-",
+            right: {
+              type: NodeType.ImaginaryLiteral,
+              value: 2 }
+          },
+          operator: "+",
+          right: {
+            type: NodeType.RealLiteral,
+            value: 2
+          }
+        }
+      }
+    ]);
+  });
+
   test('should throw an error for an unexpected token', () => {
     const tokens = lexer.tokenize("INVALID");
     const parser = new Parser();
