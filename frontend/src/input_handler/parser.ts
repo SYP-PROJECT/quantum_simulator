@@ -119,10 +119,38 @@ export class Parser {
                 return this.parseMeasureStatement();
             case TokenType.LET:
                 return this.parseLetStatement();
+            case TokenType.REPEAT:
+                return this.parseRepeatStatement();
             default:
                 this.errors.push(`(${this.curToken.row}, ${this.curToken.column}): Only creation, measurement, apply and display can be used as statements`);
                 throw new Error();
         }
+    }
+
+    private parseRepeatStatement(): StatementNode {
+        this.expectPeek([TokenType.NUMBER]);
+        const count = parseFloat(this.curToken.value);
+
+        if(!Number.isInteger(count)){
+            this.errors.push(`(${this.curToken.row}, ${this.curToken.column}): Repeat count must be an integer`);
+            throw new Error();
+        }
+
+        this.expectPeek([TokenType.LBRACE]);
+        this.nextToken();
+
+        const statements: StatementNode[] = [];
+
+        while (!this.curTokenIs(TokenType.RBRACE) && !this.curTokenIs(TokenType.EOF)) {
+            try {
+                statements.push(this.parseStatement());
+            } catch {
+                this.resynchronize();
+            }
+            this.nextToken();
+        }
+
+        return {type: NodeType.RepeatStatement, count, statements};
     }
 
     private parseLetStatement(): StatementNode {

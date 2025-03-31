@@ -11,7 +11,8 @@ export enum NodeType {
   RealLiteral = "RealLiteral",
   ImaginaryLiteral = "ImaginaryLiteral",
   PrefixExpression = "PrefixExpression",
-  InfixExpression = "InfixExpression"
+  InfixExpression = "InfixExpression",
+  RepeatStatement = "RepeatStatement",
 }
 
 export type ProgramNode = {
@@ -19,7 +20,7 @@ export type ProgramNode = {
   statements: StatementNode[];
 }
 
-export type StatementNode = QubitDeclaration | RegisterDeclaration | GateApplication | MeasureStatement | LetStatement;
+export type StatementNode = QubitDeclaration | RegisterDeclaration | GateApplication | MeasureStatement | LetStatement | RepeatStatement;
 
 export type QubitDeclaration = {
   type: NodeType.QubitDeclaration;
@@ -43,6 +44,12 @@ export type MeasureStatement = {
     type: NodeType.MeasureStatement;
     target: Target;
     result: string;
+}
+
+export type RepeatStatement = {
+    type: NodeType.RepeatStatement;
+    count: number;
+    statements: StatementNode[];
 }
 
 export type LetStatement = {
