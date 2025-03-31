@@ -8,6 +8,7 @@ import QuantumCircuit from "../components/QuantumCircuit";
 import Editor from "@monaco-editor/react";
 import type monaco from "monaco-editor";
 import React, { useRef, useState, useEffect } from "react";
+import QubitTutorial from "../components/QubitTutorial";
 
 const lexer: Lexer = new Lexer();
 const parser: Parser = new Parser();
@@ -175,7 +176,9 @@ export default function Home() {
         overflow: "hidden",
       }}
     >
-      {/* Left tile - Editor */}
+      {/* Left tile - Tutorial Section */}
+      <QubitTutorial /> {/* Insert the tutorial component here */}
+
       <div
         style={{
           flex: 1,
@@ -194,7 +197,6 @@ export default function Home() {
         />
       </div>
 
-      {/* Right tile - Other components */}
       <div
         style={{
           flex: 1,
@@ -206,7 +208,6 @@ export default function Home() {
           overflow: "hidden",
         }}
       >
-        {/* Quantum Circuit */}
         <div
           style={{
             flex: "0 0 47.5%",
@@ -220,7 +221,6 @@ export default function Home() {
           {programNode && <QuantumCircuit program={programNode} />}
         </div>
 
-        {/* Output */}
         <div
           style={{
             flex: "0 0 37.5%",
@@ -231,15 +231,15 @@ export default function Home() {
             overflow: "auto",
           }}
         >
-          {isLoading ? <div>Loading...</div> : output}
+          {isLoading ? <p>Loading...</p> : <pre>{output}</pre>}
         </div>
 
-        {/* Run Button */}
-        <div style={{ flex: "0 0 15%" }}>
-          <button onClick={handleButtonClick} style={buttonStyle} disabled={isLoading}>
-            {isLoading ? "Running..." : "Run Code"}
-          </button>
-        </div>
+        <button
+          onClick={handleButtonClick}
+          style={buttonStyle}
+        >
+          Run Program
+        </button>
       </div>
     </div>
   );
