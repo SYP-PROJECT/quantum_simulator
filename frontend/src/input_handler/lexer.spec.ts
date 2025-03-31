@@ -145,7 +145,7 @@ describe('Lexer', () => {
 
     describe('Operators', () => {
         test('should tokenize all operators', () => {
-            tokenizeAndExpect('= => == + - * / | > >= < <=;', [
+            tokenizeAndExpect('= => == + - * / | > >= < <= != !;', [
                 expectToken(TokenType.ASSIGMENT, "=", 1, 1),
                 expectToken(TokenType.ARROW, "=>", 1, 3),
                 expectToken(TokenType.EQUALS, "==", 1, 6),
@@ -158,8 +158,10 @@ describe('Lexer', () => {
                 expectToken(TokenType.GEQ, ">=", 1, 21),
                 expectToken(TokenType.LESS, "<", 1, 24),
                 expectToken(TokenType.LEQ, "<=", 1, 26),
-                expectToken(TokenType.SEMICOLON, ";", 1, 28),
-                expectToken(TokenType.EOF, "", 1, 29)
+                expectToken(TokenType.NOT_EQUALS, "!=", 1, 29),
+                expectToken(TokenType.NOT, "!", 1, 32),
+                expectToken(TokenType.SEMICOLON, ";", 1, 33),
+                expectToken(TokenType.EOF, "", 1, 34)
             ]);
         });
     });

@@ -22,6 +22,8 @@ export enum TokenType {
     ASSIGMENT = "=",
     ARROW = "=>",
     EQUALS = "==",
+    NOT_EQUALS = "!=",
+    NOT = "!",
     PLUS = "+",
     MINUS = "-",
     MULTIPLY = "*",
@@ -172,7 +174,7 @@ export class Lexer {
             case ",":
                 newToken = CreateNewToken(TokenType.COMMA, this.curChar, row, col);
                 break;
-            case "=":
+            case "=":{
                 const peek = this.peekChar();
 
                 if(peek === ">") {
@@ -183,6 +185,17 @@ export class Lexer {
                     this.readChar();
                 }  else {
                     newToken = CreateNewToken(TokenType.ASSIGMENT, this.curChar, row, col);
+                }
+                break;
+            }
+            case "!":
+                const peek = this.peekChar();
+
+                if(peek === "=") {
+                    newToken = CreateNewToken(TokenType.NOT_EQUALS, this.curChar + peek, row, col);
+                    this.readChar();
+                }  else {
+                    newToken = CreateNewToken(TokenType.NOT, this.curChar, row, col);
                 }
                 break;
             case ";":
