@@ -2,10 +2,10 @@ import * as math from 'mathjs';
 import {
     Expression,
     GateApplication,
-    IfStatement,
+    IfStatement, InfixExpression,
     LetStatement,
     MeasureStatement,
-    NodeType,
+    NodeType, PrefixExpression,
     ProgramNode,
     RepeatStatement,
     StatementNode
@@ -248,7 +248,7 @@ class QuantumSystem {
 
 export class Interpreter {
     private quantumSystem: QuantumSystem = null!;
-    private classicalState: Map<string, boolean> = null!;
+    private classicalState: Map<string, boolean | [number, number]> = null!;
     private output: string[] = [];
 
     interpret(program: ProgramNode): string {
@@ -333,7 +333,8 @@ export class Interpreter {
         if (this.classicalState.has(node.identifier)) {
             throw new Error(`Redefinition error: Classical variable '${node.identifier}' already defined`);
         }
-        this.classicalState.set(node.identifier, false);
+        const value = this.evaluateExpression(node.value);
+        this.classicalState.set(node.identifier, value);
     }
 
     private handleRepeatStatement(node: RepeatStatement): void {
@@ -353,22 +354,121 @@ export class Interpreter {
         }
     }
 
-    private evaluateExpression(expr: Expression): boolean {
+    private evaluateExpression(expr: Expression): boolean | [number, number] {
         switch (expr.type) {
             case NodeType.BooleanLiteral:
                 return expr.value as boolean;
+            case NodeType.RealLiteral:
+                return [expr.value, 0];
+            case NodeType.ImaginaryLiteral:
+                return [0, expr.value as number];
             case NodeType.Identifier:
                 const value = this.classicalState.get(expr.value as string);
                 if (value === undefined) {
-                    throw new Error(`Undefined variable '${expr.value}' in condition`);
+                    throw new Error(`Undefined variable: '${expr.value}' not found'`);
                 }
                 return value;
-            default:
-                throw new Error(`Unsupported expression type: ${expr.type}`);
+            case NodeType.PrefixExpression:
+                return this.evaluatePrefixExpression(expr);
+            case NodeType.InfixExpression:
+                return this.evaluateInfixExpression(expr);
         }
     }
 
-    getMeasurementResult(name: string): boolean | undefined {
-        return this.classicalState.get(name);
+    private evaluateInfixExpression(expr: InfixExpression): boolean | [number, number] {
+        const left = this.evaluateExpression(expr.left);
+        const right = this.evaluateExpression(expr.right);
+        switch (expr.operator) {
+            case '&&':
+                if (typeof left !== 'boolean' || typeof right !== 'boolean') {
+                    throw new Error(`Unsupported operation: '&&' cannot be applied to non-boolean values`);
+                }
+                return left && right;
+            case '||':
+                if (typeof left !== 'boolean' || typeof right !== 'boolean') {
+                    throw new Error(`Unsupported operation: '&&' cannot be applied to non-boolean values`);
+                }
+                return left || right;
+            case '==':
+                if (typeof left !== typeof right){
+                    throw new Error(`Unsupported operation: '&&' cannot be applied to ${typeof left === 'boolean' ? 'boolean' : 'complex number'} and ${typeof left === 'boolean' ? 'boolean' : 'complex number'}`);
+                }
+                // @ts-expect-error Necessary because of the check above
+                return typeof left === "boolean" ? left === right : left[0] === right[0] && left[1] === right[1];
+            case '!=':
+                if (typeof left !== typeof right){
+                    throw new Error(`Unsupported operation: '||' cannot be applied to ${typeof left === 'boolean' ? 'boolean' : 'complex number'} and ${typeof left === 'boolean' ? 'boolean' : 'complex number'}`);
+                }
+                // @ts-expect-error Necessary because of the check above
+                return typeof left !== "boolean" ? left === right : left[0] !== right[0] && left[1] !== right[1];
+            case '<':
+                if (typeof left === 'boolean' || typeof right === 'boolean') {
+                    throw new Error(`Unsupported operation: '<' cannot be applied to boolean value`);
+                }
+                return left[0] * left[0] + left[1] * left[1] < right[0] * right[0] + right[1] * right[1];
+            case '<=':
+                if (typeof left === 'boolean' || typeof right === 'boolean') {
+                    throw new Error(`Unsupported operation: '<=' cannot be applied to boolean value`);
+                }
+                return left[0] * left[0] + left[1] * left[1] <= right[0] * right[0] + right[1] * right[1];
+            case '>':
+                if (typeof left === 'boolean' || typeof right === 'boolean') {
+                    throw new Error(`Unsupported operation: '>' cannot be applied to boolean value`);
+                }
+                return left[0] * left[0] + left[1] * left[1] >= right[0] * right[0] + right[1] * right[1];
+            case '>=':
+                if (typeof left === 'boolean' || typeof right === 'boolean') {
+                    throw new Error(`Unsupported operation: '>=' cannot be applied to boolean value`);
+                }
+                return left[0] * left[0] + left[1] * left[1] >= right[0] * right[0] + right[1] * right[1];
+            case '+':
+                if (typeof left === 'boolean' || typeof right === 'boolean') {
+                    throw new Error(`Unsupported operation: '+' cannot be applied to boolean value`);
+                }
+                return [left[0] + right[0], left[1] + right[1]];
+            case '-':
+                if (typeof left === 'boolean' || typeof right === 'boolean') {
+                    throw new Error(`Unsupported operation: '-' cannot be applied to boolean value`);
+                }
+                return [left[0] - right[0], left[1] - right[1]];
+            case '*':
+                if (typeof left === 'boolean' || typeof right === 'boolean') {
+                    throw new Error(`Unsupported operation: '*' cannot be applied to boolean value`);
+                }
+                return [
+                    left[0] * right[0] - left[1] * right[1],
+                    left[0] * right[1] + left[1] * right[0]
+                ];
+            case '/':
+                if (typeof left === 'boolean' || typeof right === 'boolean') {
+                    throw new Error(`Unsupported operation: '/' cannot be applied to boolean value`);
+                }
+                const denominator = right[0] ** 2 + right[1] ** 2;
+                return [
+                    (left[0] * right[0] + left[1] * right[1]) / denominator,
+                    (left[1] * right[0] - left[0] * right[1]) / denominator
+                ];
+            default:
+                throw new Error(`Unsupported operator: ${expr.operator}`);
+        }
+    }
+
+    private evaluatePrefixExpression(expr: PrefixExpression): boolean | [number, number] {
+        const right = this.evaluateExpression(expr.right);
+        switch (expr.operator) {
+            case '!':
+                if(typeof right !== 'boolean') {
+                    throw new Error(`Unsupported operation: '!' cannot be applied to non-boolean value`);
+                }
+                return !right as boolean;
+            case '-':
+                if (typeof right === 'boolean') {
+                    throw new Error(`Unsupported operation: '-' cannot be applied to boolean value`);
+                }
+                return [-right[0], -right[1]];
+            default:
+                throw new Error(`Unsupported operator: ${expr.operator}`);
+        }
+
     }
 }
