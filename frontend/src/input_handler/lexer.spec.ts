@@ -17,7 +17,7 @@ describe('Lexer', () => {
 
     describe('Keywords', () => {
         test('should tokenize all keywords', () => {
-            const input = 'qubit register gate measure if repeat print define as matrix for let;';
+            const input = 'qubit register gate measure if repeat print define as matrix for let true false;';
             tokenizeAndExpect(input, [
                 expectToken(TokenType.QUBIT, "qubit", 1, 1),
                 expectToken(TokenType.REGISTER, "register", 1, 7),
@@ -31,8 +31,10 @@ describe('Lexer', () => {
                 expectToken(TokenType.MATRIX, "matrix", 1, 55),
                 expectToken(TokenType.FOR, "for", 1, 62),
                 expectToken(TokenType.LET, "let", 1, 66),
-                expectToken(TokenType.SEMICOLON, ";", 1, 69),
-                expectToken(TokenType.EOF, "", 1, 70)
+                expectToken(TokenType.TRUE, "true", 1, 70),
+                expectToken(TokenType.FALSE, "false", 1, 75),
+                expectToken(TokenType.SEMICOLON, ";", 1, 80),
+                expectToken(TokenType.EOF, "", 1, 81)
             ]);
         });
     });
@@ -145,7 +147,7 @@ describe('Lexer', () => {
 
     describe('Operators', () => {
         test('should tokenize all operators', () => {
-            tokenizeAndExpect('= => == + - * / | > >= < <= != !;', [
+            tokenizeAndExpect('= => == + - * / | > >= < <= != ! && ||;', [
                 expectToken(TokenType.ASSIGMENT, "=", 1, 1),
                 expectToken(TokenType.ARROW, "=>", 1, 3),
                 expectToken(TokenType.EQUALS, "==", 1, 6),
@@ -160,8 +162,10 @@ describe('Lexer', () => {
                 expectToken(TokenType.LEQ, "<=", 1, 26),
                 expectToken(TokenType.NOT_EQUALS, "!=", 1, 29),
                 expectToken(TokenType.NOT, "!", 1, 32),
-                expectToken(TokenType.SEMICOLON, ";", 1, 33),
-                expectToken(TokenType.EOF, "", 1, 34)
+                expectToken(TokenType.AND, "&&", 1, 34),
+                expectToken(TokenType.OR, "||", 1, 37),
+                expectToken(TokenType.SEMICOLON, ";", 1, 39),
+                expectToken(TokenType.EOF, "", 1, 40)
             ]);
         });
     });

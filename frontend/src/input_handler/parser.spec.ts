@@ -472,6 +472,47 @@ describe('Parser', () => {
       },
     ]);
   });
+
+  test('should parse complex expression with identifiers and comparison and chaining', () => {
+    const tokens = lexer.tokenize("if a + b < c - d || true { qubit q = |0>; }");
+    const parser = new Parser();
+    const program = parser.parseProgram(tokens);
+    expect(parser.Errors.length).toBe(0);
+    expect(program.statements).toHaveLength(1);
+    expect(program.statements).toStrictEqual([
+      {
+        type: NodeType.IfStatement,
+        condition: {
+          type : NodeType.InfixExpression,
+          operator: "||",
+          left: {
+            type: NodeType.InfixExpression,
+            operator: "<",
+            left: {
+              type: NodeType.InfixExpression,
+              operator: "+",
+              left: { type: NodeType.Identifier, value: "a" },
+              right: { type: NodeType.Identifier, value: "b" }
+            },
+            right: {
+              type: NodeType.InfixExpression,
+              operator: "-",
+              left: { type: NodeType.Identifier, value: "c" },
+              right: { type: NodeType.Identifier, value: "d" }
+            }
+          },
+          right: { type: NodeType.BooleanLiteral, value: true }
+        },
+        statements: [
+          {
+            type: NodeType.QubitDeclaration,
+            identifier: "q",
+            state: "|0>"
+          }
+        ]
+      },
+    ]);
+  });
 /*
   test('should add an error for malformed if condition', () => {
     const tokens = lexer.tokenize("if a < { gate H => q; };");

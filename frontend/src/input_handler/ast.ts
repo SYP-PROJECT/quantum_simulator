@@ -14,6 +14,7 @@ export enum NodeType {
   InfixExpression = "InfixExpression",
   RepeatStatement = "RepeatStatement",
   IfStatement = "IfStatement",
+  BooleanLiteral = "BooleanLiteral",
 }
 
 export type ProgramNode = {
@@ -71,7 +72,7 @@ export type Target = {
   index: number | null;
 }
 
-export type Expression = Identifier | RealLiteral | ImaginaryLiteral | PrefixExpression | InfixExpression;
+export type Expression = Identifier | RealLiteral | ImaginaryLiteral | PrefixExpression | InfixExpression | BooleanLiteral;
 
 export type Identifier = {
   type: NodeType.Identifier;
@@ -86,6 +87,11 @@ export type RealLiteral = {
 export type ImaginaryLiteral = {
     type: NodeType.ImaginaryLiteral;
     value: number;
+}
+
+export type BooleanLiteral = {
+    type: NodeType.BooleanLiteral;
+    value: boolean;
 }
 
 export type PrefixExpression = {

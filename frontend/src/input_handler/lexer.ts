@@ -12,6 +12,8 @@ export enum TokenType {
     MATRIX = "matrix",
     FOR = "for",
     LET = "let",
+    TRUE = "true",
+    FALSE = "false",
 
     //Literals
     IDENTIFIER = "identifier",
@@ -23,6 +25,8 @@ export enum TokenType {
     ARROW = "=>",
     EQUALS = "==",
     NOT_EQUALS = "!=",
+    AND = "&&",
+    OR = "||",
     NOT = "!",
     PLUS = "+",
     MINUS = "-",
@@ -67,7 +71,7 @@ export class Lexer {
     private errors: string[] = [];
 
     private keywords = new Set([
-        "qubit", "register", "gate", "measure", "if", "repeat", "print", "define", "as", "matrix", "for", "let"
+        "qubit", "register", "gate", "measure", "if", "repeat", "print", "define", "as", "matrix", "for", "let", "true", "false"
     ])
 
     public tokenize(input: string): Token[] {
@@ -142,25 +146,25 @@ export class Lexer {
         }
 
         if (/\d/.test(this.curChar)) {
-          const number = this.readWhile(/[0-9.i]/);
+            const number = this.readWhile(/[0-9.i]/);
 
-          const parts = number.split(".");
-          if (parts.length > 2) {
-            this.errors.push(`(${row}, ${col}): Invalid number format: '${number}'`);
-            return CreateNewToken(TokenType.UNKNOWN, number, row, col);
-          }
-
-          if (number.includes("i")) {
-            if (number.indexOf("i") !== number.length - 1) {
-              this.errors.push(`(${row}, ${col}): Invalid imaginary number format: '${number}'`);
-              return CreateNewToken(TokenType.UNKNOWN, number, row, col);
+            const parts = number.split(".");
+            if (parts.length > 2) {
+                this.errors.push(`(${row}, ${col}): Invalid number format: '${number}'`);
+                return CreateNewToken(TokenType.UNKNOWN, number, row, col);
             }
-          }
 
-          return CreateNewToken(
-            number.includes("i") ? TokenType.IMAGINARY : TokenType.NUMBER,
-            number, row, col
-          );
+            if (number.includes("i")) {
+                if (number.indexOf("i") !== number.length - 1) {
+                    this.errors.push(`(${row}, ${col}): Invalid imaginary number format: '${number}'`);
+                    return CreateNewToken(TokenType.UNKNOWN, number, row, col);
+                }
+            }
+
+            return CreateNewToken(
+                number.includes("i") ? TokenType.IMAGINARY : TokenType.NUMBER,
+                number, row, col
+            );
         }
 
 
@@ -174,30 +178,31 @@ export class Lexer {
             case ",":
                 newToken = CreateNewToken(TokenType.COMMA, this.curChar, row, col);
                 break;
-            case "=":{
+            case "=": {
                 const peek = this.peekChar();
 
-                if(peek === ">") {
+                if (peek === ">") {
                     newToken = CreateNewToken(TokenType.ARROW, this.curChar + peek, row, col);
                     this.readChar();
-                }else if (peek === "=") {
+                } else if (peek === "=") {
                     newToken = CreateNewToken(TokenType.EQUALS, this.curChar + peek, row, col);
                     this.readChar();
-                }  else {
+                } else {
                     newToken = CreateNewToken(TokenType.ASSIGMENT, this.curChar, row, col);
                 }
                 break;
             }
-            case "!":
+            case "!": {
                 const peek = this.peekChar();
 
-                if(peek === "=") {
+                if (peek === "=") {
                     newToken = CreateNewToken(TokenType.NOT_EQUALS, this.curChar + peek, row, col);
                     this.readChar();
-                }  else {
+                } else {
                     newToken = CreateNewToken(TokenType.NOT, this.curChar, row, col);
                 }
                 break;
+            }
             case ";":
                 newToken = CreateNewToken(TokenType.SEMICOLON, this.curChar, row, col);
                 break;
@@ -223,11 +228,30 @@ export class Lexer {
                 this.readWhile(/[^\n]/);
                 newToken = this.nextToken();
                 return newToken;
-            case "|":
-                newToken = CreateNewToken(TokenType.PIPE, this.curChar, row, col);
+            case "|": {
+                const peek = this.peekChar();
+
+                if (peek === "|") {
+                    newToken = CreateNewToken(TokenType.OR, this.curChar + peek, row, col);
+                    this.readChar();
+                } else {
+                    newToken = CreateNewToken(TokenType.PIPE, this.curChar, row, col);
+                }
                 break;
+            }
+            case "&": {
+                const peek = this.peekChar();
+
+                if (peek === "&") {
+                    newToken = CreateNewToken(TokenType.AND, this.curChar + peek, row, col);
+                    this.readChar();
+                } else {
+                    newToken = CreateNewToken(TokenType.UNKNOWN, this.curChar, row, col);
+                }
+                break;
+            }
             case "<":
-                if(this.peekChar() === "=") {
+                if (this.peekChar() === "=") {
                     this.readChar();
                     newToken = CreateNewToken(TokenType.LEQ, "<" + this.curChar, row, col);
                     break;
@@ -235,7 +259,7 @@ export class Lexer {
                 newToken = CreateNewToken(TokenType.LESS, this.curChar, row, col);
                 break;
             case ">":
-                if(this.peekChar() === "=") {
+                if (this.peekChar() === "=") {
                     this.readChar();
                     newToken = CreateNewToken(TokenType.GEQ, ">" + this.curChar, row, col);
                     break;

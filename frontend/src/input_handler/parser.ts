@@ -22,7 +22,10 @@ enum Precedence {
 }
 
 const precedenceMap: Map<TokenType, Precedence> = new Map([
+    [TokenType.AND, Precedence.AND],
+    [TokenType.OR, Precedence.OR],
     [TokenType.EQUALS, Precedence.EQUALS],
+    [TokenType.NOT_EQUALS, Precedence.EQUALS],
     [TokenType.LEQ, Precedence.COMPARISON],
     [TokenType.GEQ, Precedence.COMPARISON],
     [TokenType.LESS, Precedence.COMPARISON],
@@ -46,6 +49,8 @@ export class Parser {
     private prefixParsers = new Map([
         [TokenType.NUMBER, this.parseNumber.bind(this)],
         [TokenType.IMAGINARY, this.parseImaginaryNumber.bind(this)],
+        [TokenType.TRUE, this.parseBoolean.bind(this)],
+        [TokenType.FALSE, this.parseBoolean.bind(this)],
         [TokenType.IDENTIFIER, this.parseIdentifier.bind(this)],
         [TokenType.PLUS, this.parsePrefixExpression.bind(this)],
         [TokenType.MINUS, this.parsePrefixExpression.bind(this)],
@@ -53,6 +58,8 @@ export class Parser {
     ]);
 
     private infixParsers = new Map([
+        [TokenType.AND, this.parseInfixExpression.bind(this)],
+        [TokenType.OR, this.parseInfixExpression.bind(this)],
         [TokenType.EQUALS, this.parseInfixExpression.bind(this)],
         [TokenType.LEQ, this.parseInfixExpression.bind(this)],
         [TokenType.GEQ, this.parseInfixExpression.bind(this)],
@@ -308,6 +315,10 @@ export class Parser {
 
     private parseNumber(): Expression{
         return {type: NodeType.RealLiteral, value: parseFloat(this.curToken.value)};
+    }
+
+    private parseBoolean(): Expression {
+        return {type: NodeType.BooleanLiteral, value: this.curToken.type === TokenType.TRUE};
     }
 
     private parseIdentifier(): Expression {
