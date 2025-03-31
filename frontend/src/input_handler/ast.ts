@@ -1,5 +1,3 @@
-import {MeasureOptions} from "node:perf_hooks";
-
 export enum NodeType {
   Program = "Program",
   QubitDeclaration = "QubitDeclaration",
@@ -8,10 +6,12 @@ export enum NodeType {
   MeasureStatement = "MeasureStatement",
   Target = "Target",
   ComplexArray = "ComplexArray",
-  RealNumber = "RealNumber",
-  ImaginaryNumber = "ImaginaryNumber",
-  InfixExpression = "InfixExpression",
-  PrefixExpression = "PrefixExpression"
+  LetStatement = "LetStatement",
+  Identifier = "Identifier",
+  RealLiteral = "RealLiteral",
+  ImaginaryLiteral = "ImaginaryLiteral",
+  PrefixExpression = "PrefixExpression",
+  InfixExpression = "InfixExpression"
 }
 
 export type ProgramNode = {
@@ -19,7 +19,7 @@ export type ProgramNode = {
   statements: StatementNode[];
 }
 
-export type StatementNode = QubitDeclaration | RegisterDeclaration | GateApplication | MeasureStatement;
+export type StatementNode = QubitDeclaration | RegisterDeclaration | GateApplication | MeasureStatement | LetStatement;
 
 export type QubitDeclaration = {
   type: NodeType.QubitDeclaration;
@@ -45,8 +45,44 @@ export type MeasureStatement = {
     result: string;
 }
 
+export type LetStatement = {
+    type: NodeType.LetStatement;
+    identifier: string;
+    value: Expression;
+}
+
 export type Target = {
   type: NodeType.Target;
   identifier: string;
   index: number | null;
+}
+
+export type Expression = Identifier | RealLiteral | ImaginaryLiteral | PrefixExpression | InfixExpression;
+
+export type Identifier = {
+  type: NodeType.Identifier;
+  value: string;
+}
+
+export type RealLiteral = {
+    type: NodeType.RealLiteral;
+    value: number;
+}
+
+export type ImaginaryLiteral = {
+    type: NodeType.ImaginaryLiteral;
+    value: number;
+}
+
+export type PrefixExpression = {
+    type: NodeType.PrefixExpression;
+    operator: string;
+    right: Expression;
+}
+
+export type InfixExpression = {
+    type: NodeType.InfixExpression;
+    left: Expression;
+    operator: string;
+    right: Expression;
 }

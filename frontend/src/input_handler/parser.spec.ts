@@ -57,6 +57,159 @@ describe('Parser', () => {
     ]);
   });
 
+  test('should parse a simple let statement with identifier', () => {
+    const tokens = lexer.tokenize("let a = b;");
+    const parser = new Parser();
+    const program = parser.parseProgram(tokens);
+    expect(parser.Errors.length).toBe(0);
+    expect(program.statements).toHaveLength(1);
+    expect(program.statements).toStrictEqual([
+      {
+        type: NodeType.LetStatement,
+        identifier: "a",
+        value: { type: NodeType.Identifier, value: "b" }
+      }
+    ]);
+  });
+
+  test('should parse a simple let statement with number', () => {
+    const tokens = lexer.tokenize("let a = 2;");
+    const parser = new Parser();
+    const program = parser.parseProgram(tokens);
+    expect(parser.Errors.length).toBe(0);
+    expect(program.statements).toHaveLength(1);
+    expect(program.statements).toStrictEqual([
+      {
+        type: NodeType.LetStatement,
+        identifier: "a",
+        value: { type: NodeType.RealLiteral, value: 2 }
+      }
+    ]);
+  });
+
+  test('should parse a simple let statement with imaginary number', () => {
+    const tokens = lexer.tokenize("let a = 2i;");
+    const parser = new Parser();
+    const program = parser.parseProgram(tokens);
+    expect(parser.Errors.length).toBe(0);
+    expect(program.statements).toHaveLength(1);
+    expect(program.statements).toStrictEqual([
+      {
+        type: NodeType.LetStatement,
+        identifier: "a",
+        value: { type: NodeType.ImaginaryLiteral, value: 2 }
+      }
+    ]);
+  });
+
+  test('should parse a simple let statement with prefix expression', () => {
+    const tokens = lexer.tokenize("let a = -2i;");
+    const parser = new Parser();
+    const program = parser.parseProgram(tokens);
+    expect(parser.Errors.length).toBe(0);
+    expect(program.statements).toHaveLength(1);
+    expect(program.statements).toStrictEqual([
+      {
+        type: NodeType.LetStatement,
+        identifier: "a",
+        value: {
+          type: NodeType.PrefixExpression,
+          operator: "-",
+          right: {
+            type: NodeType.ImaginaryLiteral,
+            value: 2 }
+        }
+      }
+    ]);
+  });
+
+  test('should parse a simple let statement with infix expression', () => {
+    const tokens = lexer.tokenize("let a = -2i + 2;");
+    const parser = new Parser();
+    const program = parser.parseProgram(tokens);
+    expect(parser.Errors.length).toBe(0);
+    expect(program.statements).toHaveLength(1);
+    expect(program.statements).toStrictEqual([
+      {
+        type: NodeType.LetStatement,
+        identifier: "a",
+        value: {
+          type: NodeType.InfixExpression,
+          left: {
+            type: NodeType.PrefixExpression,
+            operator: "-",
+            right: {
+              type: NodeType.ImaginaryLiteral,
+              value: 2 }
+          },
+          operator: "+",
+            right: {
+                type: NodeType.RealLiteral,
+                value: 2
+            }
+        }
+      }
+    ]);
+  });
+
+  test('should parse a simple let statement with equal expression', () => {
+    const tokens = lexer.tokenize("let a = -2i == 2;");
+    const parser = new Parser();
+    const program = parser.parseProgram(tokens);
+    expect(parser.Errors.length).toBe(0);
+    expect(program.statements).toHaveLength(1);
+    expect(program.statements).toStrictEqual([
+      {
+        type: NodeType.LetStatement,
+        identifier: "a",
+        value: {
+          type: NodeType.InfixExpression,
+          left: {
+            type: NodeType.PrefixExpression,
+            operator: "-",
+            right: {
+              type: NodeType.ImaginaryLiteral,
+              value: 2 }
+          },
+          operator: "==",
+          right: {
+            type: NodeType.RealLiteral,
+            value: 2
+          }
+        }
+      }
+    ]);
+  });
+
+  test('should parse a simple let statement with comparison expression', () => {
+    const tokens = lexer.tokenize("let a = -2i <= 2;");
+    const parser = new Parser();
+    const program = parser.parseProgram(tokens);
+    expect(parser.Errors.length).toBe(0);
+    expect(program.statements).toHaveLength(1);
+    expect(program.statements).toStrictEqual([
+      {
+        type: NodeType.LetStatement,
+        identifier: "a",
+        value: {
+          type: NodeType.InfixExpression,
+          left: {
+            type: NodeType.PrefixExpression,
+            operator: "-",
+            right: {
+              type: NodeType.ImaginaryLiteral,
+              value: 2 }
+          },
+          operator: "<=",
+          right: {
+            type: NodeType.RealLiteral,
+            value: 2
+          }
+        }
+      }
+    ]);
+  });
+
   test('should throw an error for an unexpected token', () => {
     const tokens = lexer.tokenize("INVALID");
     const parser = new Parser();
@@ -109,21 +262,7 @@ describe('Parser', () => {
     expect(parser.Errors).toStrictEqual(["(1, 8): Expected next token to be identifier, got ';' instead"]);
     expect(program.statements).toHaveLength(0);
   });
-/*
-  test('should parse a simple print statement', () => {
-    const tokens = lexer.tokenize("print q;");
-    const parser = new Parser();
-    const program = parser.parseProgram(tokens);
-    expect(parser.Errors.length).toBe(0);
-    expect(program.statements).toHaveLength(1);
-    expect(program.statements).toStrictEqual([
-      {
-        type: NodeType.PrintStatement,
-        identifier: "q"
-      }
-    ]);
-  });
-*/
+
   test('should parse a simple gate application', () => {
     const tokens = lexer.tokenize("gate H => q;");
     const parser = new Parser();
