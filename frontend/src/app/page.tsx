@@ -1,10 +1,10 @@
 "use client";
 
 import { Lexer } from "@/input_handler/lexer";
-import { ProgramNode } from '../input_handler/ast'
+import { ProgramNode } from '@/input_handler/ast'
 import { Parser } from "@/input_handler/parser";
-import { SemanticAnalyzer } from "@/input_handler/semanticAnalyzer";
-import QuantumCircuit from '../components/QuantumCircuit';
+import {Interpreter} from "@/input_handler/interpreter";
+//import QuantumCircuit from '../components/QuantumCircuit';
 
 import Editor from '@monaco-editor/react';
 import type monaco from 'monaco-editor';
@@ -12,11 +12,12 @@ import React, { useRef, useState, useEffect } from 'react';
 
 const lexer: Lexer = new Lexer();
 const parser: Parser = new Parser();
-const semanticAnalyzer: SemanticAnalyzer = new SemanticAnalyzer();
+const interpreter: Interpreter = new Interpreter();
 
 export default function Home() {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const [output, setOutput] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [programNode, setProgramNode] = useState<ProgramNode | null>(null);
 
   useEffect(() => {
@@ -39,25 +40,19 @@ export default function Home() {
 
   const handleButtonClick = async () => {
     if (editorRef.current) {
-      lexer.reset(editorRef.current.getValue());
-      parser.reset(lexer);
+      const tokens = lexer.tokenize(editorRef.current.getValue());
 
-      try {
-        const programNode = parser.parseProgram();
+        const programNode = parser.parseProgram(tokens);
 
         if (parser.Errors.length != 0) {
           setOutput(parser.Errors.join("\n"));
           return;
         }
 
-        semanticAnalyzer.analyze(programNode);
-
-        if (semanticAnalyzer.Errors.length != 0) {
-          setOutput(semanticAnalyzer.Errors.join("\n"));
-          return;
-        }
-
         setProgramNode(programNode);
+
+        setOutput(interpreter.interpret(programNode));
+        /*
         let url;
         if (!process.env.URL) {
           url = "http://localhost:8000/api/"
@@ -72,17 +67,10 @@ export default function Home() {
           mode: "cors",
           method: 'POST',
           body: JSON.stringify(programNode),
-        });
+        });*
 
         const json: string[] = await response.json();
-        console.log(json);
-
-        setOutput(json.join("\n"));
-
-      } catch (e) {
-        const message = e instanceof Error ? e.message : String(e);
-        setOutput(message);
-      }
+        console.log(json);*/
     }
   };
 
@@ -212,14 +200,14 @@ export default function Home() {
         marginLeft: halfMargin,
         overflow: "hidden"
       }}>
-        {/* Quantum Circuit */}
+        {/* Quantum Circuit
         <div style={{
           flex: "0 0 47.5%",
           ...commonEditorStyle,
           overflow: "auto"
         }}>
           {programNode && <QuantumCircuit program={programNode} />}
-        </div>
+        </div>}*/}
 
         {/* Output */}
         <div style={{

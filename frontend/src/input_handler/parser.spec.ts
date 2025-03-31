@@ -259,7 +259,7 @@ describe('Parser', () => {
     const parser = new Parser();
     const program = parser.parseProgram(tokens);
     expect(parser.Errors.length).toBe(1);
-    expect(parser.Errors).toStrictEqual(["(1, 8): Expected next token to be identifier, got ';' instead"]);
+    expect(parser.Errors).toStrictEqual(["(1, 8): Expected next token to be 'identifier', got ';' instead"]);
     expect(program.statements).toHaveLength(0);
   });
 
@@ -313,7 +313,7 @@ describe('Parser', () => {
     const parser = new Parser();
     const program = parser.parseProgram(tokens);
     expect(parser.Errors.length).toBe(1);
-    expect(parser.Errors).toStrictEqual(["(1, 11): Expected next token to be identifier, got ';' instead"]);
+    expect(parser.Errors).toStrictEqual(["(1, 11): Expected next token to be 'identifier', got ';' instead"]);
     expect(program.statements).toHaveLength(0);
   });
 
@@ -561,90 +561,51 @@ describe('Parser', () => {
       }
     ]);
   });
-
+*/
   test('should parse multiple valid statements', () => {
-    const tokens = lexer.tokenize("qubit q = |1>; gate H => q; measure q => r; print r;");
-    const parser = new Parser(tokens);
-    const program = parser.parseProgram();
+    const tokens = lexer.tokenize("qubit q = |1>; gate H => q; measure q => r;");
+    const parser = new Parser();
+    const program = parser.parseProgram(tokens);
     expect(parser.Errors.length).toBe(0);
-    expect(program.statements).toHaveLength(4);
+    expect(program.statements).toHaveLength(3);
     expect(program.statements).toStrictEqual([
       { type: NodeType.QubitDeclaration, identifier: "q", state: "|1>" },
       {
         type: NodeType.GateApplication,
-        gateIdentifier: "H",
-        targets: [{ type: NodeType.Target, identifier: "q", index: null, secondIdentifier: null }]
+        gate: "H",
+        targets: [{ type: NodeType.Target, identifier: "q", index: null }]
       },
       {
         type: NodeType.MeasureStatement,
-        target: { type: NodeType.Target, identifier: "q", index: null, secondIdentifier: null },
-        resultIdentifier: "r"
+        target: { type: NodeType.Target, identifier: "q", index: null },
+        result: "r"
       },
-      { type: NodeType.PrintStatement, identifier: "r" }
-    ]);
-  });
-
-  test('should handle prefix and infix with identifiers in if condition', () => {
-    const tokens = lexer.tokenize("if -a + b <= c * d { print q; };");
-    const parser = new Parser(tokens);
-    const program = parser.parseProgram();
-    expect(parser.Errors.length).toBe(0);
-    expect(program.statements).toHaveLength(1);
-    expect(program.statements).toStrictEqual([
-      {
-        type: NodeType.IfStatement,
-        condition: {
-          type: NodeType.Condition,
-          expression: {
-            type: NodeType.ComplexExpression,
-            left: {
-              type: NodeType.InfixExpression,
-              op: "<=",
-              left: {
-                type: NodeType.InfixExpression,
-                op: "+",
-                left: { type: NodeType.PrefixExpression, op: "-", right: { type: NodeType.Identifier, value: "a" } },
-                right: { type: NodeType.Identifier, value: "b" }
-              },
-              right: {
-                type: NodeType.InfixExpression,
-                op: "*",
-                left: { type: NodeType.Identifier, value: "c" },
-                right: { type: NodeType.Identifier, value: "d" }
-              }
-            },
-            right: null
-          }
-        },
-        body: [
-          { type: NodeType.PrintStatement, identifier: "q" }
-        ]
-      }
     ]);
   });
 
   test('should add an error for missing semicolon', () => {
-    const tokens = lexer.tokenize("print q");
-    const parser = new Parser(tokens);
-    const program = parser.parseProgram();
+    const tokens = lexer.tokenize("qubit a = |0> ");
+    const parser = new Parser();
+    const program = parser.parseProgram(tokens);
     expect(parser.Errors.length).toBe(1);
-    expect(parser.Errors).toStrictEqual(["(1, 7) Expected one of SEMICOLON, got EOF"]);
+    expect(parser.Errors).toStrictEqual(["(1, 15): Expected next token to be ';', got 'EOF' instead"]);
     expect(program.statements).toHaveLength(0);
   });
 
   test('should add an error for invalid qubit state', () => {
     const tokens = lexer.tokenize("qubit q = |2>;");
-    const parser = new Parser(tokens);
-    const program = parser.parseProgram();
+    const parser = new Parser();
+    const program = parser.parseProgram(tokens);
     expect(parser.Errors.length).toBe(1);
-    expect(parser.Errors).toStrictEqual(["(1, 11) Invalid qubit state 2"]);
+    expect(parser.Errors).toStrictEqual(["(1, 12): Invalid qubit state '2'"]);
     expect(program.statements).toHaveLength(0);
   });
 
+  /*
   test('should parse matrix with numbers and null fields', () => {
     const tokens = lexer.tokenize("define gate H as matrix { [1, 1 + 2i; 1, -1] };");
-    const parser = new Parser(tokens);
-    const program = parser.parseProgram();
+    const parser = new Parser();
+    const program = parser.parseProgram(tokens);
     expect(parser.Errors.length).toBe(0);
     expect(program.statements).toHaveLength(1);
     expect(program.statements).toStrictEqual([

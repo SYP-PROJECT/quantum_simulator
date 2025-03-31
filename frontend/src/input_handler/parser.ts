@@ -362,7 +362,7 @@ export class Parser {
     }
 
     private addPeekError(ts: TokenType[]) {
-        this.errors.push(`(${this.peekToken.row}, ${this.peekToken.column}): Expected next token to be ${ts.join(', ')}, got '${this.peekToken.type}' instead`)
+        this.errors.push(`(${this.peekToken.row}, ${this.peekToken.column}): Expected next token to be ${ts.map(x => "'" + x + "'").join(', ')}, got '${this.peekToken.type}' instead`)
     }
 
     private peekPrecedence(): Precedence {
