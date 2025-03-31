@@ -1,16 +1,13 @@
 import {
-    ApplyStatementNode,
-    ComplexArrayNode,
-    CreateQubitStatementNode,
-    CreateRegisterStatementNode,
-    DisplayStatementNode,
-    Expression,
-    MeasureStatementNode,
+    GateApplication,
     NodeType,
     ProgramNode,
-    StatementNode
+    QubitDeclaration,
+    RegisterDeclaration,
+    StatementNode,
+    Target
 } from "./ast";
-import {Lexer, Token, TokenType} from "./lexer";
+import {Token, TokenType} from "./lexer";
 
 enum Precedence {
     LOWEST,
@@ -30,11 +27,13 @@ const precedenceMap: Map<TokenType, Precedence> = new Map([
 const synchronizationPoints = [TokenType.SEMICOLON, TokenType.EOF];
 
 export class Parser {
-    private lexer: Lexer = null!;
+    private tokens: Token[] = null!;
+    private readPosition: number = 0;
     private curToken: Token = null!;
     private peekToken: Token = null!;
     private errors: string[] = [];
 
+    /*
     private prefixParsers = new Map([
         [TokenType.NUMBER, this.parseNumber.bind(this)],
         [TokenType.IMAGINARY_NUMBER, this.parseImaginaryNumber.bind(this)],
@@ -47,17 +46,9 @@ export class Parser {
         [TokenType.MINUS, this.parseInfixExpression.bind(this)],
         [TokenType.DIVIDE, this.parseInfixExpression.bind(this)],
         [TokenType.MULTIPLY, this.parseInfixExpression.bind(this)],
-    ]);
+    ]);*/
 
     constructor() {
-    }
-
-    reset(lexer: Lexer) {
-        this.lexer = lexer;
-        this.errors = [];
-
-        this.nextToken();
-        this.nextToken();
     }
 
     public get Errors(): string[] {
@@ -66,10 +57,18 @@ export class Parser {
 
     private nextToken() {
         this.curToken = this.peekToken;
-        this.peekToken = this.lexer.nextToken();
+        this.peekToken = this.readPosition >= this.tokens.length ? this.tokens[this.tokens.length - 1] : this.tokens[this.readPosition];
+        this.readPosition++;
     }
 
-    parseProgram(): ProgramNode {
+    parseProgram(tokens: Token[]): ProgramNode {
+        this.tokens = tokens;
+        this.errors = [];
+        this.readPosition = 0;
+
+        this.nextToken();
+        this.nextToken();
+
         const program: ProgramNode = {
             type: NodeType.Program, statements: []
         }
@@ -94,20 +93,113 @@ export class Parser {
 
     private parseStatement(): StatementNode {
         switch (this.curToken.type) {
+            case TokenType.QUBIT:
+                return this.parseQubitDeclaration();
+            case TokenType.REGISTER:
+                return this.parseRegisterDeclaration();
+            case TokenType.GATE:
+                return this.parseGateApplication();
             case TokenType.MEASURE:
                 return this.parseMeasureStatement();
-            case TokenType.DISPLAY:
-                return this.parseDisplayStatement();
-            case TokenType.APPLY:
-                return this.parseApplyStatement();
-            case TokenType.CREATE:
-                return this.parseCreateStatement();
             default:
-                this.errors.push("Only creation, measurement, apply and display can be used as statements");
+                this.errors.push(`(${this.curToken.row}, ${this.curToken.column}): Only creation, measurement, apply and display can be used as statements`);
                 throw new Error();
         }
     }
 
+    private parseMeasureStatement(): StatementNode {
+        const target = this.parseTarget();
+
+        this.expectPeek([TokenType.ARROW]);
+        this.expectPeek([TokenType.IDENTIFIER]);
+
+        const result = this.curToken.value;
+
+        this.expectPeek([TokenType.SEMICOLON]);
+        return {type: NodeType.MeasureStatement, target, result};
+    }
+
+    private parseGateApplication(): GateApplication {
+        this.expectPeek([TokenType.IDENTIFIER]);
+        const gate = this.curToken.value;
+
+        this.expectPeek([TokenType.ARROW]);
+        const target1 = this.parseTarget();
+
+        if(this.peekTokenIs(TokenType.COMMA)){
+            this.nextToken();
+            const target2 = this.parseTarget();
+            this.expectPeek([TokenType.SEMICOLON]);
+            return {type: NodeType.GateApplication, gate: gate, targets: [target1, target2]};
+        }
+
+        this.expectPeek([TokenType.SEMICOLON]);
+        return {type: NodeType.GateApplication, gate: gate, targets: [target1]};
+    }
+
+    private parseTarget(): Target {
+        this.expectPeek([TokenType.IDENTIFIER]);
+        const identifier = this.curToken.value;
+
+        if(this.peekTokenIs(TokenType.LBRACKET)){
+            this.nextToken();
+            this.expectPeek([TokenType.NUMBER]);
+            const index = parseFloat(this.curToken.value);
+
+            if(!Number.isInteger(index)){
+                this.errors.push(`(${this.curToken.row}, ${this.curToken.column}): Register index must be an integer`);
+                throw new Error();
+            }
+
+            this.expectPeek([TokenType.RBRACKET]);
+            return {type: NodeType.Target, identifier, index: index};
+        }
+        return {type: NodeType.Target, identifier, index: null};
+    }
+
+    private parseRegisterDeclaration(): RegisterDeclaration {
+        this.expectPeek([TokenType.IDENTIFIER]);
+        const identifier = this.curToken.value;
+
+        this.expectPeek([TokenType.ASSIGMENT]);
+        this.expectPeek([TokenType.NUMBER]);
+
+        const numQubits = parseFloat(this.curToken.value);
+
+        if(!Number.isInteger(numQubits)){
+            this.errors.push(`(${this.curToken.row}, ${this.curToken.column}): Number of qubits must be an integer`);
+            throw new Error();
+        }
+
+        this.expectPeek([TokenType.SEMICOLON]);
+        return {type: NodeType.RegisterDeclaration, identifier: identifier, size: numQubits};
+    }
+
+    private parseQubitDeclaration(): QubitDeclaration {
+        this.expectPeek([TokenType.IDENTIFIER]);
+        const identifier = this.curToken.value;
+
+        this.expectPeek([TokenType.ASSIGMENT]);
+        const state = this.parseState();
+        this.expectPeek([TokenType.SEMICOLON]);
+        return {type: NodeType.QubitDeclaration, identifier: identifier, state: state};
+    }
+
+    private parseState(): "|0>" | "|1>" {
+        this.expectPeek([TokenType.PIPE]);
+        this.expectPeek([TokenType.NUMBER]);
+        const state = this.curToken.value;
+
+        if(state !== "0" && state !== "1") {
+            this.errors.push(`(${this.curToken.row}, ${this.curToken.column}): Invalid qubit state '${this.curToken.value}'`);
+            throw new Error();
+        }
+
+        this.expectPeek([TokenType.GREATER]);
+        return state == "0" ? "|0>" : "|1>";
+    }
+
+    /*
     private parseInfixExpression(left: Expression): Expression {
         const operator = this.curToken.value;
         const precedence = this.curPrecedence();
@@ -257,7 +349,7 @@ export class Parser {
         this.expectPeek([TokenType.SEMICOLON]);
 
         return {type: NodeType.MeasureStatement, identifier: identifier};
-    }
+    }*/
 
     private expectPeek(ts: TokenType[]) {
         for (const t of ts) {
@@ -272,7 +364,7 @@ export class Parser {
     }
 
     private addPeekError(ts: TokenType[]) {
-        this.errors.push(`Expected next token to be ${ts.join(', ')}, got ${this.peekToken.type} instead`)
+        this.errors.push(`(${this.peekToken.row}, ${this.peekToken.column}): Expected next token to be ${ts.join(', ')}, got '${this.peekToken.type}' instead`)
     }
 
     private peekPrecedence(): Precedence {

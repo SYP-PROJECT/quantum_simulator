@@ -1,14 +1,15 @@
+import {MeasureOptions} from "node:perf_hooks";
+
 export enum NodeType {
   Program = "Program",
-  CreateQubitStatement = "CreateQubitStatement",
-  CreateRegisterStatement = "CreateRegisterStatement",
-  ApplyStatement = "ApplyStatement",
+  QubitDeclaration = "QubitDeclaration",
+  RegisterDeclaration = "RegisterDeclaration",
+  GateApplication = "GateApplication",
   MeasureStatement = "MeasureStatement",
-  DisplayStatement = "DisplayStatement",
+  Target = "Target",
   ComplexArray = "ComplexArray",
   RealNumber = "RealNumber",
   ImaginaryNumber = "ImaginaryNumber",
-  Number = "Number",
   InfixExpression = "InfixExpression",
   PrefixExpression = "PrefixExpression"
 }
@@ -18,62 +19,34 @@ export type ProgramNode = {
   statements: StatementNode[];
 }
 
-export type StatementNode = CreateQubitStatementNode | CreateRegisterStatementNode | ApplyStatementNode | MeasureStatementNode | DisplayStatementNode;
+export type StatementNode = QubitDeclaration | RegisterDeclaration | GateApplication | MeasureStatement;
 
-export type CreateQubitStatementNode = {
-  type: NodeType.CreateQubitStatement;
+export type QubitDeclaration = {
+  type: NodeType.QubitDeclaration;
   identifier: string;
-  complexArray: ComplexArrayNode;
+  state: "|0>" | "|1>";
 };
 
-export type CreateRegisterStatementNode = {
-  type: NodeType.CreateRegisterStatement;
+export type RegisterDeclaration = {
+  type: NodeType.RegisterDeclaration;
   identifier: string;
-  numQubits: number;
+  size: number;
 };
 
-export type ApplyStatementNode = {
-  type: NodeType.ApplyStatement;
-  identifier1: string;
-  identifier2: string;
+export type GateApplication = {
+    type: NodeType.GateApplication;
+    gate: string;
+    targets: Target[];
 }
 
-export type MeasureStatementNode = {
-  type: NodeType.MeasureStatement;
+export type MeasureStatement = {
+    type: NodeType.MeasureStatement;
+    target: Target;
+    result: string;
+}
+
+export type Target = {
+  type: NodeType.Target;
   identifier: string;
-}
-
-export type DisplayStatementNode = {
-  type: NodeType.DisplayStatement;
-  identifier: string;
-}
-
-export type ComplexArrayNode = {
-  type: NodeType.ComplexArray;
-  values: Expression[];
-}
-
-export type Expression = RealNumberNode | ComplexNumberNode | InfixExpression | PrefixExpression;
-
-export type PrefixExpression = {
-  type: NodeType.PrefixExpression;
-  op: string;
-  right: Expression;
-}
-
-export type InfixExpression = {
-  type: NodeType.InfixExpression;
-  op: string;
-  left: Expression;
-  right: Expression;
-}
-
-export type RealNumberNode = {
-  type: NodeType.RealNumber
-  value: number
-}
-
-export type ComplexNumberNode = {
-  type: NodeType.ImaginaryNumber
-  value: number
+  index: number | null;
 }
