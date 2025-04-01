@@ -1,0 +1,66 @@
+.common-editor-style {
+    background: #282a36;
+    color: #f8f8f2;
+    padding: 10px;
+    borderRadius: 5px;
+    overflow: hidden;
+    whiteSpace: pre-wrap;
+}
+
+.button-style {
+    padding: 10px;
+    background: #444;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    borderRadius: 5px;
+    width: 100%;
+    marginTop: 10px;
+}
+
+.main-container {
+    display: flex;
+    height: 100vh;
+    flex-direction: row;
+    padding: 20px;
+    overflow: hidden;
+}
+
+.editor-container {
+    flex: 1;
+    height: 100%;
+    margin-right: 10px;
+    overflow: hidden;
+}
+
+.right-container {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-left: 10px;
+    overflow: hidden;
+}
+
+.quantum-container {
+    flex: 0 0 47.5%;
+    background: #282a36;
+    color: #f8f8f2;
+    padding: 10px;
+    borderRadius: 5px;
+    overflow: auto;
+}
+
+.output-container {
+    flex: 0 0 37.5%;
+    background: #282a36;
+    color: #f8f8f2;
+    padding: 10px;
+    borderRadius: 5px;
+    overflow: auto;
+}
+
+.run-button-container {
+    flex: 0 0 15%;
+}

@@ -19,18 +19,19 @@ export default function Home() {
   const [output, setOutput] = useState("");
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [programNode, setProgramNode] = useState<ProgramNode | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const originalStyle = {
       html: document.documentElement.style.cssText,
-      body: document.body.style.cssText
+      body: document.body.style.cssText,
     };
 
-    document.documentElement.style.overflow = 'hidden';
-    document.documentElement.style.height = '100%';
-    document.body.style.overflow = 'hidden';
-    document.body.style.height = '100%';
-    document.body.style.margin = '0';
+    document.documentElement.style.overflow = "hidden";
+    document.documentElement.style.height = "100%";
+    document.body.style.overflow = "hidden";
+    document.body.style.height = "100%";
+    document.body.style.margin = "0";
 
     return () => {
       document.documentElement.style.cssText = originalStyle.html;
@@ -40,11 +41,13 @@ export default function Home() {
 
   const handleButtonClick = async () => {
     if (editorRef.current) {
+      setIsLoading(true);
+      setOutput("");
       const tokens = lexer.tokenize(editorRef.current.getValue());
 
         const programNode = parser.parseProgram(tokens);
 
-        if (parser.Errors.length != 0) {
+        if (parser.Errors.length !== 0) {
           setOutput(parser.Errors.join("\n"));
           return;
         }
@@ -123,15 +126,6 @@ export default function Home() {
     monacoInstance.editor.setModelLanguage(editor.getModel()!, "customLang");
   };
 
-  const commonEditorStyle = {
-    background: "#282a36",
-    color: "#f8f8f2",
-    padding: "10px",
-    borderRadius: "5px",
-    overflow: "hidden",
-    whiteSpace: "pre-wrap",
-  };
-
   const buttonStyle = {
     padding: "10px",
     background: "#444",
@@ -147,20 +141,23 @@ export default function Home() {
   const halfMargin = "10px";
 
   return (
-    <div style={{
-      display: "flex",
-      height: "100vh",
-      flexDirection: "row",
-      padding: mainMargin,
-      overflow: "hidden"
-    }}>
-      {/* Left tile - Editor */}
-      <div style={{
-        flex: 1,
-        height: "100%",
-        marginRight: halfMargin,
-        overflow: "hidden"
-      }}>
+    <div
+      style={{
+        display: "flex",
+        height: "100vh",
+        flexDirection: "row",
+        padding: mainMargin,
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          flex: 1,
+          height: "100%",
+          marginRight: halfMargin,
+          overflow: "hidden",
+        }}
+      >
         <Editor
           height="100%"
           width="100%"
@@ -190,21 +187,25 @@ export default function Home() {
           {programNode && <QuantumCircuit program={programNode} />}
         </div>}*/}
 
-        {/* Output */}
-        <div style={{
-          flex: "0 0 37.5%",
-          ...commonEditorStyle,
-          overflow: "auto"
-        }}>
-          {output}
+        <div
+          style={{
+            flex: "0 0 37.5%",
+            background: "#282a36",
+            color: "#f8f8f2",
+            padding: "10px",
+            borderRadius: "5px",
+            overflow: "auto",
+          }}
+        >
+          {isLoading ? <p>Loading...</p> : <pre>{output}</pre>}
         </div>
 
-        {/* Run Button */}
-        <div style={{ flex: "0 0 15%" }}>
-          <button onClick={handleButtonClick} style={buttonStyle}>
-            Run Code
-          </button>
-        </div>
+        <button
+          onClick={handleButtonClick}
+          style={buttonStyle}
+        >
+          Run Program
+        </button>
       </div>
     </div>
   );
