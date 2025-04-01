@@ -8,7 +8,6 @@ import QuantumCircuit from "../components/QuantumCircuit";
 import Editor from "@monaco-editor/react";
 import type monaco from "monaco-editor";
 import React, { useRef, useState, useEffect } from "react";
-import QubitTutorial from "../components/QubitTutorial";
 
 const lexer: Lexer = new Lexer();
 const parser: Parser = new Parser();
@@ -41,7 +40,7 @@ export default function Home() {
   const handleButtonClick = async () => {
     if (editorRef.current) {
       setIsLoading(true);
-      setOutput(""); // Clear previous output
+      setOutput("");
       lexer.reset(editorRef.current.getValue());
       parser.reset(lexer);
 
@@ -180,9 +179,6 @@ export default function Home() {
         overflow: "hidden",
       }}
     >
-      {/* Left tile - Tutorial Section */}
-      <QubitTutorial /> {/* Insert the tutorial component here */}
-
       <div
         style={{
           flex: 1,
