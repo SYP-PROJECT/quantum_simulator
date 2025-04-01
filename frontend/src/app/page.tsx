@@ -16,9 +16,11 @@ const interpreter: Interpreter = new Interpreter();
 
 export default function Home() {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [output, setOutput] = useState("");
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [programNode, setProgramNode] = useState<ProgramNode | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -53,6 +55,7 @@ export default function Home() {
         }
 
         setProgramNode(programNode);
+        setIsLoading(false);
 
         setOutput(interpreter.interpret(programNode));
     }
@@ -186,7 +189,7 @@ export default function Home() {
         }}>
           {programNode && <QuantumCircuit program={programNode} />}
         </div>}*/}
-
+        {
         <div
           style={{
             flex: "0 0 37.5%",
@@ -197,8 +200,9 @@ export default function Home() {
             overflow: "auto",
           }}
         >
-          {isLoading ? <p>Loading...</p> : <pre>{output}</pre>}
+          {isLoading ? <p>Loading...</p> : <pre>{output}</pre> }
         </div>
+        }
 
         <button
           onClick={handleButtonClick}
