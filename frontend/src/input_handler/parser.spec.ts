@@ -243,7 +243,7 @@ describe('Parser', () => {
     const parser = new Parser();
     const program = parser.parseProgram(tokens);
     expect(parser.Errors.length).toBe(1);
-    expect(parser.Errors).toStrictEqual(["(1, 1): Only creation, measurement, apply and display can be used as statements"]);
+    expect(parser.Errors).toStrictEqual(["(1, 1): Only creation, measurement, apply and print can be used as a statement"]);
     expect(program.statements).toHaveLength(0);
   });
 
@@ -252,7 +252,7 @@ describe('Parser', () => {
     const parser = new Parser();
     const program = parser.parseProgram(tokens);
     expect(parser.Errors.length).toBe(1);
-    expect(parser.Errors).toStrictEqual(["(1, 1): Only creation, measurement, apply and display can be used as statements"]);
+    expect(parser.Errors).toStrictEqual(["(1, 1): Only creation, measurement, apply and print can be used as a statement"]);
     expect(program.statements).toHaveLength(1);
     expect(program.statements).toStrictEqual([
       {
@@ -269,8 +269,8 @@ describe('Parser', () => {
     const program = parser.parseProgram(tokens);
     expect(parser.Errors.length).toBe(2);
     expect(parser.Errors).toStrictEqual([
-      "(1, 1): Only creation, measurement, apply and display can be used as statements",
-      "(1, 26): Only creation, measurement, apply and display can be used as statements"
+      "(1, 1): Only creation, measurement, apply and print can be used as a statement",
+      "(1, 26): Only creation, measurement, apply and print can be used as a statement"
     ]);
     expect(program.statements).toHaveLength(1);
     expect(program.statements).toStrictEqual([
