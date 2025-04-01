@@ -1,9 +1,9 @@
-use nalgebra::Complex;
+use nalgebra::{Complex, DMatrix, Matrix3, Matrix4};
 use nalgebra::Matrix2;
 use std::fmt::Debug;
 
 pub trait Gate {
-    fn matrix_representation(&self) -> Matrix2<Complex<f64>>;
+    fn matrix_representation(&self) -> DMatrix<Complex<f64>>;
 }
 
 impl Debug for dyn Gate {
@@ -134,7 +134,7 @@ impl Hadamard {
             Complex::new(-1.0, 0.0),
         );
 
-        matrix *= Complex::new(1.0 / (2.0_f64).sqrt(), 0.0);
+        matrix *= Complex::new(1.0 / 2.0_f64.sqrt(), 0.0);
 
         Self {
             matrix_form: matrix,
@@ -144,6 +144,41 @@ impl Hadamard {
 
 impl Gate for Hadamard {
     fn matrix_representation(&self) -> Matrix2<Complex<f64>> {
+        self.matrix_form
+    }
+}
+
+pub struct CNot {
+    matrix_form: Matrix4<Complex<f64>>
+}
+
+impl CNot{
+    pub fn new() -> Self{
+        let mut matrix = Matrix4::new(
+            Complex::new(1.0, 0.0),
+            Complex::new(0.0,0.0 ),
+            Complex::new(0.0,0.0),
+            Complex::new(0.0, 0.0),
+            Complex::new(0.0, 0.0),
+            Complex::new(1.0, 0.0),
+            Complex::new(0.0,0.0),
+            Complex::new(0.0, 0.0),
+            Complex::new(0.0,0.0),
+            Complex::new(0.0,0.0),
+            Complex::new(0.0,0.0),
+            Complex::new(1.0, 0.0),
+            Complex::new(0.0,0.0),
+            Complex::new(0.0,0.0),
+            Complex::new(1.0, 0.0),
+            Complex::new(0.0,0.0)
+        );
+
+        Self {matrix_form: matrix}
+    }
+}
+
+impl Gate for CNot{
+    fn matrix_representation(&self) -> Matrix4<Complex<f64>> {
         self.matrix_form
     }
 }

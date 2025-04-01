@@ -8,6 +8,7 @@ mod interpreter;
 mod models;
 mod qubit;
 mod route;
+mod quantum_register;
 
 #[tokio::main]
 async fn main() {

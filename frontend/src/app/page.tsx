@@ -1,22 +1,26 @@
 "use client";
 
 import { Lexer } from "@/input_handler/lexer";
-import { ProgramNode } from "../input_handler/ast";
+import { ProgramNode } from '@/input_handler/ast'
 import { Parser } from "@/input_handler/parser";
-import { SemanticAnalyzer } from "@/input_handler/semanticAnalyzer";
-import QuantumCircuit from "../components/QuantumCircuit";
-import Editor from "@monaco-editor/react";
-import type monaco from "monaco-editor";
-import React, { useRef, useState, useEffect } from "react";
+import {Interpreter} from "@/input_handler/interpreter";
+//import QuantumCircuit from '../components/QuantumCircuit';
+
+import Editor from '@monaco-editor/react';
+import type monaco from 'monaco-editor';
+import React, { useRef, useState, useEffect } from 'react';
 
 const lexer: Lexer = new Lexer();
 const parser: Parser = new Parser();
-const semanticAnalyzer: SemanticAnalyzer = new SemanticAnalyzer();
+const interpreter: Interpreter = new Interpreter();
 
 export default function Home() {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [output, setOutput] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [programNode, setProgramNode] = useState<ProgramNode | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -41,50 +45,19 @@ export default function Home() {
     if (editorRef.current) {
       setIsLoading(true);
       setOutput("");
-      lexer.reset(editorRef.current.getValue());
-      parser.reset(lexer);
+      const tokens = lexer.tokenize(editorRef.current.getValue());
 
-      try {
-        const programNode = parser.parseProgram();
+        const programNode = parser.parseProgram(tokens);
 
         if (parser.Errors.length !== 0) {
           setOutput(parser.Errors.join("\n"));
           return;
         }
 
-        semanticAnalyzer.analyze(programNode);
-
-        if (semanticAnalyzer.Errors.length !== 0) {
-          setOutput(semanticAnalyzer.Errors.join("\n"));
-          return;
-        }
-
         setProgramNode(programNode);
-
-        let url;
-
-        if (!process.env.NEXT_PUBLIC_BACKEND_URL) {
-          url = "http://localhost:8000/api/"
-        } else {
-          url = process.env.NEXT_PUBLIC_BACKEND_URL;
-        }
-        const response = await fetch(url, {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          mode: "cors",
-          method: "POST",
-          body: JSON.stringify(programNode),
-        });
-
-        const json: string[] = await response.json();
-        setOutput(json.join("\n"));
-      } catch (e) {
-        const message = e instanceof Error ? e.message : String(e);
-        setOutput(`Error: ${message}`);
-      } finally {
         setIsLoading(false);
-      }
+
+        setOutput(interpreter.interpret(programNode));
     }
   };
 
@@ -198,30 +171,25 @@ export default function Home() {
         />
       </div>
 
-      <div
-        style={{
-          flex: 1,
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          gap: halfMargin,
-          marginLeft: halfMargin,
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            flex: "0 0 47.5%",
-            background: "#282a36",
-            color: "#f8f8f2",
-            padding: "10px",
-            borderRadius: "5px",
-            overflow: "auto",
-          }}
-        >
+      {/* Right tile - Other components */}
+      <div style={{
+        flex: 1,
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        gap: halfMargin,
+        marginLeft: halfMargin,
+        overflow: "hidden"
+      }}>
+        {/* Quantum Circuit
+        <div style={{
+          flex: "0 0 47.5%",
+          ...commonEditorStyle,
+          overflow: "auto"
+        }}>
           {programNode && <QuantumCircuit program={programNode} />}
-        </div>
-
+        </div>}*/}
+        {
         <div
           style={{
             flex: "0 0 37.5%",
@@ -232,8 +200,9 @@ export default function Home() {
             overflow: "auto",
           }}
         >
-          {isLoading ? <p>Loading...</p> : <pre>{output}</pre>}
+          {isLoading ? <p>Loading...</p> : <pre>{output}</pre> }
         </div>
+        }
 
         <button
           onClick={handleButtonClick}

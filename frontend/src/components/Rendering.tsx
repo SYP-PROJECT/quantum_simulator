@@ -1,4 +1,4 @@
-import React from 'react';
+/*import React from 'react';
 import QuantumCircuit from './QuantumCircuit';
 import { ProgramNode } from '@/input_handler/ast';
 
@@ -15,3 +15,4 @@ const QuantumCircuitComponent: React.FC<QuantumCircuitComponentProps> = ({ progr
 };
 
 export default QuantumCircuitComponent;
+*/

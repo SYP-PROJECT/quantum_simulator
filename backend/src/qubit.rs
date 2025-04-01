@@ -4,7 +4,7 @@ use std::fmt::{Debug, Formatter};
 
 use crate::gate::Gate;
 
-pub type Measurment = u8;
+pub type Measurement = u8;
 
 pub struct Qubit {
     state: Vector2<Complex<f64>>,
@@ -45,7 +45,7 @@ impl Qubit {
         self.state = gate.matrix_representation() * self.state;
     }
 
-    pub fn measure(&mut self) -> Measurment {
+    pub fn measure(&mut self) -> Measurement {
         let mut rng = rand::thread_rng();
         let random_num = rng.gen_range(0.0_f64..1.0);
         let prob_0 = self.state[0].norm_sqr();
