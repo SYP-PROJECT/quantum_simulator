@@ -52,25 +52,6 @@ export default function Home() {
         setProgramNode(programNode);
 
         setOutput(interpreter.interpret(programNode));
-        /*
-        let url;
-        if (!process.env.URL) {
-          url = "http://localhost:8000/api/"
-        } else {
-          url = process.env.URL;
-        }
-
-        const response = await fetch(url, {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          mode: "cors",
-          method: 'POST',
-          body: JSON.stringify(programNode),
-        });*
-
-        const json: string[] = await response.json();
-        console.log(json);*/
     }
   };
 
