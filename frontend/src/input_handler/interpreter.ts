@@ -125,37 +125,61 @@ class QuantumSystem {
     }
 
     private measureQubit(qubitIndex: QubitIndex): boolean {
-        const stateArray = this.state.toArray() as math.Complex[][];
+        if (!this.state || this.qubitNames.size === 0) {
+            throw new Error("Quantum state not initialized");
+        }
+
+        const prob1 = this.getProbabilityByIndex(qubitIndex);
+        const result = Math.random() < prob1;
+        
+        this.collapseState(qubitIndex, result);
+
+        return result;
+    }
+
+    private getProbabilityByIndex(qubitIndex: number): number {
+        const stateArray = this.state.toArray() as number[][];
         let prob1 = 0;
 
         for (let i = 0; i < stateArray.length; i++) {
             if ((i >> qubitIndex) & 1) {
                 const amplitude = stateArray[i][0];
-                prob1 += math.abs(math.multiply(amplitude, math.conj(amplitude))) as number;
+                prob1 += Math.pow(Math.abs(amplitude), 2);
             }
         }
-
-        const result = Math.random() < prob1;
-        this.collapseState(qubitIndex, result);
-        return result;
+        return prob1;
     }
 
     private collapseState(qubitIndex: QubitIndex, result: boolean): void {
-        const stateArray = this.state.toArray() as math.Complex[][];
-        const newState = math.zeros(stateArray.length, 1, 'sparse') as QuantumState;
+        const stateArray = this.state.toArray() as number[][];
+        const newStateArray: number[][] = Array(stateArray.length).fill(0).map(() => [0]);
 
+        // Collapse the state according to measurement result
         for (let i = 0; i < stateArray.length; i++) {
             const qubitValue = (i >> qubitIndex) & 1;
             if (qubitValue === (result ? 1 : 0)) {
-                newState.set([i, 0], stateArray[i][0]);
+                newStateArray[i][0] = stateArray[i][0];
             }
         }
 
-        const norm = math.norm(newState) as number;
+        // Calculate norm and normalize
+        let norm = 0;
+        for (let i = 0; i < newStateArray.length; i++) {
+            norm += Math.pow(Math.abs(newStateArray[i][0]), 2);
+        }
+        norm = Math.sqrt(norm);
+
         if (norm === 0) {
             throw new Error("Normalization failed: zero norm after collapse");
         }
-        this.state = math.divide(newState, norm) as QuantumState;
+
+        // Create new normalized state
+        const normalizedState = math.zeros(newStateArray.length, 1, 'sparse') as QuantumState;
+        for (let i = 0; i < newStateArray.length; i++) {
+            normalizedState.set([i, 0], newStateArray[i][0] / norm);
+        }
+
+        this.state = normalizedState;
     }
 
     private getQubitIndex(name: string): QubitIndex {
@@ -231,20 +255,6 @@ class QuantumSystem {
 
     getStateVector(): math.Matrix {
         return this.state;
-    }
-
-    getProbability(qubitName: string): number {
-        const index = this.getQubitIndex(qubitName);
-        let prob1 = 0;
-        const stateArray = this.state.toArray() as math.Complex[][];
-
-        for (let i = 0; i < stateArray.length; i++) {
-            if ((i >> index) & 1) {
-                const amplitude = stateArray[i][0];
-                prob1 += math.abs(math.multiply(amplitude, math.conj(amplitude))) as number;
-            }
-        }
-        return prob1;
     }
 }
 
