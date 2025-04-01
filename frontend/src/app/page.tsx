@@ -62,10 +62,11 @@ export default function Home() {
         setProgramNode(programNode);
 
         let url;
-        if (!process.env.BACKEND_URL) {
+
+        if (!process.env.NEXT_PUBLIC_BACKEND_URL) {
           url = "http://localhost:8000/api/"
         } else {
-          url = process.env.BACKEND_URL;
+          url = process.env.NEXT_PUBLIC_BACKEND_URL;
         }
         const response = await fetch(url, {
           headers: {
