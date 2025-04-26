@@ -105,22 +105,22 @@ function SandboxContent() {
         monacoInstance.languages.setMonarchTokensProvider("customLang", {
             tokenizer: {
                 root: [
-                    [/\b(create|qubit|apply|measure|display)\b/, "keyword"],
-                    [/\b[+-]?\d+(\.\d+)?\b/, "number"],
-                    [/i\b/, "imaginary"],
+                    [/\b(qubit|register|gate|measure|if|repeat|print|define|as|matrix|for|let|true|false)\b/, "keyword"],
+                    [/\b\d+(\.\d+)?i\b/, "imaginary"],
+                    [/\b\d+(\.\d+)?\b/, "number"],
                     [/\b[a-zA-Z_][a-zA-Z0-9_]*\b/, "identifier"],
-                    [/[=;,]/, "delimiter"],
-                    [/[\[\]]/, "bracket"],
-                    [/(\/\/.*)/, "comment"],
-                    [/\/\*[\s\S]*?\*\//, "comment"],
-                    [/[+\-*\/]/, "operator"],
+                    [/=>|==|!=|&&|\|\||[=+\-*/<>!]/, "operator"],
+                    [/[{}[\],;]/, "delimiter"],
+                    [/#.*$/, "comment"],
                     [/\s+/, "whitespace"],
                 ],
             },
         });
 
         monacoInstance.languages.setLanguageConfiguration("customLang", {
-            comments: { lineComment: "//", blockComment: ["/*", "*/"] },
+            comments: {
+                lineComment: "#",
+            },
             brackets: [["[", "]"], ["{", "}"], ["(", ")"]],
             autoClosingPairs: [
                 { open: "[", close: "]" },
