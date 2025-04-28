@@ -1,6 +1,6 @@
-/*import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import * as d3 from 'd3';
-import { ProgramNode, NodeType } from '../input_handler/ast'
+import { ProgramNode, NodeType } from '@/input_handler/ast'
 import './QuantumCircuit.css';
 
 const QuantumCircuit: React.FC<{ program: ProgramNode }> = ({ program }) => {
@@ -32,7 +32,7 @@ function generateQuantumCircuit(program: ProgramNode, container: HTMLElement, mi
 
   let totalWidth = padding * 2;
   program.statements.forEach(statement => {
-    if (statement.type === NodeType.ApplyStatement || statement.type === NodeType.MeasureStatement || statement.type === NodeType.DisplayStatement) {
+    if (statement.type === NodeType.GateApplication|| statement.type === NodeType.MeasureStatement) {
       totalWidth += gateSize + gateSpacing;
     }
   });
@@ -49,7 +49,7 @@ function generateQuantumCircuit(program: ProgramNode, container: HTMLElement, mi
   const qubits = new Set<string>();
 
   program.statements.forEach(statement => {
-    if (statement.type === NodeType.CreateStatement) {
+    if (statement.type === NodeType.LetStatement) {
       qubits.add(statement.identifier);
     }
   });
@@ -79,8 +79,8 @@ function generateQuantumCircuit(program: ProgramNode, container: HTMLElement, mi
 
   let currentX = padding;
   program.statements.forEach(statement => {
-    if (statement.type === NodeType.ApplyStatement) {
-      const qubitIndex = qubitList.indexOf(statement.identifier1);
+    if (statement.type === NodeType.GateApplication) {
+      const qubitIndex = qubitList.indexOf(statement.targets[0].identifier);
       const gate = svg.append("g");
 
       gate.append("rect")
@@ -93,7 +93,7 @@ function generateQuantumCircuit(program: ProgramNode, container: HTMLElement, mi
       currentX += gateSize + gateSpacing;
     }
     else if (statement.type === NodeType.MeasureStatement) {
-      const qubitIndex = qubitList.indexOf(statement.identifier);
+      const qubitIndex = qubitList.indexOf(statement.target.identifier);
 
       svg.append("circle")
         .attr("cx", currentX + gateSize / 2)
@@ -103,22 +103,7 @@ function generateQuantumCircuit(program: ProgramNode, container: HTMLElement, mi
 
       currentX += gateSize + gateSpacing;
     }
-    else if (statement.type === NodeType.DisplayStatement) {
-      const qubitIndex = qubitList.indexOf(statement.identifier);
-
-      svg.append("text")
-        .attr("x", currentX + gateSize / 2)
-        .attr("y", padding + qubitIndex * qubitSpacing)
-        .attr("dy", "0.35em")
-        .attr("font-size", "20px")
-        .attr("text-anchor", "middle")
-        .text("D")
-        .attr("fill", "#ff5555");
-
-      currentX += gateSize + gateSpacing;
-    }
   });
 }
 
 export default QuantumCircuit;
-*/
