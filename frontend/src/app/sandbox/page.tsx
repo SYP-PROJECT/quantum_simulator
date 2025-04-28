@@ -1,18 +1,31 @@
 "use client";
 
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from "next/navigation";
-import { useState, useEffect, useRef, Suspense } from "react";
-import lessons from "@/data/lessons.json"; // Adjust the path if necessary
+import lessons from "@/data/lessons.json";
 import Editor from "@monaco-editor/react";
 import { Lexer } from "@/input_handler/lexer";
-import { ProgramNode } from "@/input_handler/ast";
 import { Parser } from "@/input_handler/parser";
 import { Interpreter } from "@/input_handler/interpreter";
 import type monaco from "monaco-editor";
+import QuantumCircuit from '@/components/QuantumCircuit';
+import { ProgramNode as QuantumProgramNode } from '@/input_handler/ast';
 
 const lexer: Lexer = new Lexer();
 const parser: Parser = new Parser();
 const interpreter: Interpreter = new Interpreter();
+
+interface QuantumCircuitComponentProps {
+    programNode: QuantumProgramNode | null;
+}
+
+const QuantumCircuitComponent: React.FC<QuantumCircuitComponentProps> = ({ programNode }) => {
+    return (
+        <div className='quantum-container'>
+            {programNode && <QuantumCircuit program={programNode} />}
+        </div>
+    );
+};
 
 const LessonDetails = ({ lessonId, onClose }: { lessonId: string, onClose: () => void }) => {
     const [lesson, setLesson] = useState<{ id: number; title: string; description: string, content: string } | null>(null);
@@ -47,8 +60,7 @@ function SandboxContent() {
     const [lessonId, setLessonId] = useState<string | null>(null);
     const [showLessonPopup, setShowLessonPopup] = useState<boolean>(true);
     const [output, setOutput] = useState("");
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [programNode, setProgramNode] = useState<ProgramNode | null>(null);
+    const [programNode, setProgramNode] = useState<QuantumProgramNode | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
 
@@ -189,11 +201,14 @@ function SandboxContent() {
                 />
             </div>
 
-            {/* Right side: Output and Buttons */}
+            {/* Right side: Output, Quantum Circuit, and Buttons */}
             <div className="flex flex-col flex-1 h-full ml-2 space-y-4">
                 <div className="flex-grow bg-gray-800 rounded-2xl p-4 overflow-auto">
                     {isLoading ? <p>Loading...</p> : <pre>{output}</pre>}
                 </div>
+
+                {/* Quantum Circuit Component */}
+                <QuantumCircuitComponent programNode={programNode} />
 
                 <div className="flex space-x-2">
                     <button
