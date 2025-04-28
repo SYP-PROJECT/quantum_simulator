@@ -9,6 +9,6 @@
     "id": 2,
     "title": "Quantum Gates",
     "description": "Understand basic quantum gates like X, H, and Z.",
-    "content": "CONTENT"
+    "content": "A **Hadamard gate** applies the following transformation:\n\n$$\nH = \\frac{1}{\\sqrt{2}} \\begin{bmatrix} 1 & 1 \\\\ 1 & -1 \\end{bmatrix}\n$$\n"
   }
 ]

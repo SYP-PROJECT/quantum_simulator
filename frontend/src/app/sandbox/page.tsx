@@ -10,13 +10,17 @@ import { Interpreter } from "@/input_handler/interpreter";
 import type monaco from "monaco-editor";
 import { ProgramNode as QuantumProgramNode } from '@/input_handler/ast';
 import QuantumCircuitComponent from "@/components/Rendering";
+import ReactMarkdown from 'react-markdown';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 
 const lexer: Lexer = new Lexer();
 const parser: Parser = new Parser();
 const interpreter: Interpreter = new Interpreter();
 
-const LessonDetails = ({ lessonId, onClose }: { lessonId: string, onClose: () => void }) => {
-    const [lesson, setLesson] = useState<{ id: number; title: string; description: string, content: string } | null>(null);
+const LessonDetails = ({ lessonId, onClose }: { lessonId: string; onClose: () => void }) => {
+    const [lesson, setLesson] = useState<{ id: number; title: string; description: string; content: string } | null>(null);
 
     useEffect(() => {
         const lessonData = lessons.find((l) => l.id === parseInt(lessonId));
@@ -29,12 +33,21 @@ const LessonDetails = ({ lessonId, onClose }: { lessonId: string, onClose: () =>
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-            <div className="bg-gray-800 rounded-2xl shadow-lg p-8 max-w-2xl w-full text-left space-y-4">
-                <h2 className="text-2xl font-bold">{lesson.title}</h2>
-                <pre className="text-gray-300 whitespace-pre-wrap">{lesson.content}</pre>
+            <div className="bg-gray-800 rounded-2xl shadow-lg p-8 max-w-2xl w-full text-left space-y-6 overflow-y-auto max-h-full">
+                <h2 className="text-2xl font-bold text-white">{lesson.title}</h2>
+
+                <div className="prose prose-invert max-w-none text-gray-300">
+                    <ReactMarkdown
+                        remarkPlugins={[remarkMath]}
+                        rehypePlugins={[rehypeKatex]}
+                    >
+                        {lesson.content}
+                    </ReactMarkdown>
+                </div>
+
                 <button
                     onClick={onClose}
-                    className="bg-purple-600 hover:bg-purple-700 transition px-4 py-2 rounded-lg mt-4"
+                    className="bg-purple-600 hover:bg-purple-700 transition px-4 py-2 rounded-lg mt-6 w-full"
                 >
                     Start Lesson
                 </button>
