@@ -8,24 +8,12 @@ import { Lexer } from "@/input_handler/lexer";
 import { Parser } from "@/input_handler/parser";
 import { Interpreter } from "@/input_handler/interpreter";
 import type monaco from "monaco-editor";
-import QuantumCircuit from '@/components/QuantumCircuit';
 import { ProgramNode as QuantumProgramNode } from '@/input_handler/ast';
+import QuantumCircuitComponent from "@/components/Rendering";
 
 const lexer: Lexer = new Lexer();
 const parser: Parser = new Parser();
 const interpreter: Interpreter = new Interpreter();
-
-interface QuantumCircuitComponentProps {
-    programNode: QuantumProgramNode | null;
-}
-
-const QuantumCircuitComponent: React.FC<QuantumCircuitComponentProps> = ({ programNode }) => {
-    return (
-        <div className='quantum-container'>
-            {programNode && <QuantumCircuit program={programNode} />}
-        </div>
-    );
-};
 
 const LessonDetails = ({ lessonId, onClose }: { lessonId: string, onClose: () => void }) => {
     const [lesson, setLesson] = useState<{ id: number; title: string; description: string, content: string } | null>(null);
@@ -100,6 +88,7 @@ function SandboxContent() {
 
             if (parser.Errors.length !== 0) {
                 setOutput(parser.Errors.join("\n"));
+                setProgramNode(null); // Clear program node on error
                 setIsLoading(false);
                 return;
             }
@@ -203,13 +192,23 @@ function SandboxContent() {
 
             {/* Right side: Output, Quantum Circuit, and Buttons */}
             <div className="flex flex-col flex-1 h-full ml-2 space-y-4">
-                <div className="flex-grow bg-gray-800 rounded-2xl p-4 overflow-auto">
+                {/* Output panel */}
+                <div className="flex-1 bg-gray-800 rounded-2xl p-4 overflow-auto">
                     {isLoading ? <p>Loading...</p> : <pre>{output}</pre>}
                 </div>
 
-                {/* Quantum Circuit Component */}
-                <QuantumCircuitComponent programNode={programNode} />
+                {/* Quantum Circuit Visualization */}
+                <div className="flex-1 bg-gray-800 rounded-2xl p-4 overflow-auto">
+                    <h3 className="text-lg font-semibold mb-2">Quantum Circuit</h3>
+                    {programNode ? (
+                        <QuantumCircuitComponent programNode={programNode} />
+                    ) : (
+                        <div className="text-gray-400 italic">Run a valid quantum program to see the circuit visualization</div>
+                    )}
+                </div>
 
+
+                {/* Buttons */}
                 <div className="flex space-x-2">
                     <button
                         onClick={handleButtonClick}

@@ -7,7 +7,7 @@ const QuantumCircuit: React.FC<{ program: ProgramNode }> = ({ program }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (containerRef.current) {
+    if (containerRef.current && program) {
       containerRef.current.innerHTML = '';
 
       const containerWidth = containerRef.current.clientWidth;
@@ -17,10 +17,14 @@ const QuantumCircuit: React.FC<{ program: ProgramNode }> = ({ program }) => {
     }
   }, [program]);
 
+  if (!program) {
+    return <div className="no-circuit">No quantum circuit to display. Run a valid program first.</div>;
+  }
+
   return (
-    <div className="quantum-circuit-container">
-      <div ref={containerRef} className="quantum-circuit"></div>
-    </div>
+      <div className="quantum-circuit-container">
+        <div ref={containerRef} className="quantum-circuit"></div>
+      </div>
   );
 };
 
@@ -30,78 +34,122 @@ function generateQuantumCircuit(program: ProgramNode, container: HTMLElement, mi
   const gateSize = 30;
   const gateSpacing = 50;
 
-  let totalWidth = padding * 2;
-  program.statements.forEach(statement => {
-    if (statement.type === NodeType.GateApplication|| statement.type === NodeType.MeasureStatement) {
-      totalWidth += gateSize + gateSpacing;
-    }
-  });
-
-  const svgWidth = Math.max(totalWidth, minLineWidth);
-  const svgHeight = program.statements.length * qubitSpacing + padding * 2;
-
-  const svg = d3.select(container)
-    .append("svg")
-    .attr("width", svgWidth)
-    .attr("height", svgHeight)
-    .style("background", "#282a36");
-
   const qubits = new Set<string>();
 
   program.statements.forEach(statement => {
-    if (statement.type === NodeType.LetStatement) {
+    if (statement.type === NodeType.QubitDeclaration) {
       qubits.add(statement.identifier);
+    } else if (statement.type === NodeType.LetStatement) {
+      qubits.add(statement.identifier);
+    }
+  });
+
+  program.statements.forEach(statement => {
+    if (statement.type === NodeType.GateApplication) {
+      statement.targets.forEach(target => {
+        qubits.add(target.identifier);
+      });
+    } else if (statement.type === NodeType.MeasureStatement) {
+      qubits.add(statement.target.identifier);
     }
   });
 
   const qubitList = Array.from(qubits);
 
+  let totalWidth = padding * 2;
+  let gateCount = 0;
+  program.statements.forEach(statement => {
+    if (statement.type === NodeType.GateApplication || statement.type === NodeType.MeasureStatement) {
+      gateCount++;
+    }
+  });
+
+  totalWidth += gateCount * (gateSize + gateSpacing);
+  const svgWidth = Math.max(totalWidth, minLineWidth);
+  const svgHeight = qubitList.length * qubitSpacing + padding * 2;
+
+  const svg = d3.select(container)
+      .append("svg")
+      .attr("width", svgWidth)
+      .attr("height", svgHeight)
+      .style("background", "#282a36");
+
   svg.selectAll(".qubit-line")
-    .data(qubitList)
-    .enter()
-    .append("line")
-    .attr("x1", padding)
-    .attr("x2", svgWidth - padding)
-    .attr("y1", (_, i) => padding + i * qubitSpacing)
-    .attr("y2", (_, i) => padding + i * qubitSpacing)
-    .attr("stroke", "#bd93f9")
-    .attr("stroke-width", 2);
+      .data(qubitList)
+      .enter()
+      .append("line")
+      .attr("x1", padding)
+      .attr("x2", svgWidth - padding)
+      .attr("y1", (_, i) => padding + i * qubitSpacing)
+      .attr("y2", (_, i) => padding + i * qubitSpacing)
+      .attr("stroke", "#bd93f9")
+      .attr("stroke-width", 2);
 
   svg.selectAll(".qubit-label")
-    .data(qubitList)
-    .enter()
-    .append("text")
-    .attr("x", padding - 20)
-    .attr("y", (_, i) => padding + i * qubitSpacing)
-    .attr("dy", "0.35em")
-    .text(d => `${d}`)
-    .attr("fill", "#f8f8f2");
+      .data(qubitList)
+      .enter()
+      .append("text")
+      .attr("x", padding - 20)
+      .attr("y", (_, i) => padding + i * qubitSpacing)
+      .attr("dy", "0.35em")
+      .attr("text-anchor", "end")
+      .text(d => `${d}`)
+      .attr("fill", "#f8f8f2")
+      .attr("font-size", "14px");
 
   let currentX = padding;
+
   program.statements.forEach(statement => {
     if (statement.type === NodeType.GateApplication) {
-      const qubitIndex = qubitList.indexOf(statement.targets[0].identifier);
-      const gate = svg.append("g");
+      statement.targets.forEach(target => {
+        const qubitIndex = qubitList.indexOf(target.identifier);
 
-      gate.append("rect")
-        .attr("x", currentX)
-        .attr("y", padding + qubitIndex * qubitSpacing - gateSize / 2)
-        .attr("width", gateSize)
-        .attr("height", gateSize)
-        .attr("fill", "#50fa7b");
+        if (qubitIndex !== -1) {
+          const gate = svg.append("g");
+
+          gate.append("rect")
+              .attr("x", currentX)
+              .attr("y", padding + qubitIndex * qubitSpacing - gateSize / 2)
+              .attr("width", gateSize)
+              .attr("height", gateSize)
+              .attr("fill", "#50fa7b")
+              .attr("rx", 4)
+              .attr("ry", 4);
+
+          gate.append("text")
+              .attr("x", currentX + gateSize / 2)
+              .attr("y", padding + qubitIndex * qubitSpacing)
+              .attr("text-anchor", "middle")
+              .attr("dominant-baseline", "central")
+              .attr("fill", "#282a36")
+              .attr("font-weight", "bold")
+              .text(statement.gate);
+        }
+      });
 
       currentX += gateSize + gateSpacing;
     }
     else if (statement.type === NodeType.MeasureStatement) {
       const qubitIndex = qubitList.indexOf(statement.target.identifier);
 
-      svg.append("circle")
-        .attr("cx", currentX + gateSize / 2)
-        .attr("cy", padding + qubitIndex * qubitSpacing)
-        .attr("r", 10)
-        .attr("fill", "#ffb86c");
+      if (qubitIndex !== -1) {
+        svg.append("circle")
+            .attr("cx", currentX + gateSize / 2)
+            .attr("cy", padding + qubitIndex * qubitSpacing)
+            .attr("r", gateSize / 2)
+            .attr("fill", "#ffb86c");
 
-      currentX += gateSize + gateSpacing;
+        svg.append("text")
+            .attr("x", currentX + gateSize / 2)
+            .attr("y", padding + qubitIndex * qubitSpacing)
+            .attr("text-anchor", "middle")
+            .attr("dominant-baseline", "central")
+            .attr("fill", "#282a36")
+            .attr("font-weight", "bold")
+            .text("M");
+
+        currentX += gateSize + gateSpacing;
+      }
     }
   });
 }
