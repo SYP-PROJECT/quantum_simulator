@@ -193,27 +193,35 @@ function SandboxContent() {
             {/* Right side: Output, Quantum Circuit, and Buttons */}
             <div className="flex flex-col flex-1 h-full ml-2 space-y-4">
                 {/* Output panel */}
-                <div className="flex-1 bg-gray-800 rounded-2xl p-4 overflow-auto">
-                    <h3 className="text-lg font-semibold mb-2">Output</h3>
-                    {isLoading ? (
-                        <p>Loading...</p>
-                    ) : (
-                        output ? (
-                            <pre>{output}</pre>
+                <div className="flex-1 bg-gray-800 rounded-2xl overflow-hidden flex flex-col">
+                    <div className="sticky top-0 bg-gray-800 p-4 pb-2 z-10 border-b border-gray-700">
+                        <h3 className="text-lg font-semibold">Output</h3>
+                    </div>
+                    <div className="flex-1 p-4 pt-2 overflow-auto">
+                        {isLoading ? (
+                            <p>Loading...</p>
                         ) : (
-                            <div className="text-gray-400 italic">Run a program to see output</div>
-                        )
-                    )}
+                            output ? (
+                                <pre>{output}</pre>
+                            ) : (
+                                <div className="text-gray-400 italic">Run a program to see output</div>
+                            )
+                        )}
+                    </div>
                 </div>
 
                 {/* Quantum Circuit Visualization */}
-                <div className="flex-1 bg-gray-800 rounded-2xl p-4 overflow-auto">
-                    <h3 className="text-lg font-semibold mb-2">Quantum Circuit</h3>
-                    {programNode ? (
-                        <QuantumCircuitComponent programNode={programNode} />
-                    ) : (
-                        <div className="text-gray-400 italic">Run a valid quantum program to see the circuit visualization</div>
-                    )}
+                <div className="flex-1 bg-gray-800 rounded-2xl overflow-hidden flex flex-col">
+                    <div className="sticky top-0 bg-gray-800 p-4 pb-2 z-10 border-b border-gray-700">
+                        <h3 className="text-lg font-semibold">Quantum Circuit</h3>
+                    </div>
+                    <div className="flex-1 p-4 pt-2 overflow-auto">
+                        {programNode ? (
+                            <QuantumCircuitComponent programNode={programNode} />
+                        ) : (
+                            <div className="text-gray-400 italic">Run a valid quantum program to see the circuit visualization</div>
+                        )}
+                    </div>
                 </div>
 
 
