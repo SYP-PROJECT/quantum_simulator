@@ -194,7 +194,16 @@ function SandboxContent() {
             <div className="flex flex-col flex-1 h-full ml-2 space-y-4">
                 {/* Output panel */}
                 <div className="flex-1 bg-gray-800 rounded-2xl p-4 overflow-auto">
-                    {isLoading ? <p>Loading...</p> : <pre>{output}</pre>}
+                    <h3 className="text-lg font-semibold mb-2">Output</h3>
+                    {isLoading ? (
+                        <p>Loading...</p>
+                    ) : (
+                        output ? (
+                            <pre>{output}</pre>
+                        ) : (
+                            <div className="text-gray-400 italic">Run a program to see output</div>
+                        )
+                    )}
                 </div>
 
                 {/* Quantum Circuit Visualization */}
