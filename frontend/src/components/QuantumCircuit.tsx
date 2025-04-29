@@ -101,11 +101,16 @@ function generateQuantumCircuit(program: ProgramNode, container: HTMLElement, mi
 
   program.statements.forEach(statement => {
     if (statement.type === NodeType.GateApplication) {
-      statement.targets.forEach(target => {
-        const qubitIndex = qubitList.indexOf(target.identifier);
+      const targetIndices = statement.targets.map(target => qubitList.indexOf(target.identifier))
+          .filter(index => index !== -1);
 
-        if (qubitIndex !== -1) {
-          const gate = svg.append("g");
+      if (targetIndices.length > 0) {
+        targetIndices.sort((a, b) => a - b);
+
+        const gate = svg.append("g");
+
+        if (targetIndices.length === 1) {
+          const qubitIndex = targetIndices[0];
 
           gate.append("rect")
               .attr("x", currentX)
@@ -124,8 +129,40 @@ function generateQuantumCircuit(program: ProgramNode, container: HTMLElement, mi
               .attr("fill", "#282a36")
               .attr("font-weight", "bold")
               .text(statement.gate);
+        } else {
+          const topQubitIndex = targetIndices[0];
+          const bottomQubitIndex = targetIndices[targetIndices.length - 1];
+          const height = (bottomQubitIndex - topQubitIndex) * qubitSpacing + gateSize;
+
+          gate.append("rect")
+              .attr("x", currentX)
+              .attr("y", padding + topQubitIndex * qubitSpacing - gateSize / 2)
+              .attr("width", gateSize)
+              .attr("height", height)
+              .attr("fill", "#ff79c6")
+              .attr("rx", 4)
+              .attr("ry", 4);
+
+          gate.append("text")
+              .attr("x", currentX + gateSize / 2)
+              .attr("y", padding + (topQubitIndex + bottomQubitIndex) * qubitSpacing / 2)
+              .attr("text-anchor", "middle")
+              .attr("dominant-baseline", "central")
+              .attr("fill", "#282a36")
+              .attr("font-weight", "bold")
+              .text(statement.gate);
+
+          targetIndices.forEach(qubitIndex => {
+            gate.append("line")
+                .attr("x1", currentX - 5)
+                .attr("x2", currentX + gateSize + 5)
+                .attr("y1", padding + qubitIndex * qubitSpacing)
+                .attr("y2", padding + qubitIndex * qubitSpacing)
+                .attr("stroke", "#f8f8f2")
+                .attr("stroke-width", 2);
+          });
         }
-      });
+      }
 
       currentX += gateSize + gateSpacing;
     }
