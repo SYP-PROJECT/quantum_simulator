@@ -31,7 +31,8 @@ const QuantumCircuit: React.FC<{ program: ProgramNode }> = ({ program }) => {
 function generateQuantumCircuit(program: ProgramNode, container: HTMLElement, minLineWidth: number) {
   const qubitSpacing = 50;
   const padding = 50;
-  const gateSize = 30;
+  const gateMinSize = 30;
+  const gateTextPadding = 10;
   const gateSpacing = 50;
 
   const qubits = new Set<string>();
@@ -64,7 +65,7 @@ function generateQuantumCircuit(program: ProgramNode, container: HTMLElement, mi
     }
   });
 
-  totalWidth += gateCount * (gateSize + gateSpacing);
+  totalWidth += gateCount * (gateMinSize + gateSpacing);
   const svgWidth = Math.max(totalWidth, minLineWidth);
   const svgHeight = qubitList.length * qubitSpacing + padding * 2;
 
@@ -112,17 +113,26 @@ function generateQuantumCircuit(program: ProgramNode, container: HTMLElement, mi
         if (targetIndices.length === 1) {
           const qubitIndex = targetIndices[0];
 
+          const tempText = svg.append("text")
+              .attr("font-weight", "bold")
+              .text(statement.gate)
+              .attr("visibility", "hidden");
+
+          const textWidth = tempText.node()?.getBBox().width || 0;
+          tempText.remove();
+          const gateWidth = Math.max(gateMinSize, textWidth + gateTextPadding * 2);
+
           gate.append("rect")
               .attr("x", currentX)
-              .attr("y", padding + qubitIndex * qubitSpacing - gateSize / 2)
-              .attr("width", gateSize)
-              .attr("height", gateSize)
+              .attr("y", padding + qubitIndex * qubitSpacing - gateMinSize / 2)
+              .attr("width", gateWidth)
+              .attr("height", gateMinSize)
               .attr("fill", "#50fa7b")
               .attr("rx", 4)
               .attr("ry", 4);
 
           gate.append("text")
-              .attr("x", currentX + gateSize / 2)
+              .attr("x", currentX + gateWidth / 2)
               .attr("y", padding + qubitIndex * qubitSpacing)
               .attr("text-anchor", "middle")
               .attr("dominant-baseline", "central")
@@ -132,19 +142,28 @@ function generateQuantumCircuit(program: ProgramNode, container: HTMLElement, mi
         } else {
           const topQubitIndex = targetIndices[0];
           const bottomQubitIndex = targetIndices[targetIndices.length - 1];
-          const height = (bottomQubitIndex - topQubitIndex) * qubitSpacing + gateSize;
+          const height = (bottomQubitIndex - topQubitIndex) * qubitSpacing + gateMinSize;
+
+          const tempText = svg.append("text")
+              .attr("font-weight", "bold")
+              .text(statement.gate)
+              .attr("visibility", "hidden");
+
+          const textWidth = tempText.node()?.getBBox().width || 0;
+          tempText.remove();
+          const gateWidth = Math.max(gateMinSize, textWidth + gateTextPadding * 2);
 
           gate.append("rect")
               .attr("x", currentX)
-              .attr("y", padding + topQubitIndex * qubitSpacing - gateSize / 2)
-              .attr("width", gateSize)
+              .attr("y", padding + topQubitIndex * qubitSpacing - gateMinSize / 2)
+              .attr("width", gateWidth)
               .attr("height", height)
               .attr("fill", "#ff79c6")
               .attr("rx", 4)
               .attr("ry", 4);
 
           gate.append("text")
-              .attr("x", currentX + gateSize / 2)
+              .attr("x", currentX + gateWidth / 2)
               .attr("y", padding + (topQubitIndex + bottomQubitIndex) * qubitSpacing / 2)
               .attr("text-anchor", "middle")
               .attr("dominant-baseline", "central")
@@ -155,7 +174,7 @@ function generateQuantumCircuit(program: ProgramNode, container: HTMLElement, mi
           targetIndices.forEach(qubitIndex => {
             gate.append("line")
                 .attr("x1", currentX - 5)
-                .attr("x2", currentX + gateSize + 5)
+                .attr("x2", currentX + gateWidth + 5)
                 .attr("y1", padding + qubitIndex * qubitSpacing)
                 .attr("y2", padding + qubitIndex * qubitSpacing)
                 .attr("stroke", "#f8f8f2")
@@ -164,20 +183,31 @@ function generateQuantumCircuit(program: ProgramNode, container: HTMLElement, mi
         }
       }
 
-      currentX += gateSize + gateSpacing;
+      const tempText = svg.append("text")
+          .attr("font-weight", "bold")
+          .text(statement.gate)
+          .attr("visibility", "hidden");
+
+      const textWidth = tempText.node()?.getBBox().width || 0;
+      tempText.remove();
+      const gateWidth = Math.max(gateMinSize, textWidth + gateTextPadding * 2);
+
+      currentX += gateWidth + gateSpacing;
     }
     else if (statement.type === NodeType.MeasureStatement) {
       const qubitIndex = qubitList.indexOf(statement.target.identifier);
 
       if (qubitIndex !== -1) {
+        const measureSize = gateMinSize;
+
         svg.append("circle")
-            .attr("cx", currentX + gateSize / 2)
+            .attr("cx", currentX + measureSize / 2)
             .attr("cy", padding + qubitIndex * qubitSpacing)
-            .attr("r", gateSize / 2)
+            .attr("r", measureSize / 2)
             .attr("fill", "#ffb86c");
 
         svg.append("text")
-            .attr("x", currentX + gateSize / 2)
+            .attr("x", currentX + measureSize / 2)
             .attr("y", padding + qubitIndex * qubitSpacing)
             .attr("text-anchor", "middle")
             .attr("dominant-baseline", "central")
@@ -185,7 +215,7 @@ function generateQuantumCircuit(program: ProgramNode, container: HTMLElement, mi
             .attr("font-weight", "bold")
             .text("M");
 
-        currentX += gateSize + gateSpacing;
+        currentX += measureSize + gateSpacing;
       }
     }
   });
