@@ -31,14 +31,20 @@ class QuantumSystem {
     private qubitNames: Set<string> = new Set();
     private nameToIndex: Map<string, QubitIndex> = new Map();
     private gates: Map<string, QuantumGate> = new Map();
-    private classicalBits: Map<string, boolean> = new Map();
+    private classicalBits: Map<string, 1 | 0> = new Map();
     private registerNames: Set<string> = new Set();
+    private readonly interpreter: Interpreter | null = null;
 
-    constructor() {
+    constructor(interpreter?: Interpreter) {
+        this.interpreter = interpreter || null;
         this.initializeGates();
     }
 
     addQubit(name: string, initialState: '|0>' | '|1>' = '|0>'): void {
+        if (this.interpreter && this.interpreter.hasClassicalVariable(name)) {
+            throw new Error(`Variable name collision: '${name}' is already defined as a classical variable`);
+        }
+
         if (this.qubitNames.has(name)) {
             throw new Error(`Redefinition error: Qubit '${name}' already exists`);
         }
@@ -60,6 +66,11 @@ class QuantumSystem {
         if (this.registerNames.has(name)) {
             throw new Error(`Redefinition error: Register '${name}' already exists`);
         }
+
+        if (this.interpreter && this.interpreter.hasClassicalVariable(name)) {
+            throw new Error(`Variable name collision: '${name}' is already defined as a classical variable`);
+        }
+
         this.registerNames.add(name);
         for (let i = 0; i < size; i++) {
             const qubitName = `${name}_${i}`;
@@ -83,7 +94,7 @@ class QuantumSystem {
         this.applyGateToIndices(gate, targetIndices);
     }
 
-    measure(qubitName: string, bitName: string): boolean {
+    measure(qubitName: string, bitName: string): 1 | 0 {
         const qubitIndex = this.getQubitIndex(qubitName);
         const result = this.measureQubit(qubitIndex);
         this.classicalBits.set(bitName, result);
@@ -99,42 +110,48 @@ class QuantumSystem {
     }
 
     private applySingleQubitGate(gate: QuantumGate, targetIndex: QubitIndex): void {
-        let operator = eye(1) as math.Matrix;
-        for (let i = 0; i < this.qubitNames.size; i++) {
+        const numQubits = this.qubitNames.size;
+        let operator = math.identity(1) as math.Matrix;
+
+        for (let i = 0; i < numQubits; i++) {
             operator = math.kron(
                 operator,
                 i === targetIndex ? gate.matrix : eye(2)
             ) as math.Matrix;
         }
+
         this.state = math.multiply(operator, this.state) as QuantumState;
     }
 
     private applyMultiQubitGate(gate: QuantumGate, targetIndices: QubitIndex[]): void {
         const sortedIndices = [...targetIndices].sort((a, b) => a - b);
+
         const permutation = this.calculatePermutation(sortedIndices);
 
         const permutedState = this.permuteState(permutation);
-        const gateOperator = math.kron(
+
+        const fullOperator = math.kron(
             gate.matrix,
-            eye(2 ** (this.qubitNames.size - targetIndices.length))
+            eye(2 ** (this.qubitNames.size - gate.numQubits))
         ) as math.Matrix;
-        const transformedState = math.multiply(gateOperator, permutedState) as QuantumState;
+
+        const transformedState = math.multiply(fullOperator, permutedState) as QuantumState;
 
         const inversePermutation = permutation.map((_, i) => permutation.indexOf(i));
+
         this.state = this.permuteState(inversePermutation, transformedState);
     }
 
-    private measureQubit(qubitIndex: QubitIndex): boolean {
+    private measureQubit(qubitIndex: QubitIndex): 1 | 0 {
         if (!this.state || this.qubitNames.size === 0) {
             throw new Error("Quantum state not initialized");
         }
 
         const prob1 = this.getProbabilityByIndex(qubitIndex);
         const result = Math.random() < prob1;
-        
-        this.collapseState(qubitIndex, result);
 
-        return result;
+        this.collapseState(qubitIndex, result);
+        return result ? 1 : 0;
     }
 
     private getProbabilityByIndex(qubitIndex: number): number {
@@ -151,32 +168,41 @@ class QuantumSystem {
     }
 
     private collapseState(qubitIndex: QubitIndex, result: boolean): void {
-        const stateArray = this.state.toArray() as number[][];
-        const newStateArray: number[][] = Array(stateArray.length).fill(0).map(() => [0]);
+        const stateSize = 2 ** this.qubitNames.size;
+        const projector = math.zeros(stateSize, stateSize, 'sparse') as math.Matrix;
 
-        // Collapse the state according to measurement result
-        for (let i = 0; i < stateArray.length; i++) {
-            const qubitValue = (i >> qubitIndex) & 1;
-            if (qubitValue === (result ? 1 : 0)) {
-                newStateArray[i][0] = stateArray[i][0];
+        for (let i = 0; i < stateSize; i++) {
+            const bitValue = (i >> qubitIndex) & 1;
+            if (bitValue === (result ? 1 : 0)) {
+                projector.set([i, i], 1);
             }
         }
 
-        // Calculate norm and normalize
-        let norm = 0;
-        for (let i = 0; i < newStateArray.length; i++) {
-            norm += Math.pow(Math.abs(newStateArray[i][0]), 2);
-        }
-        norm = Math.sqrt(norm);
+        const projectedState = math.multiply(projector, this.state) as QuantumState;
 
-        if (norm === 0) {
-            throw new Error("Normalization failed: zero norm after collapse");
+        const stateArray = projectedState.toArray() as number[][];
+        let normSquared = 0;
+
+        for (let i = 0; i < stateArray.length; i++) {
+            const amplitude = stateArray[i][0];
+            if (amplitude) {
+                normSquared += Math.pow(Math.abs(amplitude), 2);
+            }
         }
 
-        // Create new normalized state
-        const normalizedState = math.zeros(newStateArray.length, 1, 'sparse') as QuantumState;
-        for (let i = 0; i < newStateArray.length; i++) {
-            normalizedState.set([i, 0], newStateArray[i][0] / norm);
+        const MIN_NORM = 1e-10;
+        if (normSquared < MIN_NORM) {
+            throw new Error(`Measurement outcome has zero probability (norm=${Math.sqrt(normSquared)})`);
+        }
+
+        const norm = Math.sqrt(normSquared);
+
+        const normalizedState = math.zeros(stateArray.length, 1, 'sparse') as QuantumState;
+        for (let i = 0; i < stateArray.length; i++) {
+            const value = projectedState.get([i, 0]);
+            if (value) {
+                normalizedState.set([i, 0], value / norm);
+            }
         }
 
         this.state = normalizedState;
@@ -236,6 +262,33 @@ class QuantumSystem {
             numQubits: 1
         });
         this.addGate({
+            name: 'Y',
+            matrix: math.matrix([
+                [0, math.complex(0, -1)],
+                [math.complex(0, 1), 0]
+            ]),
+            isEntangling: false,
+            numQubits: 1
+        });
+        this.addGate({
+            name: 'S',
+            matrix: math.matrix([
+                [1, 0],
+                [0, math.complex(0, 1)]
+            ]),
+            isEntangling: false,
+            numQubits: 1
+        });
+        this.addGate({
+            name: 'T',
+            matrix: math.matrix([
+                [1, 0],
+                [0, math.complex(Math.cos(Math.PI/4), Math.sin(Math.PI/4))]
+            ]),
+            isEntangling: false,
+            numQubits: 1
+        });
+        this.addGate({
             name: 'CNOT',
             matrix: math.matrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]]),
             isEntangling: true,
@@ -245,6 +298,12 @@ class QuantumSystem {
             name: 'SWAP',
             matrix: math.matrix([[1, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 0], [0, 0, 0, 1]]),
             isEntangling: false,
+            numQubits: 2
+        });
+        this.addGate({
+            name: 'CZ',
+            matrix: math.matrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, -1]]),
+            isEntangling: true,
             numQubits: 2
         });
     }
@@ -260,12 +319,12 @@ class QuantumSystem {
 
 export class Interpreter {
     private quantumSystem: QuantumSystem = null!;
-    private classicalState: Map<string, boolean | [number, number]> = null!;
+    private classicalState: Map<string,  boolean | math.Complex> = null!;
     private output: string[] = [];
 
     interpret(program: ProgramNode): string {
         try {
-            this.quantumSystem = new QuantumSystem();
+            this.quantumSystem = new QuantumSystem(this);
             this.classicalState = new Map();
             this.output = [];
             for (const statement of program.statements) {
@@ -275,6 +334,10 @@ export class Interpreter {
         } catch (error) {
             return `Interpreter error: ${(error as Error).message}`;
         }
+    }
+
+    public hasClassicalVariable(name: string): boolean {
+        return this.classicalState && this.classicalState.has(name);
     }
 
     private executeStatement(statement: StatementNode): void {
@@ -308,7 +371,15 @@ export class Interpreter {
 
     private handlePrintStatement(node: PrintStatement): void {
         const value = this.evaluateExpression(node.value);
-        this.output.push(typeof value === "boolean" ? value.toString() : `${value[0]}${value[1] < 0 ? "" : "+"}${value[1]}i`);
+        if (typeof value === "boolean") {
+            this.output.push(value.toString());
+        } else {
+            if (math.isComplex(value)) {
+                const real = value.re;
+                const imag = value.im;
+                this.output.push(imag != 0 ? `${real}${imag < 0 ? "" : "+"}${imag}i` : `${real}`);
+            }
+        }
     }
 
     private handleGateApplication(node: GateApplication): void {
@@ -346,14 +417,25 @@ export class Interpreter {
             throw new Error(`Undefined qubit '${qubitName}' in measurement`);
         }
 
+        if (this.quantumSystem['qubitNames'].has(node.result) ||
+            this.quantumSystem['registerNames'].has(node.result)) {
+            throw new Error(`Name collision: Measurement result '${node.result}' conflicts with a quantum variable`);
+        }
+
         const result = this.quantumSystem.measure(qubitName, node.result);
-        this.classicalState.set(node.result, result);
+        this.classicalState.set(node.result, result == 1 ? math.complex(1, 0) : math.complex(0, 0));
     }
 
     private handleLetStatement(node: LetStatement): void {
+        if (this.quantumSystem['qubitNames'].has(node.identifier) ||
+            this.quantumSystem['registerNames'].has(node.identifier)) {
+            throw new Error(`Variable name collision: '${node.identifier}' is already defined as a quantum variable`);
+        }
+
         if (this.classicalState.has(node.identifier)) {
             throw new Error(`Redefinition error: Classical variable '${node.identifier}' already defined`);
         }
+
         const value = this.evaluateExpression(node.value);
         this.classicalState.set(node.identifier, value);
     }
@@ -368,21 +450,23 @@ export class Interpreter {
 
     private handleIfStatement(node: IfStatement): void {
         const condition = this.evaluateExpression(node.condition);
-        if (condition) {
+        if (typeof condition === "boolean" && condition) {
             for (const stmt of node.statements) {
                 this.executeStatement(stmt);
             }
+        } else if (typeof condition !== "boolean") {
+            throw new Error(`Type error: Condition in if statement must be a boolean`);
         }
     }
 
-    private evaluateExpression(expr: Expression): boolean | [number, number] {
+    private evaluateExpression(expr: Expression): boolean | math.Complex {
         switch (expr.type) {
             case NodeType.BooleanLiteral:
                 return expr.value as boolean;
             case NodeType.RealLiteral:
-                return [expr.value, 0];
+                return math.complex(expr.value, 0);
             case NodeType.ImaginaryLiteral:
-                return [0, expr.value as number];
+                return math.complex(0, expr.value as number);
             case NodeType.Identifier:
                 const value = this.classicalState.get(expr.value as string);
                 if (value === undefined) {
@@ -396,100 +480,65 @@ export class Interpreter {
         }
     }
 
-    private evaluateInfixExpression(expr: InfixExpression): boolean | [number, number] {
+    private evaluateInfixExpression(expr: InfixExpression): boolean | math.Complex {
         const left = this.evaluateExpression(expr.left);
         const right = this.evaluateExpression(expr.right);
+
+        if (typeof left === 'boolean' || typeof right === 'boolean') {
+            if (expr.operator === '&&' || expr.operator === '||' || expr.operator === '==' || expr.operator === '!=') {
+                if (typeof left !== 'boolean' || typeof right !== 'boolean') {
+                    throw new Error(`Type error: Cannot apply '${expr.operator}' between boolean and complex number`);
+                }
+
+                switch (expr.operator) {
+                    case '&&': return left && right;
+                    case '||': return left || right;
+                    case '==': return left === right;
+                    case '!=': return left !== right;
+                }
+            }
+            throw new Error(`Type error: Cannot apply '${expr.operator}' to boolean value`);
+        }
+
         switch (expr.operator) {
-            case '&&':
-                if (typeof left !== 'boolean' || typeof right !== 'boolean') {
-                    throw new Error(`Unsupported operation: '&&' cannot be applied to non-boolean values`);
-                }
-                return left && right;
-            case '||':
-                if (typeof left !== 'boolean' || typeof right !== 'boolean') {
-                    throw new Error(`Unsupported operation: '&&' cannot be applied to non-boolean values`);
-                }
-                return left || right;
-            case '==':
-                if (typeof left !== typeof right){
-                    throw new Error(`Unsupported operation: '&&' cannot be applied to ${typeof left === 'boolean' ? 'boolean' : 'complex number'} and ${typeof left === 'boolean' ? 'boolean' : 'complex number'}`);
-                }
-                // @ts-expect-error Necessary because of the check above
-                return typeof left === "boolean" ? left === right : left[0] === right[0] && left[1] === right[1];
-            case '!=':
-                if (typeof left !== typeof right){
-                    throw new Error(`Unsupported operation: '||' cannot be applied to ${typeof left === 'boolean' ? 'boolean' : 'complex number'} and ${typeof left === 'boolean' ? 'boolean' : 'complex number'}`);
-                }
-                // @ts-expect-error Necessary because of the check above
-                return typeof left !== "boolean" ? left === right : left[0] !== right[0] && left[1] !== right[1];
+            case '+': return math.add(left, right) as math.Complex;
+            case '-': return math.subtract(left, right) as math.Complex;
+            case '*': return math.multiply(left, right) as math.Complex;
+            case '/': return math.divide(left, right) as math.Complex;
+            case '==': return math.equal(left, right) as boolean;
+            case '!=': return !math.equal(left, right);
             case '<':
-                if (typeof left === 'boolean' || typeof right === 'boolean') {
-                    throw new Error(`Unsupported operation: '<' cannot be applied to boolean value`);
-                }
-                return left[0] * left[0] + left[1] * left[1] < right[0] * right[0] + right[1] * right[1];
+                return Interpreter.complexMagnitude(left) < Interpreter.complexMagnitude(right);
             case '<=':
-                if (typeof left === 'boolean' || typeof right === 'boolean') {
-                    throw new Error(`Unsupported operation: '<=' cannot be applied to boolean value`);
-                }
-                return left[0] * left[0] + left[1] * left[1] <= right[0] * right[0] + right[1] * right[1];
+                return Interpreter.complexMagnitude(left) <= Interpreter.complexMagnitude(right);
             case '>':
-                if (typeof left === 'boolean' || typeof right === 'boolean') {
-                    throw new Error(`Unsupported operation: '>' cannot be applied to boolean value`);
-                }
-                return left[0] * left[0] + left[1] * left[1] >= right[0] * right[0] + right[1] * right[1];
+                return Interpreter.complexMagnitude(left) > Interpreter.complexMagnitude(right);
             case '>=':
-                if (typeof left === 'boolean' || typeof right === 'boolean') {
-                    throw new Error(`Unsupported operation: '>=' cannot be applied to boolean value`);
-                }
-                return left[0] * left[0] + left[1] * left[1] >= right[0] * right[0] + right[1] * right[1];
-            case '+':
-                if (typeof left === 'boolean' || typeof right === 'boolean') {
-                    throw new Error(`Unsupported operation: '+' cannot be applied to boolean value`);
-                }
-                return [left[0] + right[0], left[1] + right[1]];
-            case '-':
-                if (typeof left === 'boolean' || typeof right === 'boolean') {
-                    throw new Error(`Unsupported operation: '-' cannot be applied to boolean value`);
-                }
-                return [left[0] - right[0], left[1] - right[1]];
-            case '*':
-                if (typeof left === 'boolean' || typeof right === 'boolean') {
-                    throw new Error(`Unsupported operation: '*' cannot be applied to boolean value`);
-                }
-                return [
-                    left[0] * right[0] - left[1] * right[1],
-                    left[0] * right[1] + left[1] * right[0]
-                ];
-            case '/':
-                if (typeof left === 'boolean' || typeof right === 'boolean') {
-                    throw new Error(`Unsupported operation: '/' cannot be applied to boolean value`);
-                }
-                const denominator = right[0] ** 2 + right[1] ** 2;
-                return [
-                    (left[0] * right[0] + left[1] * right[1]) / denominator,
-                    (left[1] * right[0] - left[0] * right[1]) / denominator
-                ];
+               return Interpreter.complexMagnitude(left) >= Interpreter.complexMagnitude(right);
             default:
                 throw new Error(`Unsupported operator: ${expr.operator}`);
         }
     }
 
-    private evaluatePrefixExpression(expr: PrefixExpression): boolean | [number, number] {
+    private static complexMagnitude(z: math.Complex): number {
+        return Math.sqrt(z.re * z.re + z.im * z.im);
+    }
+
+    private evaluatePrefixExpression(expr: PrefixExpression): boolean | math.Complex {
         const right = this.evaluateExpression(expr.right);
         switch (expr.operator) {
             case '!':
                 if(typeof right !== 'boolean') {
-                    throw new Error(`Unsupported operation: '!' cannot be applied to non-boolean value`);
+                    throw new Error(`Type error: Cannot apply '!' to complex number`);
                 }
                 return !right as boolean;
             case '-':
                 if (typeof right === 'boolean') {
-                    throw new Error(`Unsupported operation: '-' cannot be applied to boolean value`);
+                    throw new Error(`Type error: Cannot apply '-' to boolean value`);
                 }
-                return [-right[0], -right[1]];
+                return math.multiply(right, -1) as math.Complex;
             default:
                 throw new Error(`Unsupported operator: ${expr.operator}`);
         }
-
     }
 }

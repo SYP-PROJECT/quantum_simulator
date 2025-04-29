@@ -1,0 +1,14 @@
+[
+  {
+    "id": 1,
+    "title": "Introduction to Qubits",
+    "description": "Learn what a qubit is and how it behaves.",
+    "content": "CONTENT"
+  },
+  {
+    "id": 2,
+    "title": "Quantum Gates",
+    "description": "Understand basic quantum gates like X, H, and Z.",
+    "content": "A **Hadamard gate** applies the following transformation:\n\n$$\nH = \\frac{1}{\\sqrt{2}} \\begin{bmatrix} 1 & 1 \\\\ 1 & -1 \\end{bmatrix}\n$$\n"
+  }
+]
