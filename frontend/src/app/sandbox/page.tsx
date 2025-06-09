@@ -13,6 +13,7 @@ import QuantumCircuitComponent from "@/components/Rendering";
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
+import remarkBreaks from 'remark-breaks';
 import 'katex/dist/katex.min.css';
 
 const lexer: Lexer = new Lexer();
@@ -35,16 +36,25 @@ const LessonDetails = ({ lessonId, onClose }: { lessonId: string; onClose: () =>
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
             <div className="bg-gray-800 rounded-2xl shadow-lg p-8 max-w-2xl w-full text-left space-y-6 overflow-y-auto max-h-full">
                 <h2 className="text-2xl font-bold text-white">{lesson.title}</h2>
-
                 <div className="prose prose-invert max-w-none text-gray-300">
                     <ReactMarkdown
-                        remarkPlugins={[remarkMath]}
+                        remarkPlugins={[remarkMath, remarkBreaks]}
                         rehypePlugins={[rehypeKatex]}
+                        components={{
+                            p: ({ children }) => <p className="mb-4">{children}</p>,
+                            code: ({ children, className }) => {
+                                const isInline = !className?.includes('language-');
+                                return isInline ? (
+                                    <code className="bg-gray-700 px-1 py-0.5 rounded">{children}</code>
+                                ) : (
+                                    <pre className="bg-gray-700 p-4 rounded"><code>{children}</code></pre>
+                                );
+                            }
+                        }}
                     >
                         {lesson.content}
                     </ReactMarkdown>
                 </div>
-
                 <button
                     onClick={onClose}
                     className="bg-purple-600 hover:bg-purple-700 transition px-4 py-2 rounded-lg mt-6 w-full"
@@ -101,7 +111,7 @@ function SandboxContent() {
 
             if (parser.Errors.length !== 0) {
                 setOutput(parser.Errors.join("\n"));
-                setProgramNode(null); // Clear program node on error
+                setProgramNode(null);
                 setIsLoading(false);
                 return;
             }
@@ -123,7 +133,7 @@ function SandboxContent() {
                     [/\b\d+(\.\d+)?i\b/, "imaginary"],
                     [/\b\d+(\.\d+)?\b/, "number"],
                     [/\b[a-zA-Z_][a-zA-Z0-9_]*\b/, "identifier"],
-                    [/=>|==|!=|&&|\|\||[=+\-*/<>!]/, "operator"],
+                    [/=>|==|!=|&&\|\||[=+\-*/<>!]/, "operator"],
                     [/[{}[\],;]/, "delimiter"],
                     [/#.*$/, "comment"],
                     [/\s+/, "whitespace"],
@@ -237,7 +247,6 @@ function SandboxContent() {
                     </div>
                 </div>
 
-
                 {/* Buttons */}
                 <div className="flex space-x-2">
                     <button
@@ -246,7 +255,6 @@ function SandboxContent() {
                     >
                         Run Program
                     </button>
-
                     <button
                         onClick={handleShowLesson}
                         className="bg-blue-600 hover:bg-blue-700 transition px-4 py-2 rounded-lg"

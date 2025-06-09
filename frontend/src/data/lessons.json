@@ -1,14 +1,80 @@
 [
   {
     "id": 1,
-    "title": "Introduction to Qubits",
-    "description": "Learn what a qubit is and how it behaves.",
-    "content": "CONTENT"
+    "title": "Introduction to Quantum Computing and Its Significance",
+    "description": "Learn what quantum computing is and why it matters.",
+    "content": "- **What is Quantum Computing?**: Quantum computing uses principles of quantum mechanics to process information. Unlike classical computers, which use bits (0 or 1), quantum computers use quantum bits (qubits) that can exist in superpositions, enabling parallel computation.\n\n- **Key Quantum Principles**:\n\n  - **Superposition**: A qubit can represent both 0 and 1 simultaneously, allowing multiple computations at once.\n  - **Entanglement**: Qubits can be correlated such that the state of one instantly affects another, enabling unique computational strategies.\n  - **Interference**: Quantum states can be manipulated to amplify correct solutions and cancel incorrect ones.\n\n- **Why It Matters**:\n\n  - **Computational Power**: Quantum computers can solve specific problems (e.g., factoring large numbers, simulating quantum systems) exponentially faster than classical computers.\n  - **Applications**: Cryptography (e.g., breaking RSA with Shor’s algorithm), quantum chemistry (e.g., drug discovery), optimization (e.g., logistics), and machine learning.\n  - **Current State**: Quantum computers are in the Noisy Intermediate-Scale Quantum (NISQ) era, limited by noise but promising for niche applications, like those explored in your circuit simulator.\n\n- **Example**: Factoring a 2048-bit number could take billions of years classically but hours with Shor’s algorithm on a quantum computer.\n\n- **QSimple Example**:\n\n  ```\n  # No code yet—just imagine a coin (classical bit) vs. a spinning coin (qubit).\n  ```\n\n- **Exercise**:\n\n  1. List three problems quantum computers could solve faster than classical computers.\n  2. Explain in one sentence why superposition provides a computational advantage."
   },
   {
     "id": 2,
-    "title": "Quantum Gates",
-    "description": "Understand basic quantum gates like X, H, and Z.",
-    "content": "A **Hadamard gate** applies the following transformation:\n\n$$\nH = \\frac{1}{\\sqrt{2}} \\begin{bmatrix} 1 & 1 \\\\ 1 & -1 \\end{bmatrix}\n$$\n"
+    "title": "Introduction to Dirac Notation",
+    "description": "Learn Dirac notation, the mathematical framework for quantum states.",
+    "content": "- **What is Dirac Notation?**: A compact notation for vectors and linear algebra operations in quantum mechanics. Kets ($|\\psi\\rangle$) represent column vectors; bras ($\\langle\\psi|$) represent their conjugate transposes (row vectors).\n\n- **Kets**: A ket $|\\psi\\rangle$ is a column vector, e.g.,\n\n  $$|0\\rangle = \\begin{bmatrix} 1 \\\\ 0 \\end{bmatrix}, \\quad |1\\rangle = \\begin{bmatrix} 0 \\\\ 1 \\end{bmatrix}$$\n\n  in the computational basis.\n\n- **Bras**: A bra $\\langle\\psi|$ is the complex conjugate transpose, e.g., if $|\\psi\\rangle = \\begin{bmatrix} a \\\\ b \\end{bmatrix}$, then $\\langle\\psi| = \\begin{bmatrix} a^* & b^* \\end{bmatrix}$.\n\n- **Inner Product**: $\\langle\\phi|\\psi\\rangle$ computes the dot product, yielding a complex number. If $\\langle\\psi|\\psi\\rangle = 1$, the state is normalized.\n\n- **Example**: For $|\\psi\\rangle = \\begin{bmatrix} \\frac{1}{\\sqrt{2}} \\\\ \\frac{1}{\\sqrt{2}} \\end{bmatrix}$, compute $\\langle\\psi|\\psi\\rangle = \\frac{1}{2} + \\frac{1}{2} = 1$ (normalized).\n\n- **QSimple Example**:\n\n  ```\n  qubit q0 = |0>; // Represents |0> = [1, 0]\n  qubit q1 = |1>; // Represents |1> = [0, 1]\n  # Try: qubit q0 = |0>; qubit q0 = |0>; (Error: Redefinition error)\n  ```\n\n- **Exercise**:\n\n  1. Write $|\\psi\\rangle = \\begin{bmatrix} \\frac{1}{\\sqrt{5}} \\\\ \\frac{2}{\\sqrt{5}} \\end{bmatrix}$ in Dirac notation.\n  2. Compute $\\langle\\psi|\\psi\\rangle$ and explain what it means."
+  },
+  {
+    "id": 3,
+    "title": "Qubits and Measurement",
+    "description": "Understand qubits and how measurement works in QSimple.",
+    "content": "- **Qubits**: A qubit can be $|0\\rangle$, $|1\\rangle$, or a superposition $\\alpha|0\\rangle + \\beta|1\\rangle$, where $|\\alpha|^2 + |\\beta|^2 = 1$. In QSimple, qubits are declared with initial states.\n\n- **Measurement**: Measuring a qubit collapses it to $|0\\rangle$ or $|1\\rangle$, storing the result in a classical variable. Probability of $|0\\rangle$ is $|\\alpha|^2$.\n\n- **Example**: For $|\\psi\\rangle = \\begin{bmatrix} 1 \\\\ 0 \\end{bmatrix} = |0\\rangle$, measurement yields 0 with 100% probability.\n\n- **QSimple Example**:\n\n  ```\n  qubit q0 = |0>;\n  measure q0 => r0; // r0 = 0 (100% chance)\n  qubit q1 = |1>;\n  measure q1 => r1; // r1 = 1 (100% chance)\n  ```\n\n- **Exercise**:\n\n  1. Write QSimple code to declare a qubit in $|1\\rangle$ and measure it. What’s the result?\n  2. What happens if you measure `q0` twice in a row?"
+  },
+  {
+    "id": 4,
+    "title": "Superposition with the Hadamard Gate",
+    "description": "Create and explore superposition using the H gate.",
+    "content": "- **Superposition**: A qubit in superposition, e.g., $\\frac{1}{\\sqrt{2}}(|0\\rangle + |1\\rangle)$, has equal probability of collapsing to $|0\\rangle$ or $|1\\rangle$ upon measurement.\n\n- **Hadamard Gate (H)**: Transforms $|0\\rangle \\to \\frac{1}{\\sqrt{2}}(|0\\rangle + |1\\rangle)$, matrix $H = \\frac{1}{\\sqrt{2}}\\begin{bmatrix} 1 & 1 \\\\ 1 & -1 \\end{bmatrix}$.\n\n- **Example**: Applying $H$ to $|0\\rangle$ creates a 50-50 superposition.\n\n- **QSimple Example**:\n\n  ```\n  qubit q0 = |0>;\n  gate H => q0;\n  measure q0 => r0; // r0 is 0 or 1, 50% each\n  # Run multiple times to see random outcomes\n  ```\n\n- **Exercise**:\n\n  1. Write QSimple code to apply `H` to $|1\\rangle$ and measure. What are the possible outcomes?\n  2. Run the example code 10 times. How often is `r0` 0 vs. 1?"
+  },
+  {
+    "id": 5,
+    "title": "Bit and Phase Flips with X and Z Gates",
+    "description": "Learn to manipulate qubits with X and Z gates.",
+    "content": "- **Pauli X Gate (NOT)**: Flips $|0\\rangle \\to |1\\rangle$, $|1\\rangle \\to |0\\rangle$, matrix $X = \\begin{bmatrix} 0 & 1 \\\\ 1 & 0 \\end{bmatrix}$.\n\n- **Pauli Z Gate**: Flips the phase of $|1\\rangle$: $|1\\rangle \\to -|1\\rangle$, $|0\\rangle \\to |0\\rangle$, matrix $Z = \\begin{bmatrix} 1 & 0 \\\\ 0 & -1 \\end{bmatrix}$. Phase changes are visible in superposition.\n\n- **Example**: $X$ flips a qubit; $Z$ affects superposition states.\n\n- **QSimple Example**:\n\n  ```\n  qubit q0 = |0>;\n  gate X => q0;\n  measure q0 => r0; // r0 = 1 (100%)\n  qubit q1 = |0>;\n  gate H => q1;     // [1/√2, 1/√2]\n  gate Z => q1;     // [1/√2, -1/√2]\n  measure q1 => r1; // r1 = 0 or 1, 50% each\n  ```\n\n- **Exercise**:\n\n  1. Write QSimple code to apply `X` to $|1\\rangle$ and measure.\n  2. Apply `H` then `Z` to $|0\\rangle$. Are probabilities different from just `H`?"
+  },
+  {
+    "id": 6,
+    "title": "Multi-Qubit Systems and Tensor Products",
+    "description": "Understand how to represent multi-qubit systems.",
+    "content": "- **Multi-Qubit States**: A two-qubit state is a 4D vector, e.g., $|00\\rangle = |0\\rangle \\otimes |0\\rangle = \\begin{bmatrix} 1 \\\\ 0 \\\\ 0 \\\\ 0 \\end{bmatrix}$.\n\n- **Tensor Product**: For $|\\psi\\rangle = \\begin{bmatrix} a \\\\ b \\end{bmatrix}$, $|\\phi\\rangle = \\begin{bmatrix} c \\\\ d \\end{bmatrix}$, $|\\psi\\rangle \\otimes |\\phi\\rangle = \\begin{bmatrix} ac \\\\ ad \\\\ bc \\\\ bd \\end{bmatrix}$.\n\n- **QSimple Example**:\n\n  ```\n  qubit q0 = |0>;\n  qubit q1 = |0>;\n  measure q0 => r0; // r0 = 0\n  measure q1 => r1; // r1 = 0\n  # State is |00> = [1, 0, 0, 0]\n  ```\n\n- **Exercise**:\n\n  1. Write QSimple code for $|01\\rangle$ and measure both qubits.\n  2. What is the state vector of $|10\\rangle$ in matrix form?"
+  },
+  {
+    "id": 7,
+    "title": "Entanglement with CNOT",
+    "description": "Create entangled states using the CNOT gate.",
+    "content": "- **Entangled States**: States like $\\frac{1}{\\sqrt{2}}(|00\\rangle + |11\\rangle)$ cannot be separated into individual qubit states.\n\n- **CNOT Gate**: Flips the target qubit if the control is $|1\\rangle$, matrix $CNOT = \\begin{bmatrix} 1 & 0 & 0 & 0 \\\\ 0 & 1 & 0 & 0 \\\\ 0 & 0 & 0 & 1 \\\\ 0 & 0 & 1 & 0 \\end{bmatrix}$.\n\n- **Example**: Combine $H$ and $CNOT$ to create a Bell state.\n\n- **QSimple Example**:\n\n  ```\n  qubit q0 = |0>;\n  qubit q1 = |0>;\n  gate H => q0;\n  gate CNOT => q0, q1;\n  measure q0 => r0;\n  measure q1 => r1; // r0 = r1 (00 or 11)\n  ```\n\n- **Exercise**:\n\n  1. Run the example 10 times. Are `r0` and `r1` always equal?\n  2. Modify the code to create $\\frac{1}{\\sqrt{2}}(|01\\rangle + |10\\rangle)$. Hint: Use $X$ on one qubit."
+  },
+  {
+    "id": 8,
+    "title": "Registers and Classical Control",
+    "description": "Simplify multi-qubit systems and use classical control.",
+    "content": "- **Registers**: Create multiple qubits with indexed names (e.g., `reg_0`, `reg_1`).\n\n- **Classical Control**: Use `if` to execute gates based on measurement results.\n\n- **Example**: Condition a gate on a measurement.\n\n- **QSimple Example**:\n\n  ```\n  register reg = 2; // Creates reg_0, reg_1\n  gate H => reg_0;\n  measure reg_0 => r0;\n  if r0 {\n      gate X => reg_1; // Flip reg_1 if r0 = 1\n  }\n  measure reg_1 => r1;\n  # Note: measure reg => r; gives error\n  ```\n\n- **Exercise**:\n\n  1. Write QSimple code for a 3-qubit register and apply $H$ to `reg_2`.\n  2. Add an `if` to apply $Z$ to `reg_1` if `r0 = 1`. What’s `r1`?"
+  },
+  {
+    "id": 9,
+    "title": "Quantum Interference",
+    "description": "Explore how interference manipulates quantum states.",
+    "content": "- **Interference**: Gates like $H$ and $Z$ manipulate amplitudes, causing constructive (adding) or destructive (canceling) interference.\n\n- **Example**: $H$, $Z$, $H$ sequence causes destructive interference to favor $|1\\rangle$.\n\n- **QSimple Example**:\n\n  ```\n  qubit q0 = |0>;\n  gate H => q0;     // [1/√2, 1/√2]\n  gate Z => q0;     // [1/√2, -1/√2]\n  gate H => q0;     // [0, 1] due to interference\n  measure q0 => r0; // r0 = 1 (100%)\n  ```\n\n- **Exercise**:\n\n  1. Remove the `Z` gate and measure. How does `r0` change?\n  2. Write QSimple code to apply $H$, $X$, $H$ to $|0\\rangle$. What’s the result?"
+  },
+  {
+    "id": 10,
+    "title": "Repeating Operations",
+    "description": "Use loops to repeat quantum operations.",
+    "content": "- **Repeating Operations**: The `repeat` statement executes a block multiple times, useful for iterative algorithms.\n\n- **Example**: Applying $H$ twice returns the original state due to $H^2 = I$.\n\n- **QSimple Example**:\n\n  ```\n  qubit q0 = |0>;\n  repeat 2 {\n      gate H => q0; // H twice = identity\n  }\n  measure q0 => r0; // r0 = 0 (100%)\n  ```\n\n- **Exercise**:\n\n  1. Change to `repeat 3`. What’s `r0`?\n  2. Write QSimple code to apply $X$ three times in a `repeat` block to $|0\\rangle$. What’s the result?"
+  },
+  {
+    "id": 11,
+    "title": "Quantum Teleportation",
+    "description": "Learn how to teleport a quantum state in QSimple.",
+    "content": "- **Quantum Teleportation**: Transfers the state of one qubit (e.g., $\\alpha|0\\rangle + \\beta|1\\rangle$) to another using a shared entangled pair and two classical bits.\n\n- **Steps**:\n\n  1. Create a Bell state between Alice’s second qubit and Bob’s qubit.\n  2. Alice entangles her first qubit (to teleport) with her second qubit.\n  3. Alice measures both her qubits, sending results to Bob.\n  4. Bob applies gates based on the results to recover the state.\n\n- **QSimple Example**:\n\n  ```\n  qubit q0 = |0>; // State to teleport: set to |0> for simplicity\n  qubit q1 = |0>; // Alice’s second qubit\n  qubit q2 = |0>; // Bob’s qubit\n  # Create Bell state between q1 and q2\n  gate H => q1;\n  gate CNOT => q1, q2;\n  # Entangle q0 with q1\n  gate CNOT => q0, q1;\n  gate H => q0;\n  # Measure Alice’s qubits\n  measure q0 => r0;\n  measure q1 => r1;\n  # Bob’s corrections\n  if r1 {\n      gate X => q2;\n  }\n  if r0 {\n      gate Z => q2;\n  }\n  measure q2 => r2; // r2 = 0 (matches q0’s original state)\n  ```\n\n- **Exercise**:\n\n  1. Run the code with `q0 = |1>`. What’s `r2`?\n  2. Modify to teleport $\\frac{1}{\\sqrt{2}}(|0\\rangle + |1\\rangle)$ by applying `H` to `q0` first. What are the possible `r2` values?"
+  },
+  {
+    "id": 12,
+    "title": "Deutsch-Jozsa Algorithm",
+    "description": "Determine if a function is constant or balanced with one query.",
+    "content": "- **Deutsch-Jozsa Problem**: Given a function $f: \\{0,1\\}^n \\to \\{0,1\\}$, determine if $f$ is constant (same output for all inputs) or balanced (outputs 0 for half the inputs, 1 for the other half) using one query.\n\n- **Steps** (for 2 qubits):\n\n  1. Prepare superposition with $H$ gates.\n  2. Apply oracle for $f$ (e.g., balanced: $f(00) = f(11) = 0$, $f(01) = f(10) = 1$).\n  3. Apply $H$ gates again and measure.\n  4. If all results are 0, $f$ is constant; otherwise, balanced.\n\n- **QSimple Example** (Balanced oracle for $f(x) = x_1$):\n\n  ```\n  qubit q0 = |0>;\n  qubit q1 = |0>;\n  qubit q2 = |1>; // Oracle qubit\n  gate H => q0;\n  gate H => q1;\n  gate H => q2;\n  # Oracle: f(x) = x_1 (CNOT from q1 to q2)\n  gate CNOT => q1, q2;\n  gate H => q0;\n  gate H => q1;\n  measure q0 => r0;\n  measure q1 => r1; // Non-zero r0 or r1 means balanced\n  ```\n\n- **Exercise**:\n\n  1. Run the code. Are `r0` and `r1` both 0? (No, indicating balanced.)\n  2. Modify for a constant oracle (e.g., $f(x) = 0$ for all $x$). Hint: Remove `CNOT`. What’s the result?"
+  },
+  {
+    "id": 13,
+    "title": "Grover’s Algorithm",
+    "description": "Build a quantum search algorithm.",
+    "content": "- **Grover’s Algorithm**: Searches for a marked state (e.g., $|11\\rangle$) faster than classical search by amplifying its amplitude.\n\n- **Steps**: Create superposition with $H$, apply an oracle to mark $|11\\rangle$, and use a diffuser to amplify it.\n\n- **QSimple Example**:\n\n  ```\n  qubit q0 = |0>;\n  qubit q1 = |0>;\n  # Superposition\n  gate H => q0;\n  gate H => q1;\n  # Oracle for |11>\n  gate X => q0;\n  gate X => q1;\n  gate H => q1;\n  gate CNOT => q0, q1;\n  gate H => q1;\n  gate X => q0;\n  gate X => q1;\n  # Diffuser\n  gate H => q0;\n  gate H => q1;\n  gate X => q0;\n  gate X => q1;\n  gate H => q1;\n  gate CNOT => q0, q1;\n  gate H => q1;\n  gate X => q0;\n  gate X => q1;\n  gate H => q0;\n  gate H => q1;\n  # Measure\n  measure q0 => r0;\n  measure q1 => r1; // r0 = 1, r1 = 1 (high probability)\n  ```\n\n- **Exercise**:\n\n  1. Run the code multiple times. How often is `r0 = r1 = 1`?\n  2. Modify the oracle to mark $|01\\rangle$ (hint: adjust $X$ gates)."
   }
 ]
